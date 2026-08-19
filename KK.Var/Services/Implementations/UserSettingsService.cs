@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using KK.Var.Configuration;
 using KK.Var.Data;
 
-namespace KK.Var.Services;
+namespace KK.Var.Services.Implementations;
 
 public sealed class UserSettingsService : IUserSettingsService
 {

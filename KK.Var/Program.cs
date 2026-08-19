@@ -2,7 +2,10 @@ using System;
 using Avalonia;
 using KK.Var.Configuration;
 using KK.Var.Data;
+using KK.Var.Repositories;
+using KK.Var.Repositories.Implementations;
 using KK.Var.Services;
+using KK.Var.Services.Implementations;
 using KK.Var.ViewModels;
 using KK.Var.Views;
 using Microsoft.EntityFrameworkCore;
@@ -60,6 +63,23 @@ sealed class Program
                 $"Data Source={DatabasePaths.GetDatabaseFilePath(databaseOptions.FileName)}"));
 
         builder.Services.AddSingleton<IUserSettingsService, UserSettingsService>();
+        builder.Services.AddSingleton<IKKProjectRepository, KKProjectRepository>();
+        builder.Services.AddSingleton<
+            IKKProjectEnvironmentVariableRepository,
+            KKProjectEnvironmentVariableRepository>();
+        builder.Services.AddSingleton<IKKProjectVersionRepository, KKProjectVersionRepository>();
+        builder.Services.AddSingleton<
+            IKKProjectDeploymentRepository,
+            KKProjectDeploymentRepository>();
+
+        builder.Services.AddSingleton<IKKProjectService, KKProjectService>();
+        builder.Services.AddSingleton<
+            IKKProjectEnvironmentService,
+            KKProjectEnvironmentService>();
+        builder.Services.AddSingleton<IKKProjectVersionService, KKProjectVersionService>();
+        builder.Services.AddSingleton<
+            IKKProjectDeploymentService,
+            KKProjectDeploymentService>();
         builder.Services.AddSingleton<MainViewModel>();
         builder.Services.AddSingleton<MainWindow>(services => new MainWindow
         {

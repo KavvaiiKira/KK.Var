@@ -1,0 +1,31 @@
+using System;
+using KK.Var.Enums;
+
+namespace KK.Var.Models;
+
+public sealed class KKProjectDeployment
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+
+    public Guid KKProjectId { get; set; }
+
+    public Guid KKProjectVersionId { get; set; }
+
+    public DeploymentOperationType OperationType { get; set; }
+
+    public DeploymentStatus Status { get; set; } = DeploymentStatus.Pending;
+
+    public string VariablesSnapshotJson { get; set; } = "{}";
+
+    public DateTimeOffset StartedAtUtc { get; set; } = DateTimeOffset.UtcNow;
+
+    public DateTimeOffset? CompletedAtUtc { get; set; }
+
+    public string? LogPath { get; set; }
+
+    public string? ErrorMessage { get; set; }
+
+    public KKProject Project { get; set; } = null!;
+
+    public KKProjectVersion Version { get; set; } = null!;
+}
