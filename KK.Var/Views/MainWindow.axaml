@@ -80,32 +80,34 @@
             <Setter Property="CornerRadius" Value="7" />
         </Style>
         <Style Selector="Button.window-control.close">
-            <Setter Property="Background" Value="#FF5F57" />
+            <Setter Property="Background" Value="#E052A0" />
         </Style>
         <Style Selector="Button.window-control.minimize">
-            <Setter Property="Background" Value="#FEBC2E" />
+            <Setter Property="Background" Value="#7567E8" />
         </Style>
         <Style Selector="Button.window-control.maximize">
-            <Setter Property="Background" Value="#28C840" />
+            <Setter Property="Background" Value="#38BDF8" />
         </Style>
         <Style Selector="Button.window-control.close:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#FF756E" />
+            <Setter Property="Background" Value="#F472B6" />
         </Style>
         <Style Selector="Button.window-control.minimize:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#FFD166" />
+            <Setter Property="Background" Value="#968BFF" />
         </Style>
         <Style Selector="Button.window-control.maximize:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#5EDB72" />
+            <Setter Property="Background" Value="#7DD3FC" />
         </Style>
     </Window.Styles>
 
-    <Border Margin="8"
+    <Border x:Name="WindowFrame"
+            Margin="8"
             Background="{DynamicResource AppBackgroundBrush}"
             BorderBrush="{DynamicResource AppBorderBrush}"
             BorderThickness="1"
             CornerRadius="14">
         <Grid RowDefinitions="46,*,38">
-            <Border Grid.Row="0"
+            <Border x:Name="TitleBar"
+                    Grid.Row="0"
                     Background="{DynamicResource AppSurfaceBrush}"
                     CornerRadius="14,14,0,0">
                 <Grid ColumnDefinitions="Auto,*,Auto">
@@ -437,7 +439,8 @@
                 </Grid>
             </Grid>
 
-            <Border Grid.Row="2"
+            <Border x:Name="StatusBar"
+                    Grid.Row="2"
                     Padding="14,0"
                     Background="{DynamicResource AppSurfaceBrush}"
                     BorderBrush="{DynamicResource AppBorderBrush}"

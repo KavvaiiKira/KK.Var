@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -9,6 +10,16 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+
+        PropertyChanged += (_, args) =>
+        {
+            if (args.Property == WindowStateProperty)
+            {
+                UpdateWindowChrome();
+            }
+        };
+
+        UpdateWindowChrome();
     }
 
     private void TitleBar_OnPointerPressed(object? sender, PointerPressedEventArgs e)
@@ -47,5 +58,20 @@ public partial class MainWindow : Window
         WindowState = WindowState == WindowState.Maximized
             ? WindowState.Normal
             : WindowState.Maximized;
+    }
+
+    private void UpdateWindowChrome()
+    {
+        var isMaximized = WindowState == WindowState.Maximized;
+
+        WindowFrame.Margin = new Thickness(isMaximized ? 0 : 8);
+        WindowFrame.BorderThickness = new Thickness(isMaximized ? 0 : 1);
+        WindowFrame.CornerRadius = new CornerRadius(isMaximized ? 0 : 14);
+        TitleBar.CornerRadius = isMaximized
+            ? new CornerRadius(0)
+            : new CornerRadius(14, 14, 0, 0);
+        StatusBar.CornerRadius = isMaximized
+            ? new CornerRadius(0)
+            : new CornerRadius(0, 0, 14, 14);
     }
 }
