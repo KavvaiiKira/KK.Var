@@ -1,0 +1,38 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignWidth="64"
+             d:DesignHeight="64"
+             x:Class="KK.Var.Views.Controls.BrandMark">
+
+    <Viewbox Stretch="Uniform">
+        <Grid Width="64" Height="64">
+            <Ellipse StrokeThickness="4">
+                <Ellipse.Stroke>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Offset="0" Color="#FFC2E8" />
+                        <GradientStop Offset="1" Color="#FF829D" />
+                    </LinearGradientBrush>
+                </Ellipse.Stroke>
+            </Ellipse>
+
+            <TextBlock Text="KK"
+                       Margin="0,1,0,0"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       FontFamily="{DynamicResource BrandFontFamily}"
+                       FontSize="24"
+                       FontWeight="Black">
+                <TextBlock.Foreground>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Offset="0" Color="#7CC4FF" />
+                        <GradientStop Offset="1" Color="#C4B5FD" />
+                    </LinearGradientBrush>
+                </TextBlock.Foreground>
+            </TextBlock>
+        </Grid>
+    </Viewbox>
+
+</UserControl>

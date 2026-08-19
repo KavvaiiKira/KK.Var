@@ -1,0 +1,27 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignWidth="260"
+             d:DesignHeight="96"
+             x:Class="KK.Var.Views.Controls.BrandLogo">
+
+    <StackPanel HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Orientation="Horizontal">
+        <TextBlock Text="KK."
+                   FontSize="36"
+                   FontWeight="Black"
+                   FontStretch="Condensed"
+                   FontFamily="{DynamicResource BrandFontFamily}"
+                   Foreground="{DynamicResource AppPrimaryHoverBrush}" />
+        <TextBlock Text="VAR"
+                   FontSize="36"
+                   FontWeight="Black"
+                   FontStretch="Condensed"
+                   FontFamily="{DynamicResource BrandFontFamily}"
+                   Foreground="{DynamicResource AppAccentBrush}" />
+    </StackPanel>
+
+</UserControl>
