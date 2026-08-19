@@ -1,0 +1,20 @@
+# Build output
+**/bin/
+**/obj/
+
+# IDE files
+.vs/
+.idea/
+*.user
+*.suo
+
+# Local databases and user-specific settings
+*.db
+*.db-shm
+*.db-wal
+settings.json
+settings.json.tmp
+
+# OS files
+.DS_Store
+Thumbs.db
