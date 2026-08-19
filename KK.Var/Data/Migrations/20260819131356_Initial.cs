@@ -25,12 +25,13 @@ namespace KK.Var.Data.Migrations
                     GitHubCloneUrl = table.Column<string>(type: "TEXT", maxLength: 2048, nullable: true),
                     BuildProvider = table.Column<int>(type: "INTEGER", nullable: false),
                     BuildConfigurationJson = table.Column<string>(type: "TEXT", nullable: false),
+                    EnvironmentFileFormat = table.Column<int>(type: "INTEGER", nullable: false),
                     RemoteServiceName = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false, collation: "NOCASE"),
                     RemoteExecutableFileName = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
                     RemoteDeploymentDirectory = table.Column<string>(type: "TEXT", maxLength: 1024, nullable: false),
                     ProjectEnvironmentFilePath = table.Column<string>(type: "TEXT", maxLength: 1024, nullable: false),
-                    CreatedAtUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    UpdatedAtUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
+                    CreatedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -45,7 +46,8 @@ namespace KK.Var.Data.Migrations
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     KKProjectId = table.Column<Guid>(type: "TEXT", nullable: false),
                     Name = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
-                    Value = table.Column<string>(type: "TEXT", nullable: false)
+                    Value = table.Column<string>(type: "TEXT", nullable: false),
+                    SortOrder = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -69,7 +71,7 @@ namespace KK.Var.Data.Migrations
                     ArtifactSha256 = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
                     ArtifactSize = table.Column<long>(type: "INTEGER", nullable: false),
                     SourceCommitSha = table.Column<string>(type: "TEXT", maxLength: 64, nullable: true),
-                    CreatedAtUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
+                    CreatedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: false),
                     Description = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true)
                 },
                 constraints: table =>
@@ -94,8 +96,8 @@ namespace KK.Var.Data.Migrations
                     OperationType = table.Column<int>(type: "INTEGER", nullable: false),
                     Status = table.Column<int>(type: "INTEGER", nullable: false),
                     VariablesSnapshotJson = table.Column<string>(type: "TEXT", nullable: false),
-                    StartedAtUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    CompletedAtUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
+                    StartedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    CompletedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: true),
                     LogPath = table.Column<string>(type: "TEXT", maxLength: 1024, nullable: true),
                     ErrorMessage = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: true)
                 },
@@ -127,9 +129,20 @@ namespace KK.Var.Data.Migrations
                 column: "KKProjectVersionId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_KKProjectDeployments_StartedAtUtc",
+                table: "KKProjectDeployments",
+                column: "StartedAtUtc");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_KKProjectEnvironmentVariables_KKProjectId_Name",
                 table: "KKProjectEnvironmentVariables",
                 columns: new[] { "KKProjectId", "Name" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_KKProjectEnvironmentVariables_KKProjectId_SortOrder",
+                table: "KKProjectEnvironmentVariables",
+                columns: new[] { "KKProjectId", "SortOrder" },
                 unique: true);
 
             migrationBuilder.CreateIndex(

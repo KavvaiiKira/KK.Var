@@ -19,7 +19,7 @@ public sealed class KKProjectVersion
 
     public string? SourceCommitSha { get; set; }
 
-    public DateTimeOffset CreatedAtUtc { get; set; } = DateTimeOffset.UtcNow;
+    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
     public string? Description { get; set; }
 

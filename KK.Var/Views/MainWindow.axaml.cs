@@ -12,6 +12,7 @@ public partial class MainWindow : Window
 {
     private bool _firstRunHandled;
     private bool _showSettingsAfterProjectEditorClose;
+    private bool _showHistoryAfterProjectEditorClose;
     private KKProject? _projectPendingDelete;
 
     public MainWindow()
@@ -21,6 +22,7 @@ public partial class MainWindow : Window
         ProjectDetailsPage.BackRequested += ProjectDetailsPage_OnBackRequested;
         ProjectDetailsPage.EditRequested += ProjectDetailsPage_OnEditRequested;
         ProjectDetailsPage.DeleteRequested += ProjectDetailsPage_OnDeleteRequested;
+        ProjectDetailsPage.DeployRequested += ProjectDetailsPage_OnDeployRequested;
 
         PropertyChanged += (_, args) =>
         {
@@ -61,6 +63,12 @@ public partial class MainWindow : Window
 
     private void CloseButton_OnClick(object? sender, RoutedEventArgs e)
     {
+        if (ProjectDetailsPage.IsVisible &&
+            !ProjectDetailsPage.CanNavigateAway(Close))
+        {
+            return;
+        }
+
         Close();
     }
 
@@ -101,9 +109,17 @@ public partial class MainWindow : Window
 
     private void ProjectsNavigationButton_OnClick(object? sender, RoutedEventArgs e)
     {
+        if (ProjectDetailsPage.IsVisible &&
+            !ProjectDetailsPage.CanNavigateAway(
+                () => ProjectsNavigationButton_OnClick(sender, e)))
+        {
+            return;
+        }
+
         if (CreateProjectPage.IsVisible)
         {
             _showSettingsAfterProjectEditorClose = false;
+            _showHistoryAfterProjectEditorClose = false;
             CreateProjectPage.RequestClose();
             return;
         }
@@ -118,9 +134,17 @@ public partial class MainWindow : Window
 
     private void SettingsNavigationButton_OnClick(object? sender, RoutedEventArgs e)
     {
+        if (ProjectDetailsPage.IsVisible &&
+            !ProjectDetailsPage.CanNavigateAway(
+                () => SettingsNavigationButton_OnClick(sender, e)))
+        {
+            return;
+        }
+
         if (CreateProjectPage.IsVisible)
         {
             _showSettingsAfterProjectEditorClose = true;
+            _showHistoryAfterProjectEditorClose = false;
             CreateProjectPage.RequestClose();
             return;
         }
@@ -133,8 +157,41 @@ public partial class MainWindow : Window
         ShowSettingsPage(showSettings: true);
     }
 
+    private async void HistoryNavigationButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (ProjectDetailsPage.IsVisible &&
+            !ProjectDetailsPage.CanNavigateAway(
+                () => HistoryNavigationButton_OnClick(sender, e)))
+        {
+            return;
+        }
+
+        if (CreateProjectPage.IsVisible)
+        {
+            _showSettingsAfterProjectEditorClose = false;
+            _showHistoryAfterProjectEditorClose = true;
+            CreateProjectPage.RequestClose();
+            return;
+        }
+
+        if (DataContext is MainViewModel viewModel)
+        {
+            viewModel.ClearStatusNotification();
+            await viewModel.LoadHistoryAsync();
+        }
+
+        ShowHistoryPage();
+    }
+
     private void NewProjectButton_OnClick(object? sender, RoutedEventArgs e)
     {
+        if (ProjectDetailsPage.IsVisible &&
+            !ProjectDetailsPage.CanNavigateAway(
+                () => NewProjectButton_OnClick(sender, e)))
+        {
+            return;
+        }
+
         if (DataContext is not MainViewModel viewModel)
         {
             return;
@@ -152,7 +209,7 @@ public partial class MainWindow : Window
         ShowProjectEditorPage();
     }
 
-    private void OpenProjectButton_OnClick(object? sender, RoutedEventArgs e)
+    private async void OpenProjectButton_OnClick(object? sender, RoutedEventArgs e)
     {
         var project = GetProject(sender);
 
@@ -163,6 +220,24 @@ public partial class MainWindow : Window
 
         viewModel.ClearStatusNotification();
         viewModel.SelectedProject = project;
+        await viewModel.LoadProjectDetailsAsync(project);
+        ProjectDetailsPage.ShowOverviewSection();
+        ShowProjectDetailsPage();
+    }
+
+    private async void DeployProjectButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        var project = GetProject(sender);
+
+        if (project is null || DataContext is not MainViewModel viewModel)
+        {
+            return;
+        }
+
+        viewModel.ClearStatusNotification();
+        viewModel.SelectedProject = project;
+        await viewModel.LoadProjectDetailsAsync(project);
+        ProjectDetailsPage.ShowDeploySection();
         ShowProjectDetailsPage();
     }
 
@@ -186,9 +261,31 @@ public partial class MainWindow : Window
         }
     }
 
-    private void CreateProjectPage_OnCloseRequested(object? sender, EventArgs e)
+    private async void CreateProjectPage_OnCloseRequested(object? sender, EventArgs e)
     {
         CreateProjectPage.IsVisible = false;
+
+        if (DataContext is MainViewModel projectViewModel &&
+            projectViewModel.TakeCreatedProjectForNavigation() is { } createdProject)
+        {
+            projectViewModel.SelectedProject = createdProject;
+            await projectViewModel.LoadProjectDetailsAsync(createdProject);
+            ProjectDetailsPage.ShowOverviewSection();
+            ShowProjectDetailsPage();
+            _showHistoryAfterProjectEditorClose = false;
+            _showSettingsAfterProjectEditorClose = false;
+            return;
+        }
+
+        if (_showHistoryAfterProjectEditorClose && DataContext is MainViewModel historyViewModel)
+        {
+            historyViewModel.ClearStatusNotification();
+            await historyViewModel.LoadHistoryAsync();
+            ShowHistoryPage();
+            _showHistoryAfterProjectEditorClose = false;
+            _showSettingsAfterProjectEditorClose = false;
+            return;
+        }
 
         if (_showSettingsAfterProjectEditorClose && DataContext is MainViewModel viewModel)
         {
@@ -197,6 +294,7 @@ public partial class MainWindow : Window
 
         ShowSettingsPage(_showSettingsAfterProjectEditorClose);
         _showSettingsAfterProjectEditorClose = false;
+        _showHistoryAfterProjectEditorClose = false;
     }
 
     private void ProjectDetailsPage_OnBackRequested(object? sender, EventArgs e)
@@ -225,6 +323,11 @@ public partial class MainWindow : Window
         }
     }
 
+    private void ProjectDetailsPage_OnDeployRequested(object? sender, EventArgs e)
+    {
+        ProjectDetailsPage.ShowDeploySection();
+    }
+
     private void BeginProjectEditing(KKProject project)
     {
         if (DataContext is MainViewModel viewModel)
@@ -233,6 +336,7 @@ public partial class MainWindow : Window
         }
 
         _showSettingsAfterProjectEditorClose = false;
+        _showHistoryAfterProjectEditorClose = false;
         CreateProjectPage.BeginEditing(project);
         ShowProjectEditorPage();
     }
@@ -242,8 +346,10 @@ public partial class MainWindow : Window
         ProjectsPage.IsVisible = false;
         SettingsPage.IsVisible = false;
         ProjectDetailsPage.IsVisible = false;
+        HistoryPage.IsVisible = false;
         CreateProjectPage.IsVisible = true;
         SetNavigationState(ProjectsNavigationButton, isActive: true);
+        SetNavigationState(HistoryNavigationButton, isActive: false);
         SetNavigationState(SettingsNavigationButton, isActive: false);
     }
 
@@ -252,8 +358,22 @@ public partial class MainWindow : Window
         ProjectsPage.IsVisible = false;
         SettingsPage.IsVisible = false;
         CreateProjectPage.IsVisible = false;
+        HistoryPage.IsVisible = false;
         ProjectDetailsPage.IsVisible = true;
         SetNavigationState(ProjectsNavigationButton, isActive: true);
+        SetNavigationState(HistoryNavigationButton, isActive: false);
+        SetNavigationState(SettingsNavigationButton, isActive: false);
+    }
+
+    private void ShowHistoryPage()
+    {
+        ProjectsPage.IsVisible = false;
+        SettingsPage.IsVisible = false;
+        CreateProjectPage.IsVisible = false;
+        ProjectDetailsPage.IsVisible = false;
+        HistoryPage.IsVisible = true;
+        SetNavigationState(ProjectsNavigationButton, isActive: false);
+        SetNavigationState(HistoryNavigationButton, isActive: true);
         SetNavigationState(SettingsNavigationButton, isActive: false);
     }
 
@@ -336,7 +456,9 @@ public partial class MainWindow : Window
         SettingsPage.IsVisible = showSettings;
         CreateProjectPage.IsVisible = false;
         ProjectDetailsPage.IsVisible = false;
+        HistoryPage.IsVisible = false;
         SetNavigationState(ProjectsNavigationButton, !showSettings);
+        SetNavigationState(HistoryNavigationButton, false);
         SetNavigationState(SettingsNavigationButton, showSettings);
     }
 

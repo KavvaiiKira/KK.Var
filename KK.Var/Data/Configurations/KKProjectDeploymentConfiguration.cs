@@ -33,5 +33,7 @@ public sealed class KKProjectDeploymentConfiguration
             deployment.KKProjectId,
             deployment.StartedAtUtc,
         });
+
+        builder.HasIndex(deployment => deployment.StartedAtUtc);
     }
 }

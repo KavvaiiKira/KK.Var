@@ -8,6 +8,15 @@ namespace KK.Var.Repositories;
 
 public interface IKKProjectDeploymentRepository
 {
+    Task<IReadOnlyList<KKProjectDeployment>> SearchAsync(
+        string? projectName,
+        string? searchText,
+        DateTime? startedFromUtc,
+        DateTime? startedBeforeUtc,
+        int skip,
+        int take,
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<KKProjectDeployment>> GetByProjectIdAsync(
         Guid projectId,
         CancellationToken cancellationToken = default);

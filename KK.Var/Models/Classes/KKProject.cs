@@ -66,9 +66,12 @@ public sealed class KKProject
 
     public string ProjectEnvironmentFilePath { get; set; } = string.Empty;
 
-    public DateTimeOffset CreatedAtUtc { get; set; } = DateTimeOffset.UtcNow;
+    public EnvironmentFileFormat EnvironmentFileFormat { get; set; } =
+        EnvironmentFileFormat.Json;
 
-    public DateTimeOffset UpdatedAtUtc { get; set; } = DateTimeOffset.UtcNow;
+    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+
+    public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
 
     public ICollection<KKProjectEnvironmentVariable> EnvironmentVariables { get; set; }
         = new List<KKProjectEnvironmentVariable>();

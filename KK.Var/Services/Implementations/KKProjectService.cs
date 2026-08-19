@@ -49,7 +49,7 @@ public sealed class KKProjectService(IKKProjectRepository repository)
         }
 
         project.Id = project.Id == Guid.Empty ? Guid.NewGuid() : project.Id;
-        project.CreatedAtUtc = DateTimeOffset.UtcNow;
+        project.CreatedAtUtc = DateTime.UtcNow;
         project.UpdatedAtUtc = project.CreatedAtUtc;
 
         await repository.AddAsync(project, cancellationToken);
@@ -91,7 +91,7 @@ public sealed class KKProjectService(IKKProjectRepository repository)
         }
 
         project.CreatedAtUtc = existing.CreatedAtUtc;
-        project.UpdatedAtUtc = DateTimeOffset.UtcNow;
+        project.UpdatedAtUtc = DateTime.UtcNow;
         await repository.UpdateAsync(project, cancellationToken);
     }
 
@@ -144,6 +144,14 @@ public sealed class KKProjectService(IKKProjectRepository repository)
         project.ProjectEnvironmentFilePath = ValidateProjectRelativePath(
             project.ProjectEnvironmentFilePath,
             nameof(project.ProjectEnvironmentFilePath));
+
+        if (!Enum.IsDefined(project.EnvironmentFileFormat))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(project.EnvironmentFileFormat),
+                project.EnvironmentFileFormat,
+                "Unsupported environment file format.");
+        }
 
         project.BuildConfigurationJson = string.IsNullOrWhiteSpace(project.BuildConfigurationJson)
             ? "{}"

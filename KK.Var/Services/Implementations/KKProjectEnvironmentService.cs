@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using KK.Var.Enums;
 using KK.Var.Models;
 using KK.Var.Repositories;
 
@@ -25,7 +26,7 @@ public sealed class KKProjectEnvironmentService(
         "^-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?$",
         RegexOptions.CultureInvariant);
 
-    public async Task<IReadOnlyDictionary<string, string>> GetAsync(
+    public async Task<IReadOnlyList<KeyValuePair<string, string>>> GetAsync(
         Guid projectId,
         CancellationToken cancellationToken = default)
     {
@@ -33,15 +34,17 @@ public sealed class KKProjectEnvironmentService(
             projectId,
             cancellationToken);
 
-        return variables.ToDictionary(
-            variable => variable.Name,
-            variable => variable.Value,
-            StringComparer.Ordinal);
+        return variables
+            .Select(variable => new KeyValuePair<string, string>(
+                variable.Name,
+                variable.Value))
+            .ToArray();
     }
 
     public async Task ReplaceAsync(
         Guid projectId,
-        IReadOnlyDictionary<string, string> variables,
+        EnvironmentFileFormat format,
+        IReadOnlyList<KeyValuePair<string, string>> variables,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(variables);
@@ -50,9 +53,11 @@ public sealed class KKProjectEnvironmentService(
             ?? throw new KeyNotFoundException($"Project '{projectId}' was not found.");
 
         var entities = new List<KKProjectEnvironmentVariable>(variables.Count);
+        var names = new HashSet<string>(StringComparer.Ordinal);
 
-        foreach (var pair in variables)
+        for (var index = 0; index < variables.Count; index++)
         {
+            var pair = variables[index];
             var name = pair.Key.Trim();
 
             if (!VariableNamePattern.IsMatch(name))
@@ -62,26 +67,56 @@ public sealed class KKProjectEnvironmentService(
                     nameof(variables));
             }
 
+            if (!names.Add(name))
+            {
+                throw new ArgumentException(
+                    $"Environment variable name '{name}' is duplicated.",
+                    nameof(variables));
+            }
+
             entities.Add(new KKProjectEnvironmentVariable
             {
                 Id = Guid.NewGuid(),
                 KKProjectId = projectId,
                 Name = name,
                 Value = pair.Value ?? string.Empty,
+                SortOrder = index,
             });
         }
 
-        await variableRepository.ReplaceAsync(projectId, entities, cancellationToken);
+        await variableRepository.ReplaceAsync(
+            projectId,
+            format,
+            entities,
+            cancellationToken);
     }
 
-    public async Task<string> GenerateJsonAsync(
+    public async Task<string> GenerateAsync(
         Guid projectId,
         CancellationToken cancellationToken = default)
     {
+        var project = await projectRepository.GetByIdAsync(projectId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Project '{projectId}' was not found.");
         var variables = await variableRepository.GetByProjectIdAsync(
             projectId,
             cancellationToken);
 
+        return project.EnvironmentFileFormat switch
+        {
+            EnvironmentFileFormat.Json => GenerateJson(variables),
+            EnvironmentFileFormat.DotEnv => GenerateDotEnv(variables),
+            EnvironmentFileFormat.Shell => GenerateShell(variables),
+            EnvironmentFileFormat.Yaml => GenerateYaml(variables),
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(project.EnvironmentFileFormat),
+                project.EnvironmentFileFormat,
+                "Unsupported environment file format."),
+        };
+    }
+
+    private static string GenerateJson(
+        IReadOnlyList<KKProjectEnvironmentVariable> variables)
+    {
         using var stream = new MemoryStream();
         using (var writer = new Utf8JsonWriter(stream, new JsonWriterOptions
                {
@@ -90,7 +125,7 @@ public sealed class KKProjectEnvironmentService(
         {
             writer.WriteStartObject();
 
-            foreach (var variable in variables.OrderBy(variable => variable.Name))
+            foreach (var variable in variables)
             {
                 writer.WritePropertyName(variable.Name);
 
@@ -110,7 +145,33 @@ public sealed class KKProjectEnvironmentService(
         return Encoding.UTF8.GetString(stream.ToArray());
     }
 
-    public async Task<string> WriteJsonFileAsync(
+    private static string GenerateDotEnv(
+        IReadOnlyList<KKProjectEnvironmentVariable> variables) =>
+        string.Join(
+            '\n',
+            variables.Select(variable =>
+                    $"{variable.Name}={FormatJsonLikeScalar(variable.Value)}"));
+
+    private static string GenerateShell(
+        IReadOnlyList<KKProjectEnvironmentVariable> variables) =>
+        string.Join(
+            '\n',
+            variables.Select(variable =>
+                    $"export {variable.Name}='{variable.Value.Replace("'", "'\"'\"'")}'"));
+
+    private static string GenerateYaml(
+        IReadOnlyList<KKProjectEnvironmentVariable> variables) =>
+        string.Join(
+            '\n',
+            variables.Select(variable =>
+                    $"{variable.Name}: {FormatJsonLikeScalar(variable.Value)}"));
+
+    private static string FormatJsonLikeScalar(string value) =>
+        JsonNumberPattern.IsMatch(value)
+            ? value
+            : JsonSerializer.Serialize(value);
+
+    public async Task<string> WriteFileAsync(
         Guid projectId,
         string projectRootDirectory,
         CancellationToken cancellationToken = default)
@@ -148,10 +209,10 @@ public sealed class KKProjectEnvironmentService(
 
         Directory.CreateDirectory(targetDirectory);
 
-        var json = await GenerateJsonAsync(projectId, cancellationToken);
+        var content = await GenerateAsync(projectId, cancellationToken);
         await File.WriteAllTextAsync(
             targetPath,
-            json,
+            content,
             new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
             cancellationToken);
 

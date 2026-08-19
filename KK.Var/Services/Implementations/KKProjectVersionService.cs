@@ -82,7 +82,7 @@ public sealed class KKProjectVersionService(
         }
 
         version.Id = version.Id == Guid.Empty ? Guid.NewGuid() : version.Id;
-        version.CreatedAtUtc = DateTimeOffset.UtcNow;
+        version.CreatedAtUtc = DateTime.UtcNow;
 
         await versionRepository.AddAsync(version, cancellationToken);
         return version;

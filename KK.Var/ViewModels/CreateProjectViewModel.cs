@@ -204,6 +204,8 @@ public partial class CreateProjectViewModel : ViewModelBase
             RemoteExecutableFileName = RemoteExecutableFileName,
             RemoteDeploymentDirectory = RemoteDeploymentDirectory,
             ProjectEnvironmentFilePath = ProjectEnvironmentFilePath,
+            EnvironmentFileFormat = _editingProject?.EnvironmentFileFormat ??
+                                    EnvironmentFileFormat.Json,
             EnvironmentVariables = _editingProject?.EnvironmentVariables ?? [],
             Versions = _editingProject?.Versions ?? [],
             Deployments = _editingProject?.Deployments ?? [],

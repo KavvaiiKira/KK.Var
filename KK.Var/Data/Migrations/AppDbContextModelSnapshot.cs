@@ -30,12 +30,15 @@ namespace KK.Var.Data.Migrations
                     b.Property<int>("BuildProvider")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                    b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
                         .HasMaxLength(2000)
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("EnvironmentFileFormat")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("GitHubCloneUrl")
                         .HasMaxLength(2048)
@@ -82,7 +85,7 @@ namespace KK.Var.Data.Migrations
                     b.Property<int>("SourceType")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                    b.Property<DateTime>("UpdatedAtUtc")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -105,7 +108,7 @@ namespace KK.Var.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTimeOffset?>("CompletedAtUtc")
+                    b.Property<DateTime?>("CompletedAtUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ErrorMessage")
@@ -125,7 +128,7 @@ namespace KK.Var.Data.Migrations
                     b.Property<int>("OperationType")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTimeOffset>("StartedAtUtc")
+                    b.Property<DateTime>("StartedAtUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Status")
@@ -138,6 +141,8 @@ namespace KK.Var.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("KKProjectVersionId");
+
+                    b.HasIndex("StartedAtUtc");
 
                     b.HasIndex("KKProjectId", "StartedAtUtc");
 
@@ -158,6 +163,9 @@ namespace KK.Var.Data.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -165,6 +173,9 @@ namespace KK.Var.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("KKProjectId", "Name")
+                        .IsUnique();
+
+                    b.HasIndex("KKProjectId", "SortOrder")
                         .IsUnique();
 
                     b.ToTable("KKProjectEnvironmentVariables", (string)null);
@@ -189,7 +200,7 @@ namespace KK.Var.Data.Migrations
                     b.Property<long>("ArtifactSize")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                    b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Description")

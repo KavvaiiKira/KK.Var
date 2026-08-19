@@ -20,6 +20,9 @@ public sealed class KKProjectEnvironmentVariableConfiguration
         builder.Property(variable => variable.Value)
             .IsRequired();
 
+        builder.HasIndex(variable => new { variable.KKProjectId, variable.SortOrder })
+            .IsUnique();
+
         builder.HasIndex(variable => new { variable.KKProjectId, variable.Name })
             .IsUnique();
     }

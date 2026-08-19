@@ -15,6 +15,23 @@ public sealed class KKProjectDeploymentService(
     IKKProjectDeploymentRepository deploymentRepository)
     : IKKProjectDeploymentService
 {
+    public Task<IReadOnlyList<KKProjectDeployment>> SearchAsync(
+        string? projectName,
+        string? searchText,
+        DateTime? startedFromUtc,
+        DateTime? startedBeforeUtc,
+        int skip,
+        int take,
+        CancellationToken cancellationToken = default) =>
+        deploymentRepository.SearchAsync(
+            projectName,
+            searchText,
+            startedFromUtc,
+            startedBeforeUtc,
+            skip,
+            take,
+            cancellationToken);
+
     public Task<IReadOnlyList<KKProjectDeployment>> GetByProjectIdAsync(
         Guid projectId,
         CancellationToken cancellationToken = default) =>
@@ -48,7 +65,7 @@ public sealed class KKProjectDeploymentService(
             OperationType = operationType,
             Status = DeploymentStatus.Running,
             VariablesSnapshotJson = variablesSnapshotJson.Trim(),
-            StartedAtUtc = DateTimeOffset.UtcNow,
+            StartedAtUtc = DateTime.UtcNow,
         };
 
         await deploymentRepository.AddAsync(deployment, cancellationToken);
@@ -83,7 +100,7 @@ public sealed class KKProjectDeploymentService(
         }
 
         deployment.Status = status;
-        deployment.CompletedAtUtc = DateTimeOffset.UtcNow;
+        deployment.CompletedAtUtc = DateTime.UtcNow;
         deployment.LogPath = string.IsNullOrWhiteSpace(logPath) ? null : logPath.Trim();
         deployment.ErrorMessage = string.IsNullOrWhiteSpace(errorMessage)
             ? null

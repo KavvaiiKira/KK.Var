@@ -71,6 +71,9 @@ public sealed class KKProjectConfiguration : IEntityTypeConfiguration<KKProject>
             .IsRequired()
             .HasMaxLength(1024);
 
+        builder.Property(project => project.EnvironmentFileFormat)
+            .HasConversion<int>();
+
         builder.HasMany(project => project.EnvironmentVariables)
             .WithOne(variable => variable.Project)
             .HasForeignKey(variable => variable.KKProjectId)

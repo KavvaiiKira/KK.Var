@@ -1,0 +1,126 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:KK.Var.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignWidth="1100"
+             d:DesignHeight="800"
+             x:Class="KK.Var.Views.Pages.HistoryView"
+             x:DataType="vm:MainViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="TextBox.history-input">
+            <Setter Property="Height" Value="42" />
+            <Setter Property="Padding" Value="13,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Background" Value="{DynamicResource AppSurfaceRaisedBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+        <Style Selector="TextBox.history-input:focus">
+            <Setter Property="BorderBrush" Value="{DynamicResource AppPrimaryBrush}" />
+        </Style>
+        <Style Selector="ComboBox.history-input">
+            <Setter Property="Height" Value="42" />
+            <Setter Property="Padding" Value="13,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Background" Value="{DynamicResource AppSurfaceRaisedBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto,*">
+        <Grid Margin="30,26,30,18"
+              ColumnDefinitions="*,Auto,280"
+              ColumnSpacing="12">
+            <StackPanel Spacing="5">
+                <TextBlock Text="История"
+                           FontSize="30"
+                           FontWeight="Bold" />
+                <TextBlock Text="Deploy и rollback всех проектов в порядке выполнения"
+                           FontSize="13"
+                           Foreground="{DynamicResource AppTextMutedBrush}" />
+            </StackPanel>
+
+            <ComboBox Grid.Column="1"
+                      Classes="history-input"
+                      MinWidth="190"
+                      VerticalAlignment="Center"
+                      ItemsSource="{Binding HistoryProjectFilters}"
+                      SelectedItem="{Binding SelectedHistoryProject}" />
+
+            <TextBox Grid.Column="2"
+                     Classes="history-input"
+                     VerticalAlignment="Center"
+                     PlaceholderText="Проект, версия или ДД/ММ/ГГГГ"
+                     Text="{Binding HistorySearchText, UpdateSourceTrigger=PropertyChanged}" />
+        </Grid>
+
+        <ScrollViewer Grid.Row="1"
+                      Margin="30,0,30,24"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+            <Grid RowDefinitions="*,Auto">
+                <TextBlock IsVisible="{Binding HasNoHistoryItems}"
+                           Margin="0,70,0,0"
+                           HorizontalAlignment="Center"
+                           Text="История пока пуста"
+                           FontSize="16"
+                           Foreground="{DynamicResource AppTextMutedBrush}" />
+
+                <ItemsControl Grid.Row="0" ItemsSource="{Binding HistoryItems}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:DeploymentHistoryItemViewModel">
+                            <Border Margin="0,0,0,10"
+                                    Padding="18,15"
+                                    Background="{DynamicResource AppSurfaceBrush}"
+                                    BorderBrush="{DynamicResource AppBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="10">
+                                <Grid ColumnDefinitions="150,*,170,150,120" ColumnSpacing="16">
+                                    <StackPanel Spacing="3">
+                                        <TextBlock Text="Дата" FontSize="10" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                        <TextBlock Text="{Binding DateDisplay}" FontWeight="SemiBold" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Spacing="3">
+                                        <TextBlock Text="Проект" FontSize="10" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                        <TextBlock Text="{Binding ProjectName}" FontWeight="SemiBold" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Spacing="3">
+                                        <TextBlock Text="Версия" FontSize="10" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                        <TextBlock Text="{Binding VersionTag}" Foreground="{DynamicResource AppPrimaryHoverBrush}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="3" Spacing="3">
+                                        <TextBlock Text="Действие" FontSize="10" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                        <TextBlock Text="{Binding OperationDisplay}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="4" Spacing="3">
+                                        <TextBlock Text="Статус" FontSize="10" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                        <TextBlock Text="{Binding StatusDisplay}" FontWeight="SemiBold" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Button Grid.Row="1"
+                        Margin="0,10,0,0"
+                        Padding="18,9"
+                        HorizontalAlignment="Center"
+                        IsVisible="{Binding HasMoreHistoryItems}"
+                        Background="{DynamicResource AppSurfaceRaisedBrush}"
+                        BorderBrush="{DynamicResource AppBorderBrush}"
+                        BorderThickness="1"
+                        Content="Показать ещё"
+                        Click="LoadMoreButton_OnClick" />
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

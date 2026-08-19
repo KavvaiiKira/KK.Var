@@ -17,9 +17,9 @@ public sealed class KKProjectDeployment
 
     public string VariablesSnapshotJson { get; set; } = "{}";
 
-    public DateTimeOffset StartedAtUtc { get; set; } = DateTimeOffset.UtcNow;
+    public DateTime StartedAtUtc { get; set; } = DateTime.UtcNow;
 
-    public DateTimeOffset? CompletedAtUtc { get; set; }
+    public DateTime? CompletedAtUtc { get; set; }
 
     public string? LogPath { get; set; }
 
