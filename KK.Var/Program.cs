@@ -55,14 +55,26 @@ sealed class Program
                 ?? "kk-var.db",
         };
 
+        var gitHubOptions = new GitHubOptions
+        {
+            ClientId = builder.Configuration[$"{GitHubOptions.SectionName}:ClientId"]
+                ?? string.Empty,
+            Scope = builder.Configuration[$"{GitHubOptions.SectionName}:Scope"]
+                ?? "repo read:user",
+        };
+
         DatabasePaths.EnsureUserDataDirectory();
 
         builder.Services.AddSingleton(databaseOptions);
+        builder.Services.AddSingleton(gitHubOptions);
         builder.Services.AddDbContextFactory<AppDbContext>(options =>
             options.UseSqlite(
                 $"Data Source={DatabasePaths.GetDatabaseFilePath(databaseOptions.FileName)}"));
 
         builder.Services.AddSingleton<IUserSettingsService, UserSettingsService>();
+        builder.Services.AddSingleton<IRemoteConnectionService, RemoteConnectionService>();
+        builder.Services.AddSingleton<IGitHubTokenStore, GitHubTokenStore>();
+        builder.Services.AddSingleton<IGitHubService, GitHubService>();
         builder.Services.AddSingleton<IKKProjectRepository, KKProjectRepository>();
         builder.Services.AddSingleton<
             IKKProjectEnvironmentVariableRepository,
@@ -98,7 +110,6 @@ sealed class Program
         dbContext.Database.Migrate();
     }
 
-    // Avalonia configuration, also used by the visual designer.
     public static AppBuilder BuildAvaloniaApp()
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()

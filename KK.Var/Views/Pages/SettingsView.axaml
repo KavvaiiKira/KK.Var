@@ -1,0 +1,347 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:KK.Var.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignWidth="1100"
+             d:DesignHeight="800"
+             x:Class="KK.Var.Views.Pages.SettingsView"
+             x:DataType="vm:MainViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="TextBox.settings-field">
+            <Setter Property="MinHeight" Value="42" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Background" Value="{DynamicResource AppSurfaceRaisedBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+        <Style Selector="ComboBox.settings-field">
+            <Setter Property="MinHeight" Value="42" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Background" Value="{DynamicResource AppSurfaceRaisedBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+        <Style Selector="Button.settings-primary">
+            <Setter Property="Padding" Value="18,10" />
+            <Setter Property="Background" Value="{DynamicResource AppPrimaryBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+        <Style Selector="Button.settings-secondary">
+            <Setter Property="Padding" Value="16,9" />
+            <Setter Property="Background" Value="{DynamicResource AppSurfaceRaisedBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto,*">
+        <Grid Grid.Row="0"
+              Margin="30,26,30,18"
+              ColumnDefinitions="*,Auto">
+            <StackPanel Spacing="5">
+                <TextBlock Text="Настройки"
+                           FontSize="30"
+                           FontWeight="Bold"
+                           Foreground="{DynamicResource AppTextBrush}" />
+                <TextBlock Text="GitHub и подключение к удалённой Linux-машине"
+                           FontSize="13"
+                           Foreground="{DynamicResource AppTextMutedBrush}" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="1"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal"
+                        Spacing="12">
+                <TextBlock Text="{Binding SettingsError}"
+                           MaxWidth="360"
+                           VerticalAlignment="Center"
+                           TextAlignment="Right"
+                           TextWrapping="Wrap"
+                           FontSize="12"
+                           Foreground="{DynamicResource AppDangerBrush}" />
+                <TextBlock Text="{Binding SettingsStatus}"
+                           MaxWidth="220"
+                           VerticalAlignment="Center"
+                           TextAlignment="Right"
+                           TextWrapping="Wrap"
+                           FontSize="12"
+                           Foreground="{DynamicResource AppSuccessBrush}" />
+                <Button Classes="settings-primary"
+                        Content="Сохранить"
+                        Command="{Binding SaveSettingsCommand}" />
+            </StackPanel>
+        </Grid>
+
+        <ScrollViewer Grid.Row="1"
+                      Margin="30,0,20,24"
+                      HorizontalContentAlignment="Stretch"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+            <StackPanel MaxWidth="1050"
+                        HorizontalAlignment="Stretch"
+                        Spacing="18">
+                <Border Padding="24"
+                        Background="{DynamicResource AppSurfaceBrush}"
+                        BorderBrush="{DynamicResource AppBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="14">
+                    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Spacing="5">
+                                <TextBlock Text="GitHub"
+                                           FontSize="19"
+                                           FontWeight="Bold" />
+                                <TextBlock Text="Доступ к списку ваших репозиториев через GitHub Device Flow"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource AppTextMutedBrush}" />
+                            </StackPanel>
+
+                            <Border Grid.Column="1"
+                                    IsVisible="{Binding !IsGitHubConnected}"
+                                    Padding="10,5"
+                                    Background="{DynamicResource AppSurfaceHoverBrush}"
+                                    CornerRadius="12"
+                                    VerticalAlignment="Top">
+                                <TextBlock Text="Не подключён"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource AppTextMutedBrush}" />
+                            </Border>
+
+                            <Border Grid.Column="1"
+                                    IsVisible="{Binding IsGitHubConnected}"
+                                    Padding="10,5"
+                                    Background="#223F2E"
+                                    CornerRadius="12"
+                                    VerticalAlignment="Top">
+                                <TextBlock Text="Подключён"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource AppSuccessBrush}" />
+                            </Border>
+                        </Grid>
+
+                        <Border Grid.Row="1"
+                                Height="1"
+                                Margin="0,20"
+                                Background="{DynamicResource AppBorderBrush}" />
+
+                        <Grid Grid.Row="2" ColumnDefinitions="*,Auto">
+                            <StackPanel Spacing="4"
+                                        VerticalAlignment="Center">
+                                <TextBlock Text="Аккаунт"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource AppTextMutedBrush}" />
+                                <TextBlock Text="{Binding GitHubAccountDisplay}"
+                                           FontSize="14"
+                                           FontWeight="SemiBold" />
+                            </StackPanel>
+
+                            <Button Grid.Column="1"
+                                    IsVisible="{Binding !IsGitHubConnected}"
+                                    Classes="settings-secondary"
+                                    Content="Подключить GitHub"
+                                    Command="{Binding ConnectGitHubCommand}" />
+
+                            <StackPanel Grid.Column="1"
+                                        IsVisible="{Binding IsGitHubConnected}"
+                                        Orientation="Horizontal"
+                                        VerticalAlignment="Center"
+                                        Spacing="8">
+                                <Button Classes="settings-secondary"
+                                        Content="Отключить"
+                                        Command="{Binding DisconnectGitHubCommand}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Border Grid.Row="3"
+                                IsVisible="{Binding IsGitHubAuthorizationPending}"
+                                Margin="0,18,0,0"
+                                Padding="16"
+                                Background="{DynamicResource AppSurfaceRaisedBrush}"
+                                BorderBrush="{DynamicResource AppBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="Подтвердите вход в GitHub"
+                                               FontSize="13"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding GitHubConnectionStatus}"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource AppTextMutedBrush}" />
+                                    <TextBlock Text="{Binding GitHubUserCode}"
+                                               Margin="0,5,0,0"
+                                               FontFamily="Consolas"
+                                               FontSize="24"
+                                               FontWeight="Bold"
+                                               Foreground="{DynamicResource AppPrimaryHoverBrush}" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1"
+                                            VerticalAlignment="Center"
+                                            Orientation="Horizontal"
+                                            Spacing="8">
+                                    <Button Classes="settings-secondary"
+                                            Content="Копировать код"
+                                            Click="CopyGitHubCodeButton_OnClick" />
+                                    <Button Classes="settings-secondary"
+                                            Content="Открыть GitHub"
+                                            Command="{Binding OpenGitHubVerificationPageCommand}" />
+                                    <Button Classes="settings-secondary"
+                                            Content="Отмена"
+                                            Command="{Binding CancelGitHubAuthorizationCommand}" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <TextBlock Grid.Row="4"
+                                   IsVisible="{Binding !IsGitHubAuthorizationPending}"
+                                   Margin="0,12,0,0"
+                                   Text="{Binding GitHubConnectionStatus}"
+                                   TextWrapping="Wrap"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource AppTextMutedBrush}" />
+                    </Grid>
+                </Border>
+
+                <Border Padding="24"
+                        Background="{DynamicResource AppSurfaceBrush}"
+                        BorderBrush="{DynamicResource AppBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="14">
+                    <StackPanel Spacing="20">
+                        <StackPanel Spacing="5">
+                            <TextBlock Text="Удалённая Linux-машина"
+                                       FontSize="19"
+                                       FontWeight="Bold" />
+                            <TextBlock Text="Одна машина для доставки проектов и управления systemd-сервисами"
+                                       FontSize="12"
+                                           Foreground="{DynamicResource AppTextMutedBrush}" />
+                        </StackPanel>
+
+                        <Border IsVisible="{Binding IsFirstRunSetupRequired}"
+                                Padding="14"
+                                Background="#2A172A"
+                                BorderBrush="{DynamicResource AppDangerBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Завершите обязательную настройку"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource AppDangerBrush}" />
+                                <TextBlock Text="Заполните отмеченные поля подключения к удалённой машине и сохраните настройки."
+                                           FontSize="11"
+                                           Foreground="{DynamicResource AppTextMutedBrush}" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Height="1" Background="{DynamicResource AppBorderBrush}" />
+
+                        <Grid ColumnDefinitions="*,24,*" RowDefinitions="Auto,18,Auto,18,Auto">
+                            <StackPanel Grid.Row="0" Grid.Column="0" Spacing="7">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Адрес или IP" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                    <TextBlock Text=" *" IsVisible="{Binding IsFirstRunSetupRequired}" FontSize="12" Foreground="{DynamicResource AppDangerBrush}" />
+                                </StackPanel>
+                                <TextBox Classes="settings-field"
+                                         PlaceholderText="server.example.com"
+                                         Text="{Binding Settings.RemoteMachine.Host, Mode=TwoWay}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="0" Grid.Column="2" Spacing="7">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="SSH-порт" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                    <TextBlock Text=" *" IsVisible="{Binding IsFirstRunSetupRequired}" FontSize="12" Foreground="{DynamicResource AppDangerBrush}" />
+                                </StackPanel>
+                                <TextBox Classes="settings-field"
+                                         PlaceholderText="22"
+                                         Text="{Binding Settings.RemoteMachine.Port, Mode=TwoWay}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="2" Grid.Column="0" Spacing="7">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Пользователь" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                    <TextBlock Text=" *" IsVisible="{Binding IsFirstRunSetupRequired}" FontSize="12" Foreground="{DynamicResource AppDangerBrush}" />
+                                </StackPanel>
+                                <TextBox Classes="settings-field"
+                                         PlaceholderText="deploy"
+                                         Text="{Binding Settings.RemoteMachine.UserName, Mode=TwoWay}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="2" Grid.Column="2" Spacing="7">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Способ входа" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                    <TextBlock Text=" *" IsVisible="{Binding IsFirstRunSetupRequired}" FontSize="12" Foreground="{DynamicResource AppDangerBrush}" />
+                                </StackPanel>
+                                <ComboBox Classes="settings-field"
+                                          ItemsSource="{Binding AuthenticationMethods}"
+                                          SelectedItem="{Binding AuthenticationMethod, Mode=TwoWay}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="4" Grid.Column="0" Spacing="7">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Путь к приватному SSH-ключу" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                    <TextBlock Text=" *" IsVisible="{Binding IsFirstRunSetupRequired}" FontSize="12" Foreground="{DynamicResource AppDangerBrush}" />
+                                </StackPanel>
+                                <TextBox Classes="settings-field"
+                                         PlaceholderText="C:\Users\user\.ssh\id_ed25519"
+                                         IsEnabled="{Binding IsPrivateKeyAuthentication}"
+                                         Text="{Binding Settings.RemoteMachine.PrivateKeyPath, Mode=TwoWay}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="4" Grid.Column="2" Spacing="7">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Пароль" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                    <TextBlock Text=" *" IsVisible="{Binding IsFirstRunSetupRequired}" FontSize="12" Foreground="{DynamicResource AppDangerBrush}" />
+                                </StackPanel>
+                                <TextBox Classes="settings-field"
+                                         PasswordChar="●"
+                                         IsEnabled="{Binding IsPasswordAuthentication}"
+                                         Text="{Binding Settings.RemoteMachine.Password, Mode=TwoWay}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Border Padding="14"
+                                Background="{DynamicResource AppSurfaceRaisedBrush}"
+                                CornerRadius="10">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <StackPanel Grid.Column="0"
+                                            Margin="0,0,20,0"
+                                            VerticalAlignment="Center"
+                                            Spacing="5">
+                                    <TextBlock Text="Архитектура удалённой машины"
+                                               FontSize="12"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding RemoteMachineArchitecture}"
+                                               TextWrapping="Wrap"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource AppTextMutedBrush}" />
+                                </StackPanel>
+
+                                <Button Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        Classes="settings-secondary"
+                                        Content="Проверить подключение"
+                                        IsEnabled="{Binding !IsConnectionCheckRunning}"
+                                        Command="{Binding CheckRemoteConnectionCommand}" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+
+</UserControl>

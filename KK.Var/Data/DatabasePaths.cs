@@ -14,6 +14,9 @@ public static class DatabasePaths
     public static string UserSettingsFilePath =>
         Path.Combine(UserDataDirectory, "settings.json");
 
+    public static string GitHubTokenFilePath =>
+        Path.Combine(UserDataDirectory, "github-token.dat");
+
     public static string GetDatabaseFilePath(string fileName)
     {
         if (string.IsNullOrWhiteSpace(fileName) || Path.GetFileName(fileName) != fileName)

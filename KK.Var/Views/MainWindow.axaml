@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:KK.Var.ViewModels"
         xmlns:controls="using:KK.Var.Views.Controls"
+        xmlns:pages="using:KK.Var.Views.Pages"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
@@ -9,7 +10,7 @@
         d:DesignHeight="900"
         x:Class="KK.Var.Views.MainWindow"
         x:DataType="vm:MainViewModel"
-        Icon="/Assets/avalonia-logo.ico"
+        Icon="/Assets/Brand/kk-var-github-oauth.png"
         Width="1920"
         Height="1080"
         MinWidth="1040"
@@ -105,7 +106,8 @@
             BorderBrush="{DynamicResource AppBorderBrush}"
             BorderThickness="1"
             CornerRadius="14">
-        <Grid RowDefinitions="46,*,38">
+        <Grid>
+            <Grid RowDefinitions="46,*,38">
             <Border x:Name="TitleBar"
                     Grid.Row="0"
                     Background="{DynamicResource AppSurfaceBrush}"
@@ -167,7 +169,9 @@
                         <StackPanel Grid.Row="1" Spacing="8">
                             <Grid ColumnDefinitions="*,Auto">
                                 <Button Grid.ColumnSpan="2"
-                                        Classes="nav active">
+                                        x:Name="ProjectsNavigationButton"
+                                        Classes="nav active"
+                                        Click="ProjectsNavigationButton_OnClick">
                                     <StackPanel Orientation="Horizontal" Spacing="11">
                                         <PathIcon Width="15"
                                                   Height="15"
@@ -189,7 +193,9 @@
                                               Data="{StaticResource AddIconData}" />
                                 </Button>
                             </Grid>
-                            <Button Classes="nav">
+                            <Button x:Name="SettingsNavigationButton"
+                                    Classes="nav"
+                                    Click="SettingsNavigationButton_OnClick">
                                 <StackPanel Orientation="Horizontal" Spacing="11">
                                     <PathIcon Width="15"
                                               Height="15"
@@ -202,8 +208,11 @@
                     </Grid>
                 </Border>
 
-                <Grid Grid.Column="1" RowDefinitions="Auto,*">
-                    <Grid Grid.Row="0"
+                <Grid x:Name="ProjectsPage"
+                      Grid.Column="1"
+                      RowDefinitions="Auto,*">
+                    <Grid x:Name="ProjectsHeader"
+                          Grid.Row="0"
                           Margin="30,26,30,18"
                           ColumnDefinitions="*,Auto">
                         <StackPanel Spacing="5">
@@ -221,7 +230,8 @@
                                 VerticalAlignment="Center" />
                     </Grid>
 
-                    <ScrollViewer Grid.Row="1"
+                    <ScrollViewer x:Name="ProjectsList"
+                                  Grid.Row="1"
                                   Margin="30,0,20,24"
                                   HorizontalScrollBarVisibility="Disabled"
                                   VerticalScrollBarVisibility="Auto">
@@ -240,7 +250,7 @@
                                             <TextBlock Text="KK.Var"
                                                        FontSize="20"
                                                        FontWeight="Bold" />
-                                            <TextBlock Text="GitHub · C# / Avalonia"
+                                            <TextBlock Text="GitHub · C#"
                                                        FontSize="12"
                                                        Foreground="{DynamicResource AppTextMutedBrush}" />
                                         </StackPanel>
@@ -436,7 +446,45 @@
                             </Button>
                         </WrapPanel>
                     </ScrollViewer>
+
+                    <Border x:Name="ProjectsAccessBackdrop"
+                            Grid.RowSpan="2"
+                            IsVisible="False"
+                            Background="#D9080510">
+                        <Border MaxWidth="480"
+                                Padding="34,30"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Background="{DynamicResource AppSurfaceBrush}"
+                                BorderBrush="{DynamicResource AppBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="16">
+                            <StackPanel Spacing="13">
+                                <TextBlock Text="Сначала настройте SSH-доступ"
+                                           HorizontalAlignment="Center"
+                                           TextAlignment="Center"
+                                           FontSize="22"
+                                           FontWeight="Bold" />
+                                <TextBlock Text="Для создания и развёртывания проектов KK.Var должен знать, к какой Linux-машине подключаться."
+                                           MaxWidth="400"
+                                           TextAlignment="Center"
+                                           TextWrapping="Wrap"
+                                           FontSize="13"
+                                           LineHeight="20"
+                                           Foreground="{DynamicResource AppTextMutedBrush}" />
+                                <Button Classes="primary"
+                                        Margin="0,8,0,0"
+                                        HorizontalAlignment="Center"
+                                        Content="Открыть настройки"
+                                        Click="OpenRequiredSettingsButton_OnClick" />
+                            </StackPanel>
+                        </Border>
+                    </Border>
                 </Grid>
+
+                <pages:SettingsView x:Name="SettingsPage"
+                                    Grid.Column="1"
+                                    IsVisible="False" />
             </Grid>
 
             <Border x:Name="StatusBar"
@@ -446,23 +494,19 @@
                     BorderBrush="{DynamicResource AppBorderBrush}"
                     BorderThickness="0,1,0,0"
                     CornerRadius="0,0,14,14">
-                <Grid ColumnDefinitions="Auto,220,*,Auto" ColumnSpacing="12">
-                    <TextBlock Text="Готово"
-                               VerticalAlignment="Center"
-                               FontSize="11"
-                               Foreground="{DynamicResource AppTextMutedBrush}" />
-                    <ProgressBar Grid.Column="1"
+                <Grid ColumnDefinitions="220,*,Auto" ColumnSpacing="12">
+                    <ProgressBar Grid.Column="0"
                                  Height="4"
                                  Minimum="0"
                                  Maximum="100"
                                  Value="0"
                                  VerticalAlignment="Center" />
-                    <TextBlock Grid.Column="2"
+                    <TextBlock Grid.Column="1"
                                Text="Нет активных операций"
                                VerticalAlignment="Center"
                                FontSize="11"
                                Foreground="{DynamicResource AppTextMutedBrush}" />
-                    <Button Grid.Column="3"
+                    <Button Grid.Column="2"
                             Width="28"
                             Height="28"
                             Padding="0"
@@ -476,6 +520,12 @@
                     </Button>
                 </Grid>
             </Border>
+            </Grid>
+
+            <Border x:Name="ModalBackdrop"
+                    IsVisible="False"
+                    Background="#A6000000"
+                    CornerRadius="14" />
         </Grid>
     </Border>
 

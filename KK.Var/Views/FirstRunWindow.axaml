@@ -1,0 +1,235 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:KK.Var.Views.Controls"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        d:DesignWidth="760"
+        d:DesignHeight="520"
+        x:Class="KK.Var.Views.FirstRunWindow"
+        Width="760"
+        Height="520"
+        WindowStartupLocation="CenterOwner"
+        WindowDecorations="None"
+        TransparencyLevelHint="Transparent"
+        CanResize="False"
+        ShowInTaskbar="False"
+        Background="Transparent"
+        Title="Первый запуск KK.Var">
+
+    <Window.Resources>
+        <StreamGeometry x:Key="CloseIconData">M6.4,5L12,10.6L17.6,5L19,6.4L13.4,12L19,17.6L17.6,19L12,13.4L6.4,19L5,17.6L10.6,12L5,6.4L6.4,5Z</StreamGeometry>
+    </Window.Resources>
+
+    <Window.Styles>
+        <Style Selector="Button.wizard-primary">
+            <Setter Property="MinWidth" Value="126" />
+            <Setter Property="Padding" Value="18,10" />
+            <Setter Property="Background" Value="{DynamicResource AppPrimaryBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.wizard-secondary">
+            <Setter Property="MinWidth" Value="96" />
+            <Setter Property="Padding" Value="16,9" />
+            <Setter Property="Background" Value="{DynamicResource AppSurfaceRaisedBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+    </Window.Styles>
+
+    <Border Background="{DynamicResource AppBackgroundBrush}"
+            BorderBrush="{DynamicResource AppBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="16">
+        <Grid RowDefinitions="48,*,78">
+            <Border Grid.Row="0"
+                    Background="{DynamicResource AppSurfaceBrush}"
+                    CornerRadius="16,16,0,0">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <StackPanel Margin="16,0,0,0"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal"
+                                Spacing="10">
+                        <controls:BrandMark Width="28" Height="28" />
+                        <TextBlock Text="Первый запуск"
+                                   VerticalAlignment="Center"
+                                   FontFamily="{DynamicResource BrandFontFamily}"
+                                   FontSize="13"
+                                   FontWeight="Bold"
+                                   Foreground="{DynamicResource AppTextMutedBrush}" />
+                    </StackPanel>
+
+                    <Border Grid.Column="1"
+                            Background="Transparent"
+                            PointerPressed="TitleBar_OnPointerPressed" />
+
+                    <Button Grid.Column="2"
+                            Width="34"
+                            Height="34"
+                            Margin="0,0,8,0"
+                            Padding="0"
+                            Background="Transparent"
+                            Click="CloseButton_OnClick"
+                            ToolTip.Tip="Закрыть">
+                        <PathIcon Width="16"
+                                  Height="16"
+                                  Foreground="{DynamicResource AppTextMutedBrush}"
+                                  Data="{StaticResource CloseIconData}" />
+                    </Button>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="1" Margin="48,26">
+                <Grid x:Name="WelcomeSlide">
+                    <StackPanel HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Spacing="18">
+                        <controls:BrandLogo />
+                        <TextBlock Text="Простой локальный CI/CD"
+                                   HorizontalAlignment="Center"
+                                   FontSize="27"
+                                   FontWeight="Bold" />
+                        <TextBlock MaxWidth="530"
+                                   Text="KK.Var собирает проекты с GitHub или из локальной папки, хранит ваши версии локально и доставляет их на Linux-машину."
+                                   TextAlignment="Center"
+                                   TextWrapping="Wrap"
+                                   FontSize="14"
+                                   LineHeight="22"
+                                   Foreground="{DynamicResource AppTextMutedBrush}" />
+                    </StackPanel>
+                </Grid>
+
+                <Grid x:Name="WorkflowSlide" IsVisible="False">
+                    <StackPanel VerticalAlignment="Center" Spacing="24">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Как проходит deploy"
+                                       HorizontalAlignment="Center"
+                                       FontSize="26"
+                                       FontWeight="Bold" />
+                            <TextBlock Text="Три понятных этапа без удалённого хранилища релизов"
+                                       HorizontalAlignment="Center"
+                                       FontSize="13"
+                                       Foreground="{DynamicResource AppTextMutedBrush}" />
+                        </StackPanel>
+
+                        <Grid ColumnDefinitions="*,28,*,28,*">
+                            <Border Grid.Column="0"
+                                    Padding="18"
+                                    Background="{DynamicResource AppSurfaceRaisedBrush}"
+                                    BorderBrush="{DynamicResource AppBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="12">
+                                <StackPanel Spacing="7">
+                                    <TextBlock Text="01" Foreground="{DynamicResource AppPrimaryHoverBrush}" FontWeight="Bold" />
+                                    <TextBlock Text="Источник" FontSize="16" FontWeight="SemiBold" />
+                                    <TextBlock Text="GitHub или папка" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                </StackPanel>
+                            </Border>
+                            <TextBlock Grid.Column="1" Text="›" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24" Foreground="{DynamicResource AppTextMutedBrush}" />
+                            <Border Grid.Column="2"
+                                    Padding="18"
+                                    Background="{DynamicResource AppSurfaceRaisedBrush}"
+                                    BorderBrush="{DynamicResource AppBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="12">
+                                <StackPanel Spacing="7">
+                                    <TextBlock Text="02" Foreground="{DynamicResource AppPrimaryHoverBrush}" FontWeight="Bold" />
+                                    <TextBlock Text="Сборка" FontSize="16" FontWeight="SemiBold" />
+                                    <TextBlock Text="C#, Python, Go, C++" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                </StackPanel>
+                            </Border>
+                            <TextBlock Grid.Column="3" Text="›" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24" Foreground="{DynamicResource AppTextMutedBrush}" />
+                            <Border Grid.Column="4"
+                                    Padding="18"
+                                    Background="{DynamicResource AppSurfaceRaisedBrush}"
+                                    BorderBrush="{DynamicResource AppBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="12">
+                                <StackPanel Spacing="7">
+                                    <TextBlock Text="03" Foreground="{DynamicResource AppPrimaryHoverBrush}" FontWeight="Bold" />
+                                    <TextBlock Text="Linux" FontSize="16" FontWeight="SemiBold" />
+                                    <TextBlock Text="SSH и systemd" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </Grid>
+
+                <Grid x:Name="SetupSlide" IsVisible="False">
+                    <Grid ColumnDefinitions="220,*" ColumnSpacing="34">
+                        <Border Width="200"
+                                Height="200"
+                                VerticalAlignment="Center"
+                                Background="{DynamicResource AppSurfaceRaisedBrush}"
+                                BorderBrush="{DynamicResource AppBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="100">
+                            <controls:BrandMark Width="112" Height="112" />
+                        </Border>
+
+                        <StackPanel Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    Spacing="15">
+                            <TextBlock Text="Осталось настроить доступ"
+                                       FontSize="25"
+                                       FontWeight="Bold" />
+                            <TextBlock Text="После этого шага откроется страница настроек. Для начала работы обязательно укажите:"
+                                       TextWrapping="Wrap"
+                                       FontSize="13"
+                                       LineHeight="20"
+                                       Foreground="{DynamicResource AppTextMutedBrush}" />
+                            <StackPanel Spacing="9">
+                                <TextBlock Text="• адрес и SSH-порт Linux-машины" FontSize="13" />
+                                <TextBlock Text="• пользователя SSH" FontSize="13" />
+                                <TextBlock Text="• приватный ключ или пароль" FontSize="13" />
+                            </StackPanel>
+                            <TextBlock Text="GitHub можно подключить сейчас или позже."
+                                       FontSize="12"
+                                       Foreground="{DynamicResource AppPrimaryHoverBrush}" />
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Grid>
+
+            <Border Grid.Row="2"
+                    Padding="22,0"
+                    Background="{DynamicResource AppSurfaceBrush}"
+                    BorderBrush="{DynamicResource AppBorderBrush}"
+                    BorderThickness="0,1,0,0"
+                    CornerRadius="0,0,16,16">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <Button x:Name="BackButton"
+                            Classes="wizard-secondary"
+                            Content="Назад"
+                            IsEnabled="False"
+                            Click="BackButton_OnClick" />
+
+                    <StackPanel Grid.Column="1"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal"
+                                Spacing="8">
+                        <Border x:Name="FirstIndicator" Width="22" Height="5" Background="{DynamicResource AppPrimaryBrush}" CornerRadius="3" />
+                        <Border x:Name="SecondIndicator" Width="22" Height="5" Background="{DynamicResource AppPrimaryBrush}" CornerRadius="3" Opacity="0.25" />
+                        <Border x:Name="ThirdIndicator" Width="22" Height="5" Background="{DynamicResource AppPrimaryBrush}" CornerRadius="3" Opacity="0.25" />
+                    </StackPanel>
+
+                    <Button x:Name="NextButton"
+                            Grid.Column="2"
+                            Classes="wizard-primary"
+                            Content="Далее"
+                            Click="NextButton_OnClick" />
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+
+</Window>
