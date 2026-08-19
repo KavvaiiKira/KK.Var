@@ -120,6 +120,13 @@ public sealed class KKProjectService(IKKProjectRepository repository)
             project.RemoteServiceName,
             nameof(project.RemoteServiceName),
             255);
+        project.RemoteExecutableFileName = Required(
+            project.RemoteExecutableFileName,
+            nameof(project.RemoteExecutableFileName),
+            255);
+        project.RemoteExecutableFileName = ValidateProjectRelativePath(
+            project.RemoteExecutableFileName,
+            nameof(project.RemoteExecutableFileName));
 
         if (!project.RemoteServiceName.EndsWith(".service", StringComparison.OrdinalIgnoreCase))
         {

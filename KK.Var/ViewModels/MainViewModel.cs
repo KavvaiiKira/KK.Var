@@ -1,11 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using KK.Var.Configuration;
+using KK.Var.Models;
 using KK.Var.Services;
 
 namespace KK.Var.ViewModels;
@@ -19,23 +23,38 @@ public partial class MainViewModel : ViewModelBase
     private readonly IRemoteConnectionService? _remoteConnectionService;
     private readonly IGitHubService? _gitHubService;
     private readonly IGitHubTokenStore? _gitHubTokenStore;
+    private readonly IKKProjectService? _projectService;
     private CancellationTokenSource? _gitHubAuthorizationCancellation;
 
     public MainViewModel()
     {
+        ProjectEditor = new CreateProjectViewModel();
     }
 
     public MainViewModel(
         IUserSettingsService userSettingsService,
         IRemoteConnectionService remoteConnectionService,
         IGitHubService gitHubService,
-        IGitHubTokenStore gitHubTokenStore)
+        IGitHubTokenStore gitHubTokenStore,
+        IKKProjectService projectService,
+        CreateProjectViewModel projectEditor)
     {
         _userSettingsService = userSettingsService;
         _remoteConnectionService = remoteConnectionService;
         _gitHubService = gitHubService;
         _gitHubTokenStore = gitHubTokenStore;
+        _projectService = projectService;
+        ProjectEditor = projectEditor;
+        ProjectEditor.ProjectCreated += ProjectEditor_OnProjectCreated;
+        ProjectEditor.ProjectUpdated += ProjectEditor_OnProjectUpdated;
+        ProjectEditor.PropertyChanged += ProjectEditor_OnPropertyChanged;
     }
+
+    public ObservableCollection<KKProject> Projects { get; } = [];
+
+    public ObservableCollection<ProjectTileViewModel> ProjectTiles { get; } = [];
+
+    public CreateProjectViewModel ProjectEditor { get; }
 
     [ObservableProperty]
     public partial UserSettings Settings { get; set; } = new();
@@ -45,6 +64,18 @@ public partial class MainViewModel : ViewModelBase
 
     [ObservableProperty]
     public partial string SettingsError { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string NotificationMessage { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial bool IsNotificationError { get; set; }
+
+    [ObservableProperty]
+    public partial KKProject? SelectedProject { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsProjectOperationRunning { get; set; }
 
     [ObservableProperty]
     public partial bool IsFirstRunSetupRequired { get; set; }
@@ -92,6 +123,49 @@ public partial class MainViewModel : ViewModelBase
         Settings.IsFirstRunCompleted &&
         string.IsNullOrEmpty(ValidateRemoteMachineSettings());
 
+    public bool HasNotification => !string.IsNullOrWhiteSpace(NotificationMessage);
+
+    public bool HasErrorNotification => HasNotification && IsNotificationError;
+
+    public bool HasSuccessNotification => HasNotification && !IsNotificationError;
+
+    public bool IsOperationRunning =>
+        IsConnectionCheckRunning ||
+        IsGitHubAuthorizationPending ||
+        IsProjectOperationRunning ||
+        ProjectEditor.IsSaving ||
+        ProjectEditor.IsLoadingRepositories;
+
+    public string OperationStatusText
+    {
+        get
+        {
+            if (IsConnectionCheckRunning)
+            {
+                return "Проверка SSH-подключения";
+            }
+
+            if (IsGitHubAuthorizationPending)
+            {
+                return "Подключение GitHub";
+            }
+
+            if (ProjectEditor.IsLoadingRepositories)
+            {
+                return "Загрузка репозиториев GitHub";
+            }
+
+            if (IsProjectOperationRunning)
+            {
+                return "Удаление проекта";
+            }
+
+            return ProjectEditor.IsSaving
+                ? "Сохранение проекта"
+                : "Нет активных операций";
+        }
+    }
+
     public async Task LoadSettingsAsync()
     {
         if (_userSettingsService is null)
@@ -124,6 +198,122 @@ public partial class MainViewModel : ViewModelBase
                 GitHubConnectionStatus = exception.Message;
                 IsGitHubConnected = false;
             }
+        }
+
+        await LoadProjectsAsync();
+    }
+
+    private async Task LoadProjectsAsync()
+    {
+        if (_projectService is null)
+        {
+            return;
+        }
+
+        var projects = await _projectService.GetAllAsync();
+        Projects.Clear();
+
+        foreach (var project in projects)
+        {
+            Projects.Add(project);
+        }
+
+        RebuildProjectTiles();
+    }
+
+    private void ProjectEditor_OnProjectCreated(object? sender, KKProject project)
+    {
+        Projects.Add(project);
+        RebuildProjectTiles();
+        PublishNotification($"Проект «{project.Name}» добавлен", isError: false);
+    }
+
+    private void ProjectEditor_OnProjectUpdated(object? sender, KKProject project)
+    {
+        var index = Projects
+            .Select((item, itemIndex) => new { item, itemIndex })
+            .FirstOrDefault(entry => entry.item.Id == project.Id)
+            ?.itemIndex;
+
+        if (index.HasValue)
+        {
+            Projects[index.Value] = project;
+        }
+
+        SelectedProject = project;
+        RebuildProjectTiles();
+        PublishNotification($"Проект «{project.Name}» изменён", isError: false);
+    }
+
+    public async Task<bool> DeleteProjectAsync(KKProject project)
+    {
+        if (_projectService is null || IsProjectOperationRunning)
+        {
+            return false;
+        }
+
+        IsProjectOperationRunning = true;
+
+        try
+        {
+            await _projectService.DeleteAsync(project.Id);
+            Projects.Remove(project);
+
+            if (SelectedProject?.Id == project.Id)
+            {
+                SelectedProject = null;
+            }
+
+            RebuildProjectTiles();
+            PublishNotification($"Проект «{project.Name}» удалён", isError: false);
+            return true;
+        }
+        catch (Exception exception)
+        {
+            PublishNotification(exception.Message, isError: true);
+            return false;
+        }
+        finally
+        {
+            IsProjectOperationRunning = false;
+        }
+    }
+
+    private void RebuildProjectTiles()
+    {
+        ProjectTiles.Clear();
+
+        foreach (var project in Projects.OrderBy(project => project.Name))
+        {
+            ProjectTiles.Add(new ProjectTileViewModel(project));
+        }
+
+        ProjectTiles.Add(ProjectTileViewModel.AddTile);
+    }
+
+    private void ProjectEditor_OnPropertyChanged(
+        object? sender,
+        PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(CreateProjectViewModel.ErrorMessage))
+        {
+            if (string.IsNullOrWhiteSpace(ProjectEditor.ErrorMessage))
+            {
+                if (IsNotificationError)
+                {
+                    ClearStatusNotification();
+                }
+            }
+            else
+            {
+                PublishNotification(ProjectEditor.ErrorMessage, isError: true);
+            }
+        }
+
+        if (e.PropertyName is nameof(CreateProjectViewModel.IsSaving) or
+            nameof(CreateProjectViewModel.IsLoadingRepositories))
+        {
+            NotifyOperationStateChanged();
         }
     }
 
@@ -180,6 +370,7 @@ public partial class MainViewModel : ViewModelBase
             GitHubAccountDisplay = user.Login;
             GitHubConnectionStatus = "GitHub успешно подключён";
             IsGitHubConnected = true;
+            PublishNotification("GitHub успешно подключён", isError: false);
         }
         catch (OperationCanceledException)
         {
@@ -188,6 +379,7 @@ public partial class MainViewModel : ViewModelBase
         catch (Exception exception)
         {
             GitHubConnectionStatus = exception.Message;
+            PublishNotification(exception.Message, isError: true);
         }
         finally
         {
@@ -226,6 +418,7 @@ public partial class MainViewModel : ViewModelBase
         GitHubAccountDisplay = "Не подключён";
         GitHubConnectionStatus = "GitHub отключён";
         IsGitHubConnected = false;
+        PublishNotification("GitHub отключён", isError: false);
     }
 
     [RelayCommand]
@@ -306,6 +499,84 @@ public partial class MainViewModel : ViewModelBase
     public void ClearSettingsStatus()
     {
         SettingsStatus = string.Empty;
+        SettingsError = string.Empty;
+        ClearStatusNotification();
+    }
+
+    public void ClearStatusNotification()
+    {
+        NotificationMessage = string.Empty;
+        IsNotificationError = false;
+    }
+
+    partial void OnSettingsStatusChanged(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            if (HasSuccessNotification)
+            {
+                ClearStatusNotification();
+            }
+
+            return;
+        }
+
+        PublishNotification(value, isError: false);
+    }
+
+    partial void OnSettingsErrorChanged(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            if (HasErrorNotification)
+            {
+                ClearStatusNotification();
+            }
+
+            return;
+        }
+
+        PublishNotification(value, isError: true);
+    }
+
+    partial void OnIsConnectionCheckRunningChanged(bool value)
+    {
+        NotifyOperationStateChanged();
+    }
+
+    partial void OnIsGitHubAuthorizationPendingChanged(bool value)
+    {
+        NotifyOperationStateChanged();
+    }
+
+    partial void OnIsProjectOperationRunningChanged(bool value)
+    {
+        NotifyOperationStateChanged();
+    }
+
+    partial void OnNotificationMessageChanged(string value)
+    {
+        OnPropertyChanged(nameof(HasNotification));
+        OnPropertyChanged(nameof(HasErrorNotification));
+        OnPropertyChanged(nameof(HasSuccessNotification));
+    }
+
+    partial void OnIsNotificationErrorChanged(bool value)
+    {
+        OnPropertyChanged(nameof(HasErrorNotification));
+        OnPropertyChanged(nameof(HasSuccessNotification));
+    }
+
+    private void PublishNotification(string message, bool isError)
+    {
+        IsNotificationError = isError;
+        NotificationMessage = message;
+    }
+
+    private void NotifyOperationStateChanged()
+    {
+        OnPropertyChanged(nameof(IsOperationRunning));
+        OnPropertyChanged(nameof(OperationStatusText));
     }
 
     partial void OnAuthenticationMethodChanged(string value)

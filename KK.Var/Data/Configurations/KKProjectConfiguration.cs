@@ -59,6 +59,10 @@ public sealed class KKProjectConfiguration : IEntityTypeConfiguration<KKProject>
         builder.HasIndex(project => project.RemoteServiceName)
             .IsUnique();
 
+        builder.Property(project => project.RemoteExecutableFileName)
+            .IsRequired()
+            .HasMaxLength(255);
+
         builder.Property(project => project.RemoteDeploymentDirectory)
             .IsRequired()
             .HasMaxLength(1024);

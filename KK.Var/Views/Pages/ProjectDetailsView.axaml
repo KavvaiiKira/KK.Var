@@ -1,0 +1,137 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:models="using:KK.Var.Models"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignWidth="1100"
+             d:DesignHeight="800"
+             x:Class="KK.Var.Views.Pages.ProjectDetailsView"
+             x:DataType="models:KKProject">
+
+    <UserControl.Styles>
+        <Style Selector="Button.details-secondary">
+            <Setter Property="Padding" Value="16,10" />
+            <Setter Property="Background" Value="{DynamicResource AppSurfaceRaisedBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+        <Style Selector="TextBlock.details-label">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{DynamicResource AppTextMutedBrush}" />
+        </Style>
+        <Style Selector="TextBlock.details-value">
+            <Setter Property="Margin" Value="0,4,0,0" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto,*">
+        <Grid Grid.Row="0"
+              Margin="30,24,30,18"
+              ColumnDefinitions="Auto,*,Auto">
+            <Button Width="42"
+                    Height="42"
+                    Margin="0,0,14,0"
+                    Padding="0"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    Classes="details-secondary"
+                    Click="BackButton_OnClick"
+                    ToolTip.Tip="Назад к проектам">
+                <PathIcon Width="19"
+                          Height="19"
+                          Data="M20,11H7.8L13.4,5.4L12,4L4,12L12,20L13.4,18.6L7.8,13H20V11Z" />
+            </Button>
+
+            <StackPanel Grid.Column="1" Spacing="5">
+                <TextBlock Text="{Binding Name}"
+                           FontSize="30"
+                           FontWeight="Bold" />
+                <TextBlock Text="{Binding EffectiveDescription}"
+                           FontSize="13"
+                           Foreground="{DynamicResource AppTextMutedBrush}" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="2"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal"
+                        Spacing="10">
+                <Button Classes="details-secondary"
+                        Content="Редактировать"
+                        Click="EditButton_OnClick" />
+                <Button Classes="details-secondary"
+                        Foreground="{DynamicResource AppDangerBrush}"
+                        Content="Удалить"
+                        Click="DeleteButton_OnClick" />
+            </StackPanel>
+        </Grid>
+
+        <ScrollViewer Grid.Row="1"
+                      Margin="30,0,20,24"
+                      HorizontalContentAlignment="Stretch"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+            <StackPanel MaxWidth="1050"
+                        HorizontalAlignment="Stretch"
+                        Spacing="18">
+                <Border Padding="24"
+                        Background="{DynamicResource AppSurfaceBrush}"
+                        BorderBrush="{DynamicResource AppBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="14">
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="20" RowSpacing="20">
+                        <StackPanel>
+                            <TextBlock Classes="details-label" Text="Источник" />
+                            <TextBlock Classes="details-value" Text="{Binding SourceDisplay}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Classes="details-label" Text="Тип сборки" />
+                            <TextBlock Classes="details-value" Text="{Binding BuildProvider}" />
+                        </StackPanel>
+                        <StackPanel Grid.Row="1">
+                            <TextBlock Classes="details-label" Text="Последний deploy" />
+                            <TextBlock Classes="details-value" Text="{Binding LastDeploymentDisplay}" />
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" Grid.Column="1">
+                            <TextBlock Classes="details-label" Text="Версия" />
+                            <TextBlock Classes="details-value"
+                                       Foreground="{DynamicResource AppPrimaryHoverBrush}"
+                                       Text="{Binding LatestVersionTag}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Border Padding="24"
+                        Background="{DynamicResource AppSurfaceBrush}"
+                        BorderBrush="{DynamicResource AppBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="14">
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="20" RowSpacing="20">
+                        <StackPanel>
+                            <TextBlock Classes="details-label" Text="Systemd service" />
+                            <TextBlock Classes="details-value"
+                                       FontFamily="Consolas"
+                                       Text="{Binding RemoteServiceName}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Classes="details-label" Text="Исполняемый файл на удалённой машине" />
+                            <TextBlock Classes="details-value"
+                                       FontFamily="Consolas"
+                                       Text="{Binding RemoteExecutablePath}" />
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" Grid.ColumnSpan="2">
+                            <TextBlock Classes="details-label" Text="Файл переменных окружения" />
+                            <TextBlock Classes="details-value"
+                                       FontFamily="Consolas"
+                                       Text="{Binding ProjectEnvironmentFilePath}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

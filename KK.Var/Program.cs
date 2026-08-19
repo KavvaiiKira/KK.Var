@@ -92,6 +92,7 @@ sealed class Program
         builder.Services.AddSingleton<
             IKKProjectDeploymentService,
             KKProjectDeploymentService>();
+        builder.Services.AddSingleton<CreateProjectViewModel>();
         builder.Services.AddSingleton<MainViewModel>();
         builder.Services.AddSingleton<MainWindow>(services => new MainWindow
         {

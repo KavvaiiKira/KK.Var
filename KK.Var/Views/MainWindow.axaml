@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:KK.Var.ViewModels"
+        xmlns:models="using:KK.Var.Models"
         xmlns:controls="using:KK.Var.Views.Controls"
         xmlns:pages="using:KK.Var.Views.Pages"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -186,7 +187,8 @@
                                         Padding="0"
                                         HorizontalContentAlignment="Center"
                                         VerticalContentAlignment="Center"
-                                        ToolTip.Tip="Добавить проект">
+                                        ToolTip.Tip="Добавить проект"
+                                        Click="NewProjectButton_OnClick">
                                     <PathIcon Width="17"
                                               Height="17"
                                               Foreground="{DynamicResource AppTextBrush}"
@@ -227,7 +229,8 @@
                         <Button Grid.Column="1"
                                 Classes="primary"
                                 Content="＋  Новый проект"
-                                VerticalAlignment="Center" />
+                                VerticalAlignment="Center"
+                                Click="NewProjectButton_OnClick" />
                     </Grid>
 
                     <ScrollViewer x:Name="ProjectsList"
@@ -235,216 +238,148 @@
                                   Margin="30,0,20,24"
                                   HorizontalScrollBarVisibility="Disabled"
                                   VerticalScrollBarVisibility="Auto">
-                        <WrapPanel Orientation="Horizontal">
-                            <Border Width="354"
-                                    Height="254"
-                                    Margin="0,0,18,18"
-                                    Padding="20"
-                                    Background="{DynamicResource AppSurfaceBrush}"
-                                    BorderBrush="{DynamicResource AppBorderBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="14">
-                                <Grid RowDefinitions="Auto,Auto,*,Auto">
-                                    <Grid ColumnDefinitions="*,Auto">
-                                        <StackPanel Spacing="5">
-                                            <TextBlock Text="KK.Var"
-                                                       FontSize="20"
-                                                       FontWeight="Bold" />
-                                            <TextBlock Text="GitHub · C#"
-                                                       FontSize="12"
-                                                       Foreground="{DynamicResource AppTextMutedBrush}" />
-                                        </StackPanel>
-                                        <Border Grid.Column="1"
-                                                Padding="9,4"
-                                                Background="#223F2E"
-                                                CornerRadius="12"
-                                                VerticalAlignment="Top">
-                                            <TextBlock Text="Активен"
-                                                       FontSize="11"
-                                                       Foreground="{DynamicResource AppSuccessBrush}" />
+                        <ItemsControl ItemsSource="{Binding ProjectTiles}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ProjectTileViewModel">
+                                    <Grid>
+                                        <Border Width="354"
+                                                Height="254"
+                                                Margin="0,0,18,18"
+                                                Padding="20"
+                                                IsVisible="{Binding IsProject}"
+                                                Background="{DynamicResource AppSurfaceBrush}"
+                                                BorderBrush="{DynamicResource AppBorderBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="14">
+                                            <Grid RowDefinitions="Auto,Auto,*,Auto">
+                                                <StackPanel Spacing="5">
+                                                    <TextBlock Text="{Binding Project.Name}"
+                                                               FontSize="20"
+                                                               FontWeight="Bold" />
+                                                    <TextBlock Text="{Binding Project.SourceDisplay}"
+                                                               MaxWidth="310"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               FontSize="12"
+                                                               Foreground="{DynamicResource AppTextMutedBrush}" />
+                                                </StackPanel>
+
+                                                <Border Grid.Row="1"
+                                                        Height="1"
+                                                        Margin="0,17"
+                                                        Background="{DynamicResource AppBorderBrush}" />
+
+                                                <Grid Grid.Row="2"
+                                                      ColumnDefinitions="*,*"
+                                                      RowDefinitions="Auto,Auto"
+                                                      RowSpacing="13">
+                                                    <StackPanel Spacing="3">
+                                                        <TextBlock Text="Последний deploy"
+                                                                   FontSize="11"
+                                                                   Foreground="{DynamicResource AppTextMutedBrush}" />
+                                                        <TextBlock Text="{Binding Project.LastDeploymentDisplay}"
+                                                                   FontSize="13"
+                                                                   FontWeight="SemiBold" />
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1" Spacing="3">
+                                                        <TextBlock Text="Версия"
+                                                                   FontSize="11"
+                                                                   Foreground="{DynamicResource AppTextMutedBrush}" />
+                                                        <TextBlock Text="{Binding Project.LatestVersionTag}"
+                                                                   FontSize="13"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource AppPrimaryHoverBrush}" />
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Row="1"
+                                                                Spacing="3">
+                                                        <TextBlock Text="Systemd service"
+                                                                   FontSize="11"
+                                                                   Foreground="{DynamicResource AppTextMutedBrush}" />
+                                                        <TextBlock Text="{Binding Project.RemoteServiceName}"
+                                                                   FontFamily="Consolas"
+                                                                   FontSize="12" />
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Row="1"
+                                                                Grid.Column="1"
+                                                                Spacing="3">
+                                                        <TextBlock Text="Service file"
+                                                                   FontSize="11"
+                                                                   Foreground="{DynamicResource AppTextMutedBrush}" />
+                                                        <TextBlock Text="{Binding Project.RemoteExecutablePath}"
+                                                                   TextTrimming="CharacterEllipsis"
+                                                                   ToolTip.Tip="{Binding Project.RemoteExecutablePath}"
+                                                                   FontFamily="Consolas"
+                                                                   FontSize="12" />
+                                                    </StackPanel>
+                                                </Grid>
+
+                                                <StackPanel Grid.Row="3"
+                                                            Margin="0,16,0,0"
+                                                            HorizontalAlignment="Right"
+                                                            Orientation="Horizontal"
+                                                            Spacing="8">
+                                                    <Button Classes="icon"
+                                                            ToolTip.Tip="Открыть"
+                                                            Click="OpenProjectButton_OnClick">
+                                                        <PathIcon Width="18"
+                                                                  Height="18"
+                                                                  Foreground="{DynamicResource AppTextBrush}"
+                                                                  Data="{StaticResource OpenIconData}" />
+                                                    </Button>
+                                                    <Button Classes="icon"
+                                                            ToolTip.Tip="Редактировать"
+                                                            Click="EditProjectButton_OnClick">
+                                                        <PathIcon Width="18"
+                                                                  Height="18"
+                                                                  Foreground="{DynamicResource AppTextBrush}"
+                                                                  Data="{StaticResource EditIconData}" />
+                                                    </Button>
+                                                    <Button Classes="icon"
+                                                            ToolTip.Tip="Удалить"
+                                                            Click="DeleteProjectButton_OnClick">
+                                                        <PathIcon Width="18"
+                                                                  Height="18"
+                                                                  Foreground="{DynamicResource AppDangerBrush}"
+                                                                  Data="{StaticResource DeleteIconData}" />
+                                                    </Button>
+                                                </StackPanel>
+                                            </Grid>
                                         </Border>
+
+                                        <Button Width="354"
+                                                Height="254"
+                                                Margin="0,0,18,18"
+                                                Padding="0"
+                                                IsVisible="{Binding IsAddTile}"
+                                                HorizontalContentAlignment="Center"
+                                                VerticalContentAlignment="Center"
+                                                BorderBrush="{DynamicResource AppBorderBrush}"
+                                                BorderThickness="1"
+                                                Background="Transparent"
+                                                CornerRadius="14"
+                                                Click="NewProjectButton_OnClick">
+                                            <StackPanel HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"
+                                                        Spacing="10">
+                                                <PathIcon Width="32"
+                                                          Height="32"
+                                                          HorizontalAlignment="Center"
+                                                          Foreground="{DynamicResource AppPrimaryHoverBrush}"
+                                                          Data="{StaticResource AddIconData}" />
+                                                <TextBlock Text="Добавить проект"
+                                                           HorizontalAlignment="Center"
+                                                           FontSize="14"
+                                                           FontWeight="SemiBold" />
+                                            </StackPanel>
+                                        </Button>
                                     </Grid>
-
-                                    <Border Grid.Row="1"
-                                            Height="1"
-                                            Margin="0,17"
-                                            Background="{DynamicResource AppBorderBrush}" />
-
-                                    <Grid Grid.Row="2"
-                                          ColumnDefinitions="*,*"
-                                          RowDefinitions="Auto,Auto"
-                                          RowSpacing="14">
-                                        <StackPanel Spacing="3">
-                                            <TextBlock Text="Последний deploy"
-                                                       FontSize="11"
-                                                       Foreground="{DynamicResource AppTextMutedBrush}" />
-                                            <TextBlock Text="Сегодня, 18:42"
-                                                       FontSize="13"
-                                                       FontWeight="SemiBold" />
-                                        </StackPanel>
-                                        <StackPanel Grid.Column="1" Spacing="3">
-                                            <TextBlock Text="Версия"
-                                                       FontSize="11"
-                                                       Foreground="{DynamicResource AppTextMutedBrush}" />
-                                            <TextBlock Text="release-12"
-                                                       FontSize="13"
-                                                       FontWeight="SemiBold"
-                                                       Foreground="{DynamicResource AppPrimaryHoverBrush}" />
-                                        </StackPanel>
-                                        <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Spacing="3">
-                                            <TextBlock Text="Systemd service"
-                                                       FontSize="11"
-                                                       Foreground="{DynamicResource AppTextMutedBrush}" />
-                                            <TextBlock Text="kk-var.service"
-                                                       FontFamily="Consolas"
-                                                       FontSize="12" />
-                                        </StackPanel>
-                                    </Grid>
-
-                                    <StackPanel Grid.Row="3"
-                                                Margin="0,18,0,0"
-                                                HorizontalAlignment="Right"
-                                                Orientation="Horizontal"
-                                                Spacing="8">
-                                        <Button Classes="icon" ToolTip.Tip="Открыть">
-                                            <PathIcon Width="18"
-                                                      Height="18"
-                                                      Foreground="{DynamicResource AppTextBrush}"
-                                                      Data="{StaticResource OpenIconData}" />
-                                        </Button>
-                                        <Button Classes="icon" ToolTip.Tip="Редактировать">
-                                            <PathIcon Width="18"
-                                                      Height="18"
-                                                      Foreground="{DynamicResource AppTextBrush}"
-                                                      Data="{StaticResource EditIconData}" />
-                                        </Button>
-                                        <Button Classes="icon" ToolTip.Tip="Удалить">
-                                            <PathIcon Width="18"
-                                                      Height="18"
-                                                      Foreground="{DynamicResource AppDangerBrush}"
-                                                      Data="{StaticResource DeleteIconData}" />
-                                        </Button>
-                                    </StackPanel>
-                                </Grid>
-                            </Border>
-
-                            <Border Width="354"
-                                    Height="254"
-                                    Margin="0,0,18,18"
-                                    Padding="20"
-                                    Background="{DynamicResource AppSurfaceBrush}"
-                                    BorderBrush="{DynamicResource AppBorderBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="14">
-                                <Grid RowDefinitions="Auto,Auto,*,Auto">
-                                    <Grid ColumnDefinitions="*,Auto">
-                                        <StackPanel Spacing="5">
-                                            <TextBlock Text="Telemetry API"
-                                                       FontSize="20"
-                                                       FontWeight="Bold" />
-                                            <TextBlock Text="Локальная папка · Go"
-                                                       FontSize="12"
-                                                       Foreground="{DynamicResource AppTextMutedBrush}" />
-                                        </StackPanel>
-                                        <Border Grid.Column="1"
-                                                Padding="9,4"
-                                                Background="{DynamicResource AppSurfaceHoverBrush}"
-                                                CornerRadius="12"
-                                                VerticalAlignment="Top">
-                                            <TextBlock Text="Остановлен"
-                                                       FontSize="11"
-                                                       Foreground="{DynamicResource AppTextMutedBrush}" />
-                                        </Border>
-                                    </Grid>
-
-                                    <Border Grid.Row="1"
-                                            Height="1"
-                                            Margin="0,17"
-                                            Background="{DynamicResource AppBorderBrush}" />
-
-                                    <Grid Grid.Row="2"
-                                          ColumnDefinitions="*,*"
-                                          RowDefinitions="Auto,Auto"
-                                          RowSpacing="14">
-                                        <StackPanel Spacing="3">
-                                            <TextBlock Text="Последний deploy"
-                                                       FontSize="11"
-                                                       Foreground="{DynamicResource AppTextMutedBrush}" />
-                                            <TextBlock Text="Вчера, 23:14"
-                                                       FontSize="13"
-                                                       FontWeight="SemiBold" />
-                                        </StackPanel>
-                                        <StackPanel Grid.Column="1" Spacing="3">
-                                            <TextBlock Text="Версия"
-                                                       FontSize="11"
-                                                       Foreground="{DynamicResource AppTextMutedBrush}" />
-                                            <TextBlock Text="release-5"
-                                                       FontSize="13"
-                                                       FontWeight="SemiBold"
-                                                       Foreground="{DynamicResource AppPrimaryHoverBrush}" />
-                                        </StackPanel>
-                                        <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Spacing="3">
-                                            <TextBlock Text="Systemd service"
-                                                       FontSize="11"
-                                                       Foreground="{DynamicResource AppTextMutedBrush}" />
-                                            <TextBlock Text="telemetry-api.service"
-                                                       FontFamily="Consolas"
-                                                       FontSize="12" />
-                                        </StackPanel>
-                                    </Grid>
-
-                                    <StackPanel Grid.Row="3"
-                                                Margin="0,18,0,0"
-                                                HorizontalAlignment="Right"
-                                                Orientation="Horizontal"
-                                                Spacing="8">
-                                        <Button Classes="icon" ToolTip.Tip="Открыть">
-                                            <PathIcon Width="18"
-                                                      Height="18"
-                                                      Foreground="{DynamicResource AppTextBrush}"
-                                                      Data="{StaticResource OpenIconData}" />
-                                        </Button>
-                                        <Button Classes="icon" ToolTip.Tip="Редактировать">
-                                            <PathIcon Width="18"
-                                                      Height="18"
-                                                      Foreground="{DynamicResource AppTextBrush}"
-                                                      Data="{StaticResource EditIconData}" />
-                                        </Button>
-                                        <Button Classes="icon" ToolTip.Tip="Удалить">
-                                            <PathIcon Width="18"
-                                                      Height="18"
-                                                      Foreground="{DynamicResource AppDangerBrush}"
-                                                      Data="{StaticResource DeleteIconData}" />
-                                        </Button>
-                                    </StackPanel>
-                                </Grid>
-                            </Border>
-
-                            <Button Width="354"
-                                    Height="254"
-                                    Margin="0,0,18,18"
-                                    Padding="0"
-                                    HorizontalContentAlignment="Center"
-                                    VerticalContentAlignment="Center"
-                                    BorderBrush="{DynamicResource AppBorderBrush}"
-                                    BorderThickness="1"
-                                    Background="Transparent"
-                                    CornerRadius="14">
-                                <StackPanel HorizontalAlignment="Center"
-                                            VerticalAlignment="Center"
-                                            Spacing="10">
-                                    <PathIcon Width="32"
-                                              Height="32"
-                                              HorizontalAlignment="Center"
-                                              Foreground="{DynamicResource AppPrimaryHoverBrush}"
-                                              Data="{StaticResource AddIconData}" />
-                                    <TextBlock Text="Добавить проект"
-                                               HorizontalAlignment="Center"
-                                               FontSize="14"
-                                               FontWeight="SemiBold" />
-                                </StackPanel>
-                            </Button>
-                        </WrapPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </ScrollViewer>
 
                     <Border x:Name="ProjectsAccessBackdrop"
@@ -482,6 +417,16 @@
                     </Border>
                 </Grid>
 
+                <pages:CreateProjectView x:Name="CreateProjectPage"
+                                         Grid.Column="1"
+                                         IsVisible="False"
+                                         DataContext="{Binding ProjectEditor}" />
+
+                <pages:ProjectDetailsView x:Name="ProjectDetailsPage"
+                                          Grid.Column="1"
+                                          IsVisible="False"
+                                          DataContext="{Binding SelectedProject}" />
+
                 <pages:SettingsView x:Name="SettingsPage"
                                     Grid.Column="1"
                                     IsVisible="False" />
@@ -494,19 +439,43 @@
                     BorderBrush="{DynamicResource AppBorderBrush}"
                     BorderThickness="0,1,0,0"
                     CornerRadius="0,0,14,14">
-                <Grid ColumnDefinitions="220,*,Auto" ColumnSpacing="12">
+                <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto" ColumnSpacing="12">
                     <ProgressBar Grid.Column="0"
+                                 Width="150"
                                  Height="4"
-                                 Minimum="0"
-                                 Maximum="100"
-                                 Value="0"
+                                 IsVisible="{Binding IsOperationRunning}"
+                                 IsIndeterminate="True"
                                  VerticalAlignment="Center" />
                     <TextBlock Grid.Column="1"
-                               Text="Нет активных операций"
+                               Text="{Binding OperationStatusText}"
                                VerticalAlignment="Center"
                                FontSize="11"
                                Foreground="{DynamicResource AppTextMutedBrush}" />
-                    <Button Grid.Column="2"
+
+                    <Border Grid.Column="2"
+                            Width="1"
+                            Height="16"
+                            IsVisible="{Binding HasNotification}"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource AppBorderBrush}" />
+
+                    <TextBlock Grid.Column="3"
+                               IsVisible="{Binding HasErrorNotification}"
+                               Text="{Binding NotificationMessage}"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               FontSize="11"
+                               Foreground="{DynamicResource AppDangerBrush}" />
+
+                    <TextBlock Grid.Column="3"
+                               IsVisible="{Binding HasSuccessNotification}"
+                               Text="{Binding NotificationMessage}"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               FontSize="11"
+                               Foreground="{DynamicResource AppSuccessBrush}" />
+
+                    <Button Grid.Column="4"
                             Width="28"
                             Height="28"
                             Padding="0"
@@ -526,6 +495,47 @@
                     IsVisible="False"
                     Background="#A6000000"
                     CornerRadius="14" />
+
+            <Border x:Name="DeleteProjectConfirmation"
+                    IsVisible="False"
+                    Background="#C9080510"
+                    CornerRadius="14">
+                <Border Width="460"
+                        Padding="28"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Background="{DynamicResource AppSurfaceBrush}"
+                        BorderBrush="{DynamicResource AppBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="14">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Удалить проект?"
+                                   FontSize="20"
+                                   FontWeight="Bold" />
+                        <TextBlock x:Name="DeleteProjectMessage"
+                                   TextWrapping="Wrap"
+                                   FontSize="13"
+                                   Foreground="{DynamicResource AppTextMutedBrush}" />
+                        <TextBlock Text="Версии, переменные окружения и история deploy будут удалены из базы данных."
+                                   TextWrapping="Wrap"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource AppDangerBrush}" />
+                        <StackPanel Margin="0,10,0,0"
+                                    HorizontalAlignment="Right"
+                                    Orientation="Horizontal"
+                                    Spacing="10">
+                            <Button Classes="primary"
+                                    Background="{DynamicResource AppSurfaceRaisedBrush}"
+                                    Content="Отмена"
+                                    Click="CancelDeleteProjectButton_OnClick" />
+                            <Button Classes="primary"
+                                    Background="{DynamicResource AppDangerBrush}"
+                                    Content="Удалить"
+                                    Click="ConfirmDeleteProjectButton_OnClick" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Border>
         </Grid>
     </Border>
 

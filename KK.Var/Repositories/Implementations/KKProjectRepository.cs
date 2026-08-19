@@ -19,6 +19,8 @@ public sealed class KKProjectRepository(
 
         return await db.Projects
             .AsNoTracking()
+            .Include(project => project.Versions)
+            .Include(project => project.Deployments)
             .OrderBy(project => project.Name)
             .ToListAsync(cancellationToken);
     }

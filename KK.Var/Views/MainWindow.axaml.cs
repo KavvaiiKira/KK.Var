@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using KK.Var.Models;
 using KK.Var.ViewModels;
 
 namespace KK.Var.Views;
@@ -10,10 +11,16 @@ namespace KK.Var.Views;
 public partial class MainWindow : Window
 {
     private bool _firstRunHandled;
+    private bool _showSettingsAfterProjectEditorClose;
+    private KKProject? _projectPendingDelete;
 
     public MainWindow()
     {
         InitializeComponent();
+        CreateProjectPage.CloseRequested += CreateProjectPage_OnCloseRequested;
+        ProjectDetailsPage.BackRequested += ProjectDetailsPage_OnBackRequested;
+        ProjectDetailsPage.EditRequested += ProjectDetailsPage_OnEditRequested;
+        ProjectDetailsPage.DeleteRequested += ProjectDetailsPage_OnDeleteRequested;
 
         PropertyChanged += (_, args) =>
         {
@@ -94,16 +101,199 @@ public partial class MainWindow : Window
 
     private void ProjectsNavigationButton_OnClick(object? sender, RoutedEventArgs e)
     {
+        if (CreateProjectPage.IsVisible)
+        {
+            _showSettingsAfterProjectEditorClose = false;
+            CreateProjectPage.RequestClose();
+            return;
+        }
+
+        if (DataContext is MainViewModel viewModel)
+        {
+            viewModel.ClearStatusNotification();
+        }
+
         ShowSettingsPage(showSettings: false);
     }
 
     private void SettingsNavigationButton_OnClick(object? sender, RoutedEventArgs e)
     {
+        if (CreateProjectPage.IsVisible)
+        {
+            _showSettingsAfterProjectEditorClose = true;
+            CreateProjectPage.RequestClose();
+            return;
+        }
+
+        if (DataContext is MainViewModel viewModel)
+        {
+            viewModel.ClearStatusNotification();
+        }
+
         ShowSettingsPage(showSettings: true);
+    }
+
+    private void NewProjectButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainViewModel viewModel)
+        {
+            return;
+        }
+
+        if (!viewModel.IsRemoteMachineConfigured)
+        {
+            ShowSettingsPage(showSettings: true);
+            return;
+        }
+
+        _showSettingsAfterProjectEditorClose = false;
+        viewModel.ClearStatusNotification();
+        CreateProjectPage.BeginCreation();
+        ShowProjectEditorPage();
+    }
+
+    private void OpenProjectButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        var project = GetProject(sender);
+
+        if (project is null || DataContext is not MainViewModel viewModel)
+        {
+            return;
+        }
+
+        viewModel.ClearStatusNotification();
+        viewModel.SelectedProject = project;
+        ShowProjectDetailsPage();
+    }
+
+    private void EditProjectButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        var project = GetProject(sender);
+
+        if (project is not null)
+        {
+            BeginProjectEditing(project);
+        }
+    }
+
+    private void DeleteProjectButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        var project = GetProject(sender);
+
+        if (project is not null)
+        {
+            ShowDeleteProjectConfirmation(project);
+        }
+    }
+
+    private void CreateProjectPage_OnCloseRequested(object? sender, EventArgs e)
+    {
+        CreateProjectPage.IsVisible = false;
+
+        if (_showSettingsAfterProjectEditorClose && DataContext is MainViewModel viewModel)
+        {
+            viewModel.ClearStatusNotification();
+        }
+
+        ShowSettingsPage(_showSettingsAfterProjectEditorClose);
+        _showSettingsAfterProjectEditorClose = false;
+    }
+
+    private void ProjectDetailsPage_OnBackRequested(object? sender, EventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel)
+        {
+            viewModel.ClearStatusNotification();
+        }
+
+        ShowSettingsPage(showSettings: false);
+    }
+
+    private void ProjectDetailsPage_OnEditRequested(object? sender, EventArgs e)
+    {
+        if (DataContext is MainViewModel { SelectedProject: { } project })
+        {
+            BeginProjectEditing(project);
+        }
+    }
+
+    private void ProjectDetailsPage_OnDeleteRequested(object? sender, EventArgs e)
+    {
+        if (DataContext is MainViewModel { SelectedProject: { } project })
+        {
+            ShowDeleteProjectConfirmation(project);
+        }
+    }
+
+    private void BeginProjectEditing(KKProject project)
+    {
+        if (DataContext is MainViewModel viewModel)
+        {
+            viewModel.ClearStatusNotification();
+        }
+
+        _showSettingsAfterProjectEditorClose = false;
+        CreateProjectPage.BeginEditing(project);
+        ShowProjectEditorPage();
+    }
+
+    private void ShowProjectEditorPage()
+    {
+        ProjectsPage.IsVisible = false;
+        SettingsPage.IsVisible = false;
+        ProjectDetailsPage.IsVisible = false;
+        CreateProjectPage.IsVisible = true;
+        SetNavigationState(ProjectsNavigationButton, isActive: true);
+        SetNavigationState(SettingsNavigationButton, isActive: false);
+    }
+
+    private void ShowProjectDetailsPage()
+    {
+        ProjectsPage.IsVisible = false;
+        SettingsPage.IsVisible = false;
+        CreateProjectPage.IsVisible = false;
+        ProjectDetailsPage.IsVisible = true;
+        SetNavigationState(ProjectsNavigationButton, isActive: true);
+        SetNavigationState(SettingsNavigationButton, isActive: false);
+    }
+
+    private void ShowDeleteProjectConfirmation(KKProject project)
+    {
+        _projectPendingDelete = project;
+        DeleteProjectMessage.Text = $"Проект «{project.Name}» будет удалён без возможности отмены.";
+        DeleteProjectConfirmation.IsVisible = true;
+    }
+
+    private void CancelDeleteProjectButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        _projectPendingDelete = null;
+        DeleteProjectConfirmation.IsVisible = false;
+    }
+
+    private async void ConfirmDeleteProjectButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (_projectPendingDelete is null || DataContext is not MainViewModel viewModel)
+        {
+            return;
+        }
+
+        var project = _projectPendingDelete;
+        DeleteProjectConfirmation.IsVisible = false;
+        _projectPendingDelete = null;
+
+        if (await viewModel.DeleteProjectAsync(project))
+        {
+            ShowSettingsPage(showSettings: false);
+        }
     }
 
     private void OpenRequiredSettingsButton_OnClick(object? sender, RoutedEventArgs e)
     {
+        if (DataContext is MainViewModel viewModel)
+        {
+            viewModel.ClearStatusNotification();
+        }
+
         ShowSettingsPage(showSettings: true);
     }
 
@@ -144,6 +334,8 @@ public partial class MainWindow : Window
 
         ProjectsPage.IsVisible = !showSettings;
         SettingsPage.IsVisible = showSettings;
+        CreateProjectPage.IsVisible = false;
+        ProjectDetailsPage.IsVisible = false;
         SetNavigationState(ProjectsNavigationButton, !showSettings);
         SetNavigationState(SettingsNavigationButton, showSettings);
     }
@@ -170,4 +362,9 @@ public partial class MainWindow : Window
             button.Classes.Remove("active");
         }
     }
+
+    private static KKProject? GetProject(object? sender) =>
+        (sender as Control)?.DataContext is ProjectTileViewModel tile
+            ? tile.Project
+            : null;
 }

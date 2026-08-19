@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace KK.Var.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class AddProjectDomain : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -26,6 +26,7 @@ namespace KK.Var.Data.Migrations
                     BuildProvider = table.Column<int>(type: "INTEGER", nullable: false),
                     BuildConfigurationJson = table.Column<string>(type: "TEXT", nullable: false),
                     RemoteServiceName = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false, collation: "NOCASE"),
+                    RemoteExecutableFileName = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
                     RemoteDeploymentDirectory = table.Column<string>(type: "TEXT", maxLength: 1024, nullable: false),
                     ProjectEnvironmentFilePath = table.Column<string>(type: "TEXT", maxLength: 1024, nullable: false),
                     CreatedAtUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
