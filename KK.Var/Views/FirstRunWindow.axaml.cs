@@ -89,8 +89,9 @@ public partial class FirstRunWindow : Window
         ThirdIndicator.Opacity = _currentSlideIndex == 2 ? 1 : 0.25;
 
         BackButton.IsEnabled = _currentSlideIndex > 0;
-        NextButton.Content = _currentSlideIndex == LastSlideIndex
-            ? _localizationService.Get("Открыть настройки")
-            : _localizationService.Get("Далее");
+
+        NextButton.Content = _currentSlideIndex == LastSlideIndex ?
+            _localizationService.Get("Открыть настройки") :
+            _localizationService.Get("Далее");
     }
 }

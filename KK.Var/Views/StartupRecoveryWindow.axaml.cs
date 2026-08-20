@@ -32,12 +32,14 @@ public partial class StartupRecoveryWindow : Window
 
         var localization = Program.Services.GetRequiredService<ILocalizationService>();
 
-        TitleText.Text = kind == StartupRecoveryKind.UserSettings
-            ? localization.Get("Не удалось прочитать настройки")
-            : localization.Get("Не удалось открыть базу данных");
-        DescriptionText.Text = kind == StartupRecoveryKind.UserSettings
-            ? localization.Get("Настройки повреждены или недоступны. Можно сохранить исходный файл в резервной копии и начать с чистых настроек.")
-            : localization.Get("SQLite-база повреждена или её схема не может быть обновлена. Можно сохранить все файлы базы в резервной копии и создать новую базу.");
+        TitleText.Text = kind == StartupRecoveryKind.UserSettings ?
+            localization.Get("Не удалось прочитать настройки") :
+            localization.Get("Не удалось открыть базу данных");
+
+        DescriptionText.Text = kind == StartupRecoveryKind.UserSettings ?
+            localization.Get("Настройки повреждены или недоступны. Можно сохранить исходный файл в резервной копии и начать с чистых настроек.") :
+            localization.Get("SQLite-база повреждена или её схема не может быть обновлена. Можно сохранить все файлы базы в резервной копии и создать новую базу.");
+
         ErrorText.Text = exception.Message;
         OpenDataDirectoryButton.Content = localization.Get("Открыть папку данных");
         CloseButton.Content = localization.Get("Завершить");

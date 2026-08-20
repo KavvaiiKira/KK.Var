@@ -37,8 +37,8 @@ public sealed class KKProjectEnvironmentVariableRepository(
 
         var project = await db.Projects.SingleOrDefaultAsync(
                 candidate => candidate.Id == projectId,
-                cancellationToken)
-            ?? throw new KeyNotFoundException($"Project '{projectId}' was not found.");
+                cancellationToken) ??
+                throw new KeyNotFoundException($"Project '{projectId}' was not found.");
 
         var existing = await db.ProjectEnvironmentVariables
             .Where(variable => variable.KKProjectId == projectId)

@@ -14,13 +14,13 @@ namespace KK.Var.Services.Implementations;
 public sealed class GitHubService : IGitHubService, IDisposable
 {
     private static readonly Uri DeviceCodeUri =
-        new("https://github.com/login/device/code");
+        new Uri("https://github.com/login/device/code");
     private static readonly Uri AccessTokenUri =
-        new("https://github.com/login/oauth/access_token");
+        new Uri("https://github.com/login/oauth/access_token");
     private static readonly Uri CurrentUserUri =
-        new("https://api.github.com/user");
+        new Uri("https://api.github.com/user");
     private static readonly Uri RepositoriesUri =
-        new("https://api.github.com/user/repos?per_page=100&sort=updated&affiliation=owner,collaborator,organization_member");
+        new Uri("https://api.github.com/user/repos?per_page=100&sort=updated&affiliation=owner,collaborator,organization_member");
 
     private readonly GitHubOptions _options;
     private readonly ILocalizationService _localizationService;
@@ -32,13 +32,14 @@ public sealed class GitHubService : IGitHubService, IDisposable
     {
         _options = options;
         _localizationService = localizationService;
+
         _httpClient = new HttpClient
         {
             Timeout = TimeSpan.FromSeconds(30),
         };
+
         _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("KK.Var/1.0");
-        _httpClient.DefaultRequestHeaders.Accept.Add(
-            new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
+        _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
         _httpClient.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
     }
 
@@ -52,18 +53,23 @@ public sealed class GitHubService : IGitHubService, IDisposable
             new KeyValuePair<string, string>("client_id", _options.ClientId),
             new KeyValuePair<string, string>("scope", _options.Scope),
         ]);
+
         using var request = new HttpRequestMessage(HttpMethod.Post, DeviceCodeUri)
         {
             Content = content,
         };
+
         request.Headers.Accept.Clear();
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
         using var response = await _httpClient.SendAsync(request, cancellationToken);
+
         var json = await response.Content.ReadAsStringAsync(cancellationToken);
+
         EnsureSuccess(response, json);
 
         using var document = JsonDocument.Parse(json);
+
         var root = document.RootElement;
         var expiresIn = root.GetProperty("expires_in").GetInt32();
         var interval = root.GetProperty("interval").GetInt32();
@@ -94,19 +100,24 @@ public sealed class GitHubService : IGitHubService, IDisposable
                     "grant_type",
                     "urn:ietf:params:oauth:grant-type:device_code"),
             ]);
+
             using var request = new HttpRequestMessage(HttpMethod.Post, AccessTokenUri)
             {
                 Content = content,
             };
+
             request.Headers.Accept.Clear();
             request.Headers.Accept.Add(
                 new MediaTypeWithQualityHeaderValue("application/json"));
 
             using var response = await _httpClient.SendAsync(request, cancellationToken);
+
             var json = await response.Content.ReadAsStringAsync(cancellationToken);
+
             EnsureSuccess(response, json);
 
             using var document = JsonDocument.Parse(json);
+
             var root = document.RootElement;
 
             if (root.TryGetProperty("access_token", out var tokenElement))
@@ -114,9 +125,10 @@ public sealed class GitHubService : IGitHubService, IDisposable
                 return ReadToken(root);
             }
 
-            var error = root.TryGetProperty("error", out var errorElement)
-                ? errorElement.GetString()
-                : null;
+            var error =
+                root.TryGetProperty("error", out var errorElement) ?
+                    errorElement.GetString() :
+                    null;
 
             switch (error)
             {
@@ -155,6 +167,7 @@ public sealed class GitHubService : IGitHubService, IDisposable
         CancellationToken cancellationToken = default)
     {
         EnsureConfigured();
+
         if (string.IsNullOrWhiteSpace(token.RefreshToken))
         {
             throw new InvalidOperationException(_localizationService.Get(
@@ -167,20 +180,26 @@ public sealed class GitHubService : IGitHubService, IDisposable
             new KeyValuePair<string, string>("grant_type", "refresh_token"),
             new KeyValuePair<string, string>("refresh_token", token.RefreshToken),
         ]);
+
         using var request = new HttpRequestMessage(HttpMethod.Post, AccessTokenUri)
         {
             Content = content,
         };
+
         request.Headers.Accept.Clear();
         request.Headers.Accept.Add(
             new MediaTypeWithQualityHeaderValue("application/json"));
 
         using var response = await _httpClient.SendAsync(request, cancellationToken);
+
         var json = await response.Content.ReadAsStringAsync(cancellationToken);
+
         EnsureSuccess(response, json);
 
         using var document = JsonDocument.Parse(json);
+
         var root = document.RootElement;
+
         if (!root.TryGetProperty("access_token", out _))
         {
             throw new InvalidOperationException(GetGitHubError(
@@ -198,18 +217,21 @@ public sealed class GitHubService : IGitHubService, IDisposable
     {
         using var request = CreateApiRequest(CurrentUserUri, accessToken);
         using var response = await _httpClient.SendAsync(request, cancellationToken);
+
         var json = await response.Content.ReadAsStringAsync(cancellationToken);
+
         EnsureSuccess(response, json);
 
         using var document = JsonDocument.Parse(json);
+
         var root = document.RootElement;
 
         return new GitHubUser(
             root.GetProperty("id").GetInt64(),
             root.GetProperty("login").GetString()!,
-            root.TryGetProperty("avatar_url", out var avatar)
-                ? avatar.GetString()
-                : null);
+            root.TryGetProperty("avatar_url", out var avatar) ?
+                avatar.GetString() :
+                null);
     }
 
     public async Task<IReadOnlyList<GitHubRepository>> GetRepositoriesAsync(
@@ -223,7 +245,9 @@ public sealed class GitHubService : IGitHubService, IDisposable
         {
             using var request = CreateApiRequest(pageUri, accessToken);
             using var response = await _httpClient.SendAsync(request, cancellationToken);
+
             var json = await response.Content.ReadAsStringAsync(cancellationToken);
+
             EnsureSuccess(response, json);
 
             using var document = JsonDocument.Parse(json);
@@ -265,21 +289,26 @@ public sealed class GitHubService : IGitHubService, IDisposable
                 nameof(commitSha));
         }
 
-        var uri = new Uri(
-            $"https://api.github.com/repos/{repositoryFullName}/zipball/{commitSha}");
+        var uri = new Uri($"https://api.github.com/repos/{repositoryFullName}/zipball/{commitSha}");
+
         using var request = CreateApiRequest(uri, accessToken);
         using var response = await _httpClient.SendAsync(
             request,
             HttpCompletionOption.ResponseHeadersRead,
             cancellationToken);
-        var error = response.IsSuccessStatusCode
-            ? string.Empty
-            : await response.Content.ReadAsStringAsync(cancellationToken);
+
+        var error = response.IsSuccessStatusCode ?
+            string.Empty :
+            await response.Content.ReadAsStringAsync(cancellationToken);
+
         EnsureSuccess(response, error);
 
         var result = new MemoryStream();
+
         await response.Content.CopyToAsync(result, cancellationToken);
+
         result.Position = 0;
+
         return result;
     }
 
@@ -295,23 +324,27 @@ public sealed class GitHubService : IGitHubService, IDisposable
                 "Некорректное имя репозитория GitHub."));
         }
 
-        var uri = new Uri(
-            $"https://api.github.com/repos/{repositoryFullName}/commits?per_page=1");
+        var uri = new Uri($"https://api.github.com/repos/{repositoryFullName}/commits?per_page=1");
+
         using var request = CreateApiRequest(uri, accessToken);
         using var response = await _httpClient.SendAsync(request, cancellationToken);
+
         var json = await response.Content.ReadAsStringAsync(cancellationToken);
+
         EnsureSuccess(response, json);
 
         using var document = JsonDocument.Parse(json);
+
         var commits = document.RootElement;
+
         if (commits.ValueKind != JsonValueKind.Array || commits.GetArrayLength() == 0)
         {
             throw new InvalidDataException(_localizationService.Get(
                 "В репозитории GitHub нет коммитов."));
         }
 
-        return commits[0].GetProperty("sha").GetString()
-            ?? throw new InvalidDataException(_localizationService.Get(
+        return commits[0].GetProperty("sha").GetString() ??
+            throw new InvalidDataException(_localizationService.Get(
                 "GitHub не вернул Git commit SHA."));
     }
 
@@ -335,32 +368,39 @@ public sealed class GitHubService : IGitHubService, IDisposable
                 nameof(commitSha));
         }
 
-        var commitUri = new Uri(
-            $"https://api.github.com/repos/{repositoryFullName}/git/commits/{commitSha}");
+        var commitUri = new Uri($"https://api.github.com/repos/{repositoryFullName}/git/commits/{commitSha}");
+
         using var commitRequest = CreateApiRequest(commitUri, accessToken);
         using var commitResponse = await _httpClient.SendAsync(
             commitRequest,
             cancellationToken);
+
         var commitJson = await commitResponse.Content.ReadAsStringAsync(cancellationToken);
+
         EnsureSuccess(commitResponse, commitJson);
 
         using var commitDocument = JsonDocument.Parse(commitJson);
+
         var treeSha = commitDocument.RootElement
             .GetProperty("tree")
             .GetProperty("sha")
-            .GetString()
-            ?? throw new InvalidDataException(_localizationService.Get(
+            .GetString() ??
+            throw new InvalidDataException(_localizationService.Get(
                 "GitHub не вернул SHA дерева репозитория."));
 
-        var treeUri = new Uri(
-            $"https://api.github.com/repos/{repositoryFullName}/git/trees/{treeSha}?recursive=1");
+        var treeUri = new Uri($"https://api.github.com/repos/{repositoryFullName}/git/trees/{treeSha}?recursive=1");
+
         using var treeRequest = CreateApiRequest(treeUri, accessToken);
         using var treeResponse = await _httpClient.SendAsync(treeRequest, cancellationToken);
+
         var json = await treeResponse.Content.ReadAsStringAsync(cancellationToken);
+
         EnsureSuccess(treeResponse, json);
 
         using var document = JsonDocument.Parse(json);
+
         var result = new List<GitHubSubmodule>();
+
         if (!document.RootElement.TryGetProperty("tree", out var tree))
         {
             return result;
@@ -396,7 +436,9 @@ public sealed class GitHubService : IGitHubService, IDisposable
     private static HttpRequestMessage CreateApiRequest(Uri uri, string accessToken)
     {
         var request = new HttpRequestMessage(HttpMethod.Get, uri);
+
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
         return request;
     }
 
@@ -412,16 +454,16 @@ public sealed class GitHubService : IGitHubService, IDisposable
             foreach (var part in value.Split(','))
             {
                 var sections = part.Split(';', StringSplitOptions.TrimEntries);
-
                 if (sections.Length < 2 || !sections[1].Contains("rel=\"next\"", StringComparison.Ordinal))
                 {
                     continue;
                 }
 
                 var uriText = sections[0].Trim().Trim('<', '>');
-                return Uri.TryCreate(uriText, UriKind.Absolute, out var uri)
-                    ? uri
-                    : null;
+
+                return Uri.TryCreate(uriText, UriKind.Absolute, out var uri) ?
+                    uri :
+                    null;
             }
         }
 
@@ -452,31 +494,36 @@ public sealed class GitHubService : IGitHubService, IDisposable
     }
 
     private static string GetGitHubError(JsonElement root, string fallback) =>
-        root.TryGetProperty("error_description", out var description)
-            ? description.GetString() ?? fallback
-            : root.TryGetProperty("message", out var message)
-                ? message.GetString() ?? fallback
-                : fallback;
+        root.TryGetProperty("error_description", out var description) ?
+            description.GetString() ?? fallback :
+            root.TryGetProperty("message", out var message) ?
+                message.GetString() ?? fallback :
+                fallback;
 
     private static GitHubToken ReadToken(JsonElement root)
     {
         var now = DateTimeOffset.UtcNow;
+
         var accessToken = root.GetProperty("access_token").GetString()!;
-        var refreshToken = root.TryGetProperty("refresh_token", out var refreshTokenElement)
-            ? refreshTokenElement.GetString()
-            : null;
+
+        var refreshToken =
+            root.TryGetProperty("refresh_token", out var refreshTokenElement) ?
+                refreshTokenElement.GetString() :
+                null;
+
         DateTimeOffset? accessTokenExpiresAtUtc =
             root.TryGetProperty("expires_in", out var expiresElement) &&
-            expiresElement.ValueKind == JsonValueKind.Number
-            ? now.AddSeconds(expiresElement.GetInt32())
-            : null;
+            expiresElement.ValueKind == JsonValueKind.Number ?
+                now.AddSeconds(expiresElement.GetInt32()) :
+                null;
+
         DateTimeOffset? refreshTokenExpiresAtUtc =
             root.TryGetProperty(
                 "refresh_token_expires_in",
                 out var refreshExpiresElement) &&
-            refreshExpiresElement.ValueKind == JsonValueKind.Number
-                ? now.AddSeconds(refreshExpiresElement.GetInt32())
-                : null;
+            refreshExpiresElement.ValueKind == JsonValueKind.Number ?
+                now.AddSeconds(refreshExpiresElement.GetInt32()) :
+                null;
 
         return new GitHubToken(
             accessToken,

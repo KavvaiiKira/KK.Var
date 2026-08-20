@@ -31,8 +31,10 @@ public sealed class RemoteConnectionService(ILocalizationService localizationSer
         try
         {
             using var client = CreateClient(settings);
+
             hostKeyValidator = new SshHostKeyValidator(settings.HostKeyFingerprint);
             hostKeyValidator.Attach(client);
+
             client.ConnectionInfo.Timeout = TimeSpan.FromSeconds(10);
             client.Connect();
 
@@ -106,6 +108,7 @@ public sealed class RemoteConnectionService(ILocalizationService localizationSer
         }
 
         var keyFile = new PrivateKeyFile(settings.PrivateKeyPath!);
+
         return new SshClient(
             settings.Host!,
             settings.Port,

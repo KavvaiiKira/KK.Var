@@ -18,11 +18,11 @@ public sealed class KKProjectEnvironmentService(
     IKKProjectEnvironmentVariableRepository variableRepository)
     : IKKProjectEnvironmentService
 {
-    private static readonly Regex VariableNamePattern = new(
+    private static readonly Regex VariableNamePattern = new Regex(
         "^[A-Za-z_][A-Za-z0-9_]*$",
         RegexOptions.CultureInvariant);
 
-    private static readonly Regex JsonNumberPattern = new(
+    private static readonly Regex JsonNumberPattern = new Regex(
         "^-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?$",
         RegexOptions.CultureInvariant);
 
@@ -49,8 +49,8 @@ public sealed class KKProjectEnvironmentService(
     {
         ArgumentNullException.ThrowIfNull(variables);
 
-        _ = await projectRepository.GetByIdAsync(projectId, cancellationToken)
-            ?? throw new KeyNotFoundException($"Project '{projectId}' was not found.");
+        _ = await projectRepository.GetByIdAsync(projectId, cancellationToken) ??
+            throw new KeyNotFoundException($"Project '{projectId}' was not found.");
 
         var entities = new List<KKProjectEnvironmentVariable>(variables.Count);
         var names = new HashSet<string>(StringComparer.Ordinal);
@@ -95,8 +95,9 @@ public sealed class KKProjectEnvironmentService(
         Guid projectId,
         CancellationToken cancellationToken = default)
     {
-        var project = await projectRepository.GetByIdAsync(projectId, cancellationToken)
-            ?? throw new KeyNotFoundException($"Project '{projectId}' was not found.");
+        var project = await projectRepository.GetByIdAsync(projectId, cancellationToken) ??
+            throw new KeyNotFoundException($"Project '{projectId}' was not found.");
+
         var variables = await variableRepository.GetByProjectIdAsync(
             projectId,
             cancellationToken);
@@ -167,9 +168,9 @@ public sealed class KKProjectEnvironmentService(
                     $"{variable.Name}: {FormatJsonLikeScalar(variable.Value)}"));
 
     private static string FormatJsonLikeScalar(string value) =>
-        JsonNumberPattern.IsMatch(value)
-            ? value
-            : JsonSerializer.Serialize(value);
+        JsonNumberPattern.IsMatch(value) ?
+            value :
+        JsonSerializer.Serialize(value);
 
     public async Task<string> WriteFileAsync(
         Guid projectId,
@@ -183,13 +184,15 @@ public sealed class KKProjectEnvironmentService(
                 nameof(projectRootDirectory));
         }
 
-        var project = await projectRepository.GetByIdAsync(projectId, cancellationToken)
-            ?? throw new KeyNotFoundException($"Project '{projectId}' was not found.");
+        var project = await projectRepository.GetByIdAsync(projectId, cancellationToken) ??
+            throw new KeyNotFoundException($"Project '{projectId}' was not found.");
 
         var rootPath = Path.GetFullPath(projectRootDirectory);
+
         var relativePath = project.ProjectEnvironmentFilePath.Replace(
             '/',
             Path.DirectorySeparatorChar);
+
         var targetPath = Path.GetFullPath(Path.Combine(rootPath, relativePath));
         var pathFromRoot = Path.GetRelativePath(rootPath, targetPath);
 
@@ -203,13 +206,13 @@ public sealed class KKProjectEnvironmentService(
                 "Environment file path points outside the project root directory.");
         }
 
-        var targetDirectory = Path.GetDirectoryName(targetPath)
-            ?? throw new InvalidOperationException(
-                "Environment file directory could not be determined.");
+        var targetDirectory = Path.GetDirectoryName(targetPath) ??
+            throw new InvalidOperationException("Environment file directory could not be determined.");
 
         Directory.CreateDirectory(targetDirectory);
 
         var content = await GenerateAsync(projectId, cancellationToken);
+
         await File.WriteAllTextAsync(
             targetPath,
             content,

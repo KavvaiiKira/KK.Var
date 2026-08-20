@@ -9,7 +9,9 @@ public interface ISshPasswordStore
         string password,
         CancellationToken cancellationToken = default);
 
-    Task<string?> LoadAsync(CancellationToken cancellationToken = default);
+    Task<string?> LoadAsync(
+        CancellationToken cancellationToken = default);
 
-    Task DeleteAsync(CancellationToken cancellationToken = default);
+    Task DeleteAsync(
+        CancellationToken cancellationToken = default);
 }

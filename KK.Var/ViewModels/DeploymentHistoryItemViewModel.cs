@@ -14,8 +14,7 @@ public sealed class DeploymentHistoryItemViewModel(
 
     public string VersionTag => Deployment.Version?.Tag ?? string.Empty;
 
-    public string DateDisplay =>
-        Deployment.StartedAtUtc.ToLocalTime().ToString("g");
+    public string DateDisplay => Deployment.StartedAtUtc.ToLocalTime().ToString("g");
 
     public string OperationDisplay => Deployment.OperationType switch
     {
@@ -37,12 +36,12 @@ public sealed class DeploymentHistoryItemViewModel(
 
     public bool IsSuccessful => Deployment.Status == DeploymentStatus.Succeeded;
 
-    public bool IsFailed => Deployment.Status is
-        DeploymentStatus.Failed or DeploymentStatus.Interrupted;
+    public bool IsFailed => Deployment.Status is DeploymentStatus.Failed or DeploymentStatus.Interrupted;
 
-    public string Details => string.IsNullOrWhiteSpace(Deployment.ErrorMessage)
-        ? OperationDisplay
-        : Deployment.ErrorMessage;
+    public string Details =>
+        string.IsNullOrWhiteSpace(Deployment.ErrorMessage) ?
+            OperationDisplay :
+            Deployment.ErrorMessage;
 
     public void RefreshLocalization()
     {

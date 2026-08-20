@@ -12,8 +12,7 @@ using Renci.SshNet;
 
 namespace KK.Var.Services.Implementations;
 
-public sealed class RemoteDeploymentService(ILocalizationService localizationService)
-    : IRemoteDeploymentService
+public sealed class RemoteDeploymentService(ILocalizationService localizationService) : IRemoteDeploymentService
 {
     private const string PasswordAuthentication = "Пароль";
 
@@ -67,6 +66,7 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
     {
         Validate(settings, project, artifactPath);
         ValidateOperationId(operationId);
+
         var remoteArchive = $"/tmp/kk-var-{operationId}.tar.gz";
         var remoteUnit = $"/tmp/kk-var-{operationId}.service";
         var target = project.RemoteDeploymentDirectory.TrimEnd('/');
@@ -80,12 +80,16 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
 
         using var ssh = CreateSshClient(settings);
         using var sftp = CreateSftpClient(settings);
+
         var sshHostKeyValidator = new SshHostKeyValidator(settings.HostKeyFingerprint);
         var sftpHostKeyValidator = new SshHostKeyValidator(settings.HostKeyFingerprint);
+
         sshHostKeyValidator.Attach(ssh);
         sftpHostKeyValidator.Attach(sftp);
+
         ssh.ConnectionInfo.Timeout = TimeSpan.FromSeconds(15);
         sftp.ConnectionInfo.Timeout = TimeSpan.FromSeconds(15);
+
         try
         {
             ssh.Connect();
@@ -102,12 +106,16 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
+
             progress?.Report(new DeploymentProgress(
                 55,
                 localizationService.Get("Проверка удалённой машины")));
+
             RunChecked(ssh, "sudo -n true", log);
             RunChecked(ssh, "command -v systemctl >/dev/null && command -v tar >/dev/null", log);
+
             var actualArchitecture = RunCheckedWithOutput(ssh, "uname -m", log);
+
             if (!string.Equals(
                     actualArchitecture,
                     settings.Architecture,
@@ -118,7 +126,9 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
                     settings.Architecture,
                     actualArchitecture));
             }
+
             var requiredKilobytes = Math.Max(1024, new FileInfo(artifactPath).Length / 1024 * 3);
+
             RunChecked(
                 ssh,
                 $"check_path=$(dirname -- {Q(target)}); " +
@@ -129,17 +139,19 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
                 "available=$(df -Pk -- \"$check_path\" | awk 'NR==2 {print $4}'); " +
                 $"test -n \"$available\" && test \"$available\" -ge {requiredKilobytes}",
                 log);
+
             progress?.Report(new DeploymentProgress(
                 58,
                 localizationService.Get("Удалённая машина готова к Deploy")));
-
             progress?.Report(new DeploymentProgress(
                 60,
                 localizationService.Get("Загрузка архива на удалённую машину")));
+
             using (var archive = File.OpenRead(artifactPath))
             {
                 sftp.UploadFile(archive, remoteArchive);
             }
+
             using (var unit = new MemoryStream(Encoding.UTF8.GetBytes(unitContent)))
             {
                 sftp.UploadFile(unit, remoteUnit);
@@ -148,6 +160,7 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
             progress?.Report(new DeploymentProgress(
                 65,
                 localizationService.Get("Распаковка новой версии")));
+
             RunChecked(
                 ssh,
                 $"sudo rm -rf -- {Q(staging)} && sudo mkdir -p -- {Q(staging)} && " +
@@ -160,14 +173,17 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
             {
                 var buildConfiguration = JsonSerializer.Deserialize<ProjectBuildConfiguration>(
                     project.BuildConfigurationJson,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-                    ?? new ProjectBuildConfiguration();
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new ProjectBuildConfiguration();
+
                 var pipArguments = string.Join(
                     ' ',
                     (buildConfiguration.BuildArguments ?? []).Select(Q));
-                var pipArgumentPrefix = string.IsNullOrWhiteSpace(pipArguments)
-                    ? string.Empty
-                    : pipArguments + " ";
+
+                var pipArgumentPrefix =
+                    string.IsNullOrWhiteSpace(pipArguments) ?
+                        string.Empty :
+                        pipArguments + " ";
+
                 RunChecked(ssh, "command -v python3 >/dev/null", log);
                 RunChecked(
                     ssh,
@@ -210,20 +226,25 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
             }
 
             SaveCheckpoint(checkpoint, DeploymentStage.ReadyToSwitch, unitState);
+
             progress?.Report(new DeploymentProgress(
                 75,
                 localizationService.Get("Переключение версии")));
+
             SaveCheckpoint(checkpoint, DeploymentStage.SwitchingVersion, unitState);
+
             Run(ssh, $"sudo systemctl stop {Q(project.RemoteServiceName)}", log);
             RunChecked(
                 ssh,
                 $"if sudo test -e {Q(target)}; then sudo mv -- {Q(target)} {Q(backup)}; fi && " +
                 $"sudo mv -- {Q(staging)} {Q(target)}",
                 log);
+
             targetMoved = true;
             SaveCheckpoint(checkpoint, DeploymentStage.VersionSwitched, unitState);
 
             SaveCheckpoint(checkpoint, DeploymentStage.UpdatingUnit, unitState);
+
             if (unitState != DeploymentUnitChange.Unchanged)
             {
                 RunChecked(ssh, $"sudo systemd-analyze verify {Q(remoteUnit)}", log);
@@ -235,6 +256,7 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
                     82,
                     localizationService.Get("Systemd перечитал изменённый unit")));
             }
+
             SaveCheckpoint(checkpoint, DeploymentStage.UnitUpdated, unitState);
 
             if (Run(ssh, $"sudo systemctl is-enabled {Q(project.RemoteServiceName)}", log).ExitStatus != 0)
@@ -242,22 +264,27 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
                 RunChecked(ssh, $"sudo systemctl enable {Q(project.RemoteServiceName)}", log);
             }
 
-            progress?.Report(new DeploymentProgress(
-                88,
-                localizationService.Get("Запуск systemd-сервиса")));
+            progress?.Report(new DeploymentProgress(88, localizationService.Get("Запуск systemd-сервиса")));
+
             SaveCheckpoint(checkpoint, DeploymentStage.StartingService, unitState);
+
             RunChecked(ssh, $"sudo systemctl restart {Q(project.RemoteServiceName)}", log);
             RunChecked(ssh, $"sudo systemctl is-active --quiet {Q(project.RemoteServiceName)}", log);
+
             SaveCheckpoint(checkpoint, DeploymentStage.ServiceStarted, unitState);
+
             progress?.Report(new DeploymentProgress(
                 96,
                 localizationService.Get("Systemd-сервис успешно запущен")));
+
             SaveCheckpoint(checkpoint, DeploymentStage.Committed, unitState);
+
             Run(
                 ssh,
                 $"sudo rm -rf -- {Q(backup)} {Q(remoteArchive)} {Q(remoteUnit)} {Q(unitBackup)} " +
                 $"{Q(target + "/.kk-var-deployment")}",
                 log);
+
             progress?.Report(new DeploymentProgress(
                 100,
                 localizationService.Get("Deploy завершён")));
@@ -307,6 +334,7 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
                     $"sudo rm -rf -- {Q(staging)} {Q(remoteArchive)} {Q(remoteUnit)} {Q(unitBackup)}",
                     log);
             }
+
             throw;
         }
         finally
@@ -315,6 +343,7 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
             {
                 sftp.Disconnect();
             }
+
             if (ssh.IsConnected)
             {
                 ssh.Disconnect();
@@ -345,9 +374,12 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
         var marker = target + "/.kk-var-deployment";
 
         using var ssh = CreateSshClient(settings);
+
         var hostKeyValidator = new SshHostKeyValidator(settings.HostKeyFingerprint);
+
         hostKeyValidator.Attach(ssh);
         ssh.ConnectionInfo.Timeout = TimeSpan.FromSeconds(15);
+
         try
         {
             ssh.Connect();
@@ -362,10 +394,12 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
         try
         {
             RunChecked(ssh, "sudo -n true", log);
+
             var markerMatches = Run(
                 ssh,
                 $"sudo test -f {Q(marker)} && test \"$(sudo cat {Q(marker)})\" = {Q(operationId)}",
                 log).ExitStatus == 0;
+
             var serviceIsActive = Run(
                 ssh,
                 $"sudo systemctl is-active --quiet {Q(project.RemoteServiceName)}",
@@ -399,12 +433,14 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
                 ssh,
                 $"sudo test -e {Q(backup)}",
                 log).ExitStatus == 0;
+
             var targetExists = Run(
                 ssh,
                 $"sudo test -e {Q(target)}",
                 log).ExitStatus == 0;
-            var hasPreviousVersion = backupExists ||
-                                     (targetExists && !markerMatches);
+
+            var hasPreviousVersion = backupExists || (targetExists && !markerMatches);
+
             Run(
                 ssh,
                 $"sudo systemctl stop {Q(project.RemoteServiceName)}; " +
@@ -441,10 +477,11 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
                 ssh,
                 $"sudo rm -rf -- {Q(staging)} {Q(remoteArchive)} {Q(remoteUnit)} {Q(unitBackup)}",
                 log);
+
             return new DeploymentRecoveryResult(
-                hasPreviousVersion
-                    ? DeploymentRecoveryOutcome.PreviousVersionRestored
-                    : DeploymentRecoveryOutcome.StagingCleaned);
+                hasPreviousVersion ?
+                    DeploymentRecoveryOutcome.PreviousVersionRestored :
+                    DeploymentRecoveryOutcome.StagingCleaned);
         }
         finally
         {
@@ -458,44 +495,49 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
     private static SshCommand Run(SshClient client, string command, TextWriter log)
     {
         log.WriteLine($"> {command}");
+
         var result = client.RunCommand(command);
+
         if (!string.IsNullOrWhiteSpace(result.Result))
         {
             log.WriteLine(result.Result.TrimEnd());
         }
+
         if (!string.IsNullOrWhiteSpace(result.Error))
         {
             log.WriteLine(result.Error.TrimEnd());
         }
+
         return result;
     }
 
     private void RunChecked(SshClient client, string command, TextWriter log)
     {
         using var result = Run(client, command, log);
+
         if (result.ExitStatus != 0)
         {
-            var output = string.IsNullOrWhiteSpace(result.Error)
-                ? result.Result
-                : result.Error;
+            var output = string.IsNullOrWhiteSpace(result.Error) ?
+                result.Result :
+                result.Error;
+
             var message = output.Contains(
                 "ensurepip is not available",
-                StringComparison.OrdinalIgnoreCase)
-                ? localizationService.Get(
-                    "Не удалось создать виртуальное окружение Python: на удалённой машине отсутствует venv/ensurepip. Для Debian или Ubuntu установите пакет python3-venv.")
-                : string.IsNullOrWhiteSpace(output)
-                    ? localizationService.Format(
-                        "Удалённая команда завершилась с кодом {0}.",
-                        result.ExitStatus)
-                    : LastUsefulLine(output);
+                StringComparison.OrdinalIgnoreCase) ?
+                    localizationService.Get(
+                        "Не удалось создать виртуальное окружение Python: на удалённой машине отсутствует venv/ensurepip. Для Debian или Ubuntu установите пакет python3-venv.") :
+                    string.IsNullOrWhiteSpace(output) ?
+                        localizationService.Format(
+                            "Удалённая команда завершилась с кодом {0}.",
+                            result.ExitStatus) :
+                        LastUsefulLine(output);
             throw new InvalidOperationException(message);
         }
     }
 
     private static string LastUsefulLine(string output) => output
         .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-        .LastOrDefault()
-        ?? string.Empty;
+        .LastOrDefault() ?? string.Empty;
 
     private string RunCheckedWithOutput(
         SshClient client,
@@ -506,11 +548,11 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
         if (result.ExitStatus != 0)
         {
             throw new InvalidOperationException(
-                string.IsNullOrWhiteSpace(result.Error)
-                    ? localizationService.Format(
+                string.IsNullOrWhiteSpace(result.Error) ?
+                    localizationService.Format(
                         "Удалённая команда завершилась с кодом {0}.",
-                        result.ExitStatus)
-                    : result.Error.Trim());
+                        result.ExitStatus) :
+                    result.Error.Trim());
         }
         return result.Result.Trim();
     }
@@ -518,11 +560,14 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
     private string CreateUnit(KKProject project, string userName)
     {
         RejectControlCharacters(userName);
+
         var directory = project.RemoteDeploymentDirectory.TrimEnd('/');
         var executable = $"{directory}/{GetExecutableRelativePath(project)}";
-        var execStart = IsPythonProject(project)
-            ? $"{UnitQuote(directory + "/.venv/bin/python")} {UnitQuote(executable)}"
-            : UnitQuote(executable);
+
+        var execStart = IsPythonProject(project) ?
+            $"{UnitQuote(directory + "/.venv/bin/python")} {UnitQuote(executable)}" :
+            UnitQuote(executable);
+
         return string.Join('\n',
         [
             "[Unit]",
@@ -568,6 +613,7 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
             throw new InvalidOperationException(localizationService.Get(
                 "Удалённая машина не настроена."));
         }
+
         if (string.IsNullOrWhiteSpace(settings.HostKeyFingerprint) ||
             !string.Equals(
                 settings.HostKeyHost,
@@ -578,6 +624,7 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
             throw new InvalidOperationException(localizationService.Get(
                 "Проверьте подключение и подтвердите отпечаток SSH-сервера."));
         }
+
         RejectControlCharacters(project.RemoteServiceName);
         RejectControlCharacters(project.RemoteDeploymentDirectory);
         RejectControlCharacters(project.RemoteExecutableFileName);
@@ -611,7 +658,8 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
         }
     }
 
-    private static string Q(string value) => $"'{value.Replace("'", "'\"'\"'")}'";
+    private static string Q(string value) =>
+        $"'{value.Replace("'", "'\"'\"'")}'";
 
     private static string UnitQuote(string value) =>
         $"\"{value.Replace("\\", "\\\\").Replace("\"", "\\\"")}\"";
@@ -627,23 +675,23 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
         project.RemoteExecutableFileName.EndsWith(".py", StringComparison.OrdinalIgnoreCase);
 
     private static string GetExecutableRelativePath(KKProject project) =>
-        project.RemoteExecutableFileName.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)
-            ? project.RemoteExecutableFileName[..^4]
-            : project.RemoteExecutableFileName;
+        project.RemoteExecutableFileName.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) ?
+            project.RemoteExecutableFileName[..^4] :
+        project.RemoteExecutableFileName;
 
     private static SshClient CreateSshClient(RemoteMachineSettings settings) =>
-        settings.AuthenticationMethod == PasswordAuthentication
-            ? new SshClient(settings.Host!, settings.Port, settings.UserName!, settings.Password!)
-            : new SshClient(
+        settings.AuthenticationMethod == PasswordAuthentication ?
+            new SshClient(settings.Host!, settings.Port, settings.UserName!, settings.Password!) :
+            new SshClient(
                 settings.Host!,
                 settings.Port,
                 settings.UserName!,
                 new PrivateKeyFile(settings.PrivateKeyPath!));
 
     private static SftpClient CreateSftpClient(RemoteMachineSettings settings) =>
-        settings.AuthenticationMethod == PasswordAuthentication
-            ? new SftpClient(settings.Host!, settings.Port, settings.UserName!, settings.Password!)
-            : new SftpClient(
+        settings.AuthenticationMethod == PasswordAuthentication ?
+            new SftpClient(settings.Host!, settings.Port, settings.UserName!, settings.Password!) :
+            new SftpClient(
                 settings.Host!,
                 settings.Port,
                 settings.UserName!,

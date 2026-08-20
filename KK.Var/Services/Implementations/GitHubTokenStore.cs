@@ -21,6 +21,7 @@ public sealed class GitHubTokenStore : IGitHubTokenStore
     {
         ArgumentNullException.ThrowIfNull(token);
         ArgumentException.ThrowIfNullOrWhiteSpace(token.AccessToken);
+
         if (!OperatingSystem.IsWindows())
         {
             throw new PlatformNotSupportedException(
@@ -33,12 +34,14 @@ public sealed class GitHubTokenStore : IGitHubTokenStore
             JsonSerializer.SerializeToUtf8Bytes(token),
             AdditionalEntropy,
             DataProtectionScope.CurrentUser);
+
         var temporaryPath = DatabasePaths.GitHubTokenFilePath + ".tmp";
 
         await File.WriteAllBytesAsync(
             temporaryPath,
             encryptedToken,
             cancellationToken);
+
         File.Move(
             temporaryPath,
             DatabasePaths.GitHubTokenFilePath,
@@ -62,13 +65,14 @@ public sealed class GitHubTokenStore : IGitHubTokenStore
         var encryptedToken = await File.ReadAllBytesAsync(
             DatabasePaths.GitHubTokenFilePath,
             cancellationToken);
+
         var token = ProtectedData.Unprotect(
             encryptedToken,
             AdditionalEntropy,
             DataProtectionScope.CurrentUser);
 
-        return JsonSerializer.Deserialize<GitHubToken>(token)
-            ?? throw new InvalidDataException("GitHub token data is invalid.");
+        return JsonSerializer.Deserialize<GitHubToken>(token) ??
+            throw new InvalidDataException("GitHub token data is invalid.");
     }
 
     public Task DeleteAsync(CancellationToken cancellationToken = default)

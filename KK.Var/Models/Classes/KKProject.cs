@@ -16,7 +16,9 @@ public sealed class KKProject
 
     [NotMapped]
     public string EffectiveDescription =>
-        string.IsNullOrWhiteSpace(Description) ? Name : Description;
+        string.IsNullOrWhiteSpace(Description) ?
+            Name :
+            Description;
 
     [NotMapped]
     public string LastDeploymentDisplay
@@ -25,9 +27,9 @@ public sealed class KKProject
         {
             var deployment = Deployments.MaxBy(item => item.StartedAtUtc);
 
-            return deployment is null
-                ? "Не выполнялся"
-                : deployment.StartedAtUtc.ToLocalTime().ToString("dd.MM.yyyy, HH:mm");
+            return deployment is null ?
+                "Не выполнялся" :
+                deployment.StartedAtUtc.ToLocalTime().ToString("dd.MM.yyyy, HH:mm");
         }
     }
 
@@ -40,9 +42,10 @@ public sealed class KKProject
         $"{RemoteDeploymentDirectory.TrimEnd('/')}/{RemoteExecutableFileName.TrimStart('/')}";
 
     [NotMapped]
-    public string SourceDisplay => SourceType == ProjectSourceType.GitHubRepository
-        ? $"GitHub · {GitHubRepositoryFullName}"
-        : $"Локальная папка · {LocalDirectoryPath}";
+    public string SourceDisplay =>
+        SourceType == ProjectSourceType.GitHubRepository ?
+            $"GitHub · {GitHubRepositoryFullName}" :
+            $"Локальная папка · {LocalDirectoryPath}";
 
     public ProjectSourceType SourceType { get; set; }
 
@@ -66,19 +69,15 @@ public sealed class KKProject
 
     public string ProjectEnvironmentFilePath { get; set; } = string.Empty;
 
-    public EnvironmentFileFormat EnvironmentFileFormat { get; set; } =
-        EnvironmentFileFormat.Json;
+    public EnvironmentFileFormat EnvironmentFileFormat { get; set; } = EnvironmentFileFormat.Json;
 
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
 
-    public ICollection<KKProjectEnvironmentVariable> EnvironmentVariables { get; set; }
-        = new List<KKProjectEnvironmentVariable>();
+    public ICollection<KKProjectEnvironmentVariable> EnvironmentVariables { get; set; } = new List<KKProjectEnvironmentVariable>();
 
-    public ICollection<KKProjectVersion> Versions { get; set; }
-        = new List<KKProjectVersion>();
+    public ICollection<KKProjectVersion> Versions { get; set; } = new List<KKProjectVersion>();
 
-    public ICollection<KKProjectDeployment> Deployments { get; set; }
-        = new List<KKProjectDeployment>();
+    public ICollection<KKProjectDeployment> Deployments { get; set; } = new List<KKProjectDeployment>();
 }

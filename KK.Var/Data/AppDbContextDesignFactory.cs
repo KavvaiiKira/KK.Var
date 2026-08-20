@@ -16,8 +16,7 @@ public sealed class AppDbContextDesignFactory
             .AddJsonFile("appsettings.json", optional: true)
             .Build();
 
-        var fileName = configuration[$"{DatabaseOptions.SectionName}:FileName"]
-            ?? "kk-var.db";
+        var fileName = configuration[$"{DatabaseOptions.SectionName}:FileName"] ?? "kk-var.db";
 
         var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseSqlite($"Data Source={DatabasePaths.GetDatabaseFilePath(fileName)}")

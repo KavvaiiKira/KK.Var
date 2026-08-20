@@ -25,6 +25,5 @@ public sealed class KKProjectVersion
 
     public KKProject Project { get; set; } = null!;
 
-    public ICollection<KKProjectDeployment> Deployments { get; set; }
-        = new List<KKProjectDeployment>();
+    public ICollection<KKProjectDeployment> Deployments { get; set; } = new List<KKProjectDeployment>();
 }

@@ -16,8 +16,7 @@ public sealed class ProjectTileViewModel
     }
 
     private ProjectTileViewModel()
-    {
-    }
+    { }
 
     public KKProject? Project { get; }
 
@@ -27,26 +26,26 @@ public sealed class ProjectTileViewModel
 
     public bool IsAddTile => Project is null;
 
-    public string SourceDisplay => Project?.SourceType == ProjectSourceType.GitHubRepository
-        ? $"GitHub · {Project.GitHubRepositoryFullName}"
-        : $"{Localize("Локальная папка")} · {Project?.LocalDirectoryPath}";
+    public string SourceDisplay =>
+        Project?.SourceType == ProjectSourceType.GitHubRepository ?
+            $"GitHub · {Project.GitHubRepositoryFullName}" :
+            $"{Localize("Локальная папка")} · {Project?.LocalDirectoryPath}";
 
     public string LastDeploymentDisplay
     {
         get
         {
             var deployment = Project?.Deployments.MaxBy(item => item.StartedAtUtc);
-            return deployment is null
-                ? Localize("Не выполнялся")
-                : deployment.StartedAtUtc.ToLocalTime().ToString("g");
+            return deployment is null ?
+                Localize("Не выполнялся") :
+                deployment.StartedAtUtc.ToLocalTime().ToString("g");
         }
     }
 
     public string LatestVersionTag =>
-        Project?.Versions.MaxBy(version => version.CreatedAtUtc)?.Tag
-        ?? Localize("Нет версий");
+        Project?.Versions.MaxBy(version => version.CreatedAtUtc)?.Tag ?? Localize("Нет версий");
 
-    public static ProjectTileViewModel AddTile { get; } = new();
+    public static ProjectTileViewModel AddTile { get; } = new ProjectTileViewModel();
 
     private string Localize(string key) => _localizationService?.Get(key) ?? key;
 }

@@ -104,13 +104,13 @@ public partial class CreateProjectViewModel : ViewModelBase
 
     public bool IsEditing => _editingProjectId.HasValue;
 
-    public string EditorTitle => IsEditing
-        ? Localize("Редактирование проекта")
-        : Localize("Новый проект");
+    public string EditorTitle => IsEditing ?
+        Localize("Редактирование проекта") :
+        Localize("Новый проект");
 
-    public string SaveButtonText => IsEditing
-        ? Localize("Сохранить изменения")
-        : Localize("Сохранить проект");
+    public string SaveButtonText => IsEditing ?
+        Localize("Сохранить изменения") :
+        Localize("Сохранить проект");
 
     public void Reset()
     {
@@ -131,6 +131,7 @@ public partial class CreateProjectViewModel : ViewModelBase
         BuildConfigurationJson = "{}";
         ErrorMessage = string.Empty;
         HasUnsavedChanges = false;
+
         OnPropertyChanged(nameof(IsEditing));
         OnPropertyChanged(nameof(EditorTitle));
         OnPropertyChanged(nameof(SaveButtonText));
@@ -149,22 +150,26 @@ public partial class CreateProjectViewModel : ViewModelBase
         Name = project.Name;
         Description = project.Description ?? string.Empty;
         SelectedSourceType = Localize(
-            project.SourceType == ProjectSourceType.GitHubRepository
-                ? GitHubSource
-                : LocalSource);
+            project.SourceType == ProjectSourceType.GitHubRepository ?
+                GitHubSource :
+                LocalSource);
+
         LocalDirectoryPath = project.LocalDirectoryPath ?? string.Empty;
-        SelectedGitHubRepository = project.SourceType == ProjectSourceType.GitHubRepository &&
-                                   project.GitHubRepositoryId.HasValue &&
-                                   project.GitHubRepositoryFullName is not null &&
-                                   project.GitHubCloneUrl is not null
-            ? new GitHubRepository(
-                project.GitHubRepositoryId.Value,
-                project.GitHubRepositoryFullName.Split('/')[^1],
-                project.GitHubRepositoryFullName,
-                project.GitHubCloneUrl,
-                string.Empty,
-                false)
-            : null;
+
+        SelectedGitHubRepository =
+            project.SourceType == ProjectSourceType.GitHubRepository &&
+            project.GitHubRepositoryId.HasValue &&
+            project.GitHubRepositoryFullName is not null &&
+            project.GitHubCloneUrl is not null ?
+                new GitHubRepository(
+                    project.GitHubRepositoryId.Value,
+                    project.GitHubRepositoryFullName.Split('/')[^1],
+                    project.GitHubRepositoryFullName,
+                    project.GitHubCloneUrl,
+                    string.Empty,
+                    false) :
+                null;
+
         SelectedBuildProvider = MapBuildProvider(project.BuildProvider);
         RemoteServiceName = project.RemoteServiceName;
         RemoteExecutableFileName = project.RemoteExecutableFileName;
@@ -177,6 +182,7 @@ public partial class CreateProjectViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsEditing));
         OnPropertyChanged(nameof(EditorTitle));
         OnPropertyChanged(nameof(SaveButtonText));
+
         _isResetting = false;
     }
 
@@ -199,14 +205,18 @@ public partial class CreateProjectViewModel : ViewModelBase
             Id = _editingProjectId ?? Guid.NewGuid(),
             Name = Name,
             Description = Description,
-            SourceType = IsLocalSource
-                ? ProjectSourceType.LocalDirectory
-                : ProjectSourceType.GitHubRepository,
+
+            SourceType = IsLocalSource ?
+                ProjectSourceType.LocalDirectory :
+                ProjectSourceType.GitHubRepository,
+
             LocalDirectoryPath = IsLocalSource ? LocalDirectoryPath : null,
             GitHubRepositoryId = IsGitHubSource ? SelectedGitHubRepository?.Id : null,
-            GitHubRepositoryFullName = IsGitHubSource
-                ? SelectedGitHubRepository?.FullName
-                : null,
+
+            GitHubRepositoryFullName = IsGitHubSource ?
+                SelectedGitHubRepository?.FullName :
+                null,
+
             GitHubCloneUrl = IsGitHubSource ? SelectedGitHubRepository?.CloneUrl : null,
             BuildProvider = MapBuildProvider(),
             BuildConfigurationJson = BuildConfigurationJson,
@@ -214,8 +224,7 @@ public partial class CreateProjectViewModel : ViewModelBase
             RemoteExecutableFileName = RemoteExecutableFileName,
             RemoteDeploymentDirectory = RemoteDeploymentDirectory,
             ProjectEnvironmentFilePath = ProjectEnvironmentFilePath,
-            EnvironmentFileFormat = _editingProject?.EnvironmentFileFormat ??
-                                    EnvironmentFileFormat.Json,
+            EnvironmentFileFormat = _editingProject?.EnvironmentFileFormat ?? EnvironmentFileFormat.Json,
             EnvironmentVariables = _editingProject?.EnvironmentVariables ?? [],
             Versions = _editingProject?.Versions ?? [],
             Deployments = _editingProject?.Deployments ?? [],
@@ -228,12 +237,14 @@ public partial class CreateProjectViewModel : ViewModelBase
             if (IsEditing)
             {
                 await _projectService.UpdateAsync(project);
+
                 Reset();
                 ProjectUpdated?.Invoke(this, project);
             }
             else
             {
                 var createdProject = await _projectService.CreateAsync(project);
+
                 Reset();
                 ProjectCreated?.Invoke(this, createdProject);
             }
@@ -267,17 +278,15 @@ public partial class CreateProjectViewModel : ViewModelBase
         try
         {
             var token = await _gitHubAuthenticationService.GetTokenAsync();
-
             if (token is null)
             {
-                ErrorMessage = Localize(
-                    "Сначала подключите GitHub на странице настроек.");
+                ErrorMessage = Localize("Сначала подключите GitHub на странице настроек.");
                 return;
             }
 
             var selectedRepositoryId = SelectedGitHubRepository?.Id;
-            var repositories = await _gitHubService.GetRepositoriesAsync(
-                token.AccessToken);
+            var repositories = await _gitHubService.GetRepositoriesAsync(token.AccessToken);
+
             GitHubRepositories.Clear();
 
             foreach (var repository in repositories)
@@ -410,14 +419,18 @@ public partial class CreateProjectViewModel : ViewModelBase
 
         try
         {
-            var configurationJson = string.IsNullOrWhiteSpace(BuildConfigurationJson)
-                ? "{}"
-                : BuildConfigurationJson;
+            var configurationJson =
+                string.IsNullOrWhiteSpace(BuildConfigurationJson) ?
+                    "{}" :
+                    BuildConfigurationJson;
+
             using var document = System.Text.Json.JsonDocument.Parse(configurationJson);
+
             if (document.RootElement.ValueKind != System.Text.Json.JsonValueKind.Object)
             {
                 return Localize("Параметры сборки должны быть JSON-объектом.");
             }
+
             var configuration = System.Text.Json.JsonSerializer
                 .Deserialize<ProjectBuildConfiguration>(
                     configurationJson,
@@ -425,12 +438,14 @@ public partial class CreateProjectViewModel : ViewModelBase
                     {
                         PropertyNameCaseInsensitive = true,
                     }) ?? new ProjectBuildConfiguration();
+
             var provider = MapBuildProvider();
             if (provider == ProjectBuildProvider.Custom &&
                 string.IsNullOrWhiteSpace(configuration.Command))
             {
                 return Localize("Укажите command для пользовательской сборки.");
             }
+
             if (provider == ProjectBuildProvider.Cpp &&
                 string.IsNullOrWhiteSpace(configuration.ToolchainFile))
             {
@@ -469,16 +484,19 @@ public partial class CreateProjectViewModel : ViewModelBase
     {
         var sourceKey = Canonicalize(SelectedSourceType);
         var providerKey = Canonicalize(SelectedBuildProvider);
+
         if (string.IsNullOrWhiteSpace(sourceKey))
         {
             sourceKey = LocalSource;
         }
+
         if (string.IsNullOrWhiteSpace(providerKey))
         {
             providerKey = AutomaticBuild;
         }
 
         _isResetting = true;
+
         SourceTypes.Clear();
         SourceTypes.Add(Localize(LocalSource));
         SourceTypes.Add(Localize(GitHubSource));
@@ -491,6 +509,7 @@ public partial class CreateProjectViewModel : ViewModelBase
         BuildProviders.Add(Localize("Свой сценарий"));
         SelectedSourceType = Localize(sourceKey);
         SelectedBuildProvider = Localize(providerKey);
+
         _isResetting = false;
 
         OnPropertyChanged(nameof(IsLocalSource));
@@ -501,6 +520,5 @@ public partial class CreateProjectViewModel : ViewModelBase
 
     private string Localize(string key) => _localizationService?.Get(key) ?? key;
 
-    private string Canonicalize(string value) =>
-        _localizationService?.GetKey(value) ?? value;
+    private string Canonicalize(string value) => _localizationService?.GetKey(value) ?? value;
 }

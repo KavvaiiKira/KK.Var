@@ -25,11 +25,11 @@ public sealed class ProjectArtifactService(
     IGitHubAuthenticationService gitHubAuthenticationService,
     ILocalizationService localizationService) : IProjectArtifactService
 {
-    private static readonly Regex TagPattern = new(
+    private static readonly Regex TagPattern = new Regex(
         "^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$",
         RegexOptions.CultureInvariant);
 
-    private static readonly HashSet<string> IgnoredDirectories = new(
+    private static readonly HashSet<string> IgnoredDirectories = new HashSet<string>(
         [".git", ".vs", ".idea", ".vscode", "bin", "obj", "node_modules", ".venv"],
         StringComparer.OrdinalIgnoreCase);
 
@@ -38,6 +38,7 @@ public sealed class ProjectArtifactService(
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+
         if (projectId == Guid.Empty)
         {
             throw new ArgumentException("Project id is required.", nameof(projectId));
@@ -47,7 +48,9 @@ public sealed class ProjectArtifactService(
         var projectDirectory = Path.GetFullPath(Path.Combine(
             root,
             projectId.ToString("N")));
+
         var expectedParent = Directory.GetParent(projectDirectory)?.FullName;
+
         if (!string.Equals(expectedParent, root, StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException("Project artifact path is outside the artifact root.");
@@ -59,9 +62,11 @@ public sealed class ProjectArtifactService(
         }
 
         var directory = new DirectoryInfo(projectDirectory);
+
         EnsureNoReparsePoints(directory);
 
         Directory.Delete(projectDirectory, recursive: true);
+
         return Task.CompletedTask;
     }
 
@@ -108,8 +113,10 @@ public sealed class ProjectArtifactService(
             Path.GetTempPath(),
             "KK.Var",
             Guid.NewGuid().ToString("N"));
+
         var sourceDirectory = Path.Combine(operationDirectory, "source");
         var outputDirectory = Path.Combine(operationDirectory, "output");
+
         string? artifactPath = null;
 
         Directory.CreateDirectory(sourceDirectory);
@@ -127,17 +134,20 @@ public sealed class ProjectArtifactService(
 
             var configuration = JsonSerializer.Deserialize<ProjectBuildConfiguration>(
                 project.BuildConfigurationJson,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-                ?? new ProjectBuildConfiguration();
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new ProjectBuildConfiguration();
+
             var buildSourceDirectory = ResolveBuildSourceDirectory(
                 configuration.WorkingDirectory,
                 sourceDirectory);
+
             var provider = DetectProvider(project, buildSourceDirectory);
+
             progress?.Report(new DeploymentProgress(
                 15,
                 localizationService.Format(
                     "Сборка: {0}",
                     FormatProvider(provider))));
+
             await BuildAsync(
                 provider,
                 project,
@@ -156,6 +166,7 @@ public sealed class ProjectArtifactService(
                 outputDirectory,
                 GetBuiltExecutableRelativePath(project, provider)
                     .Replace('/', Path.DirectorySeparatorChar)));
+
             if (!File.Exists(executablePath))
             {
                 throw new InvalidOperationException(localizationService.Format(
@@ -166,13 +177,17 @@ public sealed class ProjectArtifactService(
             progress?.Report(new DeploymentProgress(
                 45,
                 localizationService.Get("Создание локального архива")));
+
             var projectDirectory = Path.Combine(
                 DatabasePaths.ArtifactsDirectory,
                 project.Id.ToString("N"));
+
             Directory.CreateDirectory(projectDirectory);
+
             var relativePath = Path.Combine(
                 project.Id.ToString("N"),
                 $"{tag}.tar.gz");
+
             artifactPath = Path.Combine(DatabasePaths.ArtifactsDirectory, relativePath);
 
             if (File.Exists(artifactPath))
@@ -183,6 +198,7 @@ public sealed class ProjectArtifactService(
             }
 
             await CreateTarGzAsync(outputDirectory, artifactPath, cancellationToken);
+
             var hash = await CalculateSha256Async(artifactPath, cancellationToken);
             var size = new FileInfo(artifactPath).Length;
 
@@ -200,6 +216,7 @@ public sealed class ProjectArtifactService(
             {
                 File.Delete(artifactPath);
             }
+
             throw;
         }
         finally
@@ -218,9 +235,10 @@ public sealed class ProjectArtifactService(
     {
         if (project.SourceType == ProjectSourceType.LocalDirectory)
         {
-            var source = project.LocalDirectoryPath
-                ?? throw new InvalidOperationException(localizationService.Get(
+            var source = project.LocalDirectoryPath ??
+                throw new InvalidOperationException(localizationService.Get(
                     "Не указана локальная папка проекта."));
+
             if (!Directory.Exists(source))
             {
                 throw new DirectoryNotFoundException(localizationService.Format(
@@ -231,12 +249,14 @@ public sealed class ProjectArtifactService(
             await Task.Run(
                 () => CopyDirectory(source, destination, cancellationToken),
                 cancellationToken);
+
             return null;
         }
 
-        var repository = project.GitHubRepositoryFullName
-            ?? throw new InvalidOperationException(localizationService.Get(
+        var repository = project.GitHubRepositoryFullName ??
+            throw new InvalidOperationException(localizationService.Get(
                 "Не указан репозиторий GitHub."));
+
         var token = await gitHubAuthenticationService.GetTokenAsync(cancellationToken);
         if (token is null)
         {
@@ -248,13 +268,17 @@ public sealed class ProjectArtifactService(
             repository,
             token.AccessToken,
             cancellationToken);
+
         await using var archive = await gitHubService.DownloadRepositoryArchiveAsync(
             repository,
             commitSha,
             token.AccessToken,
             cancellationToken);
+
         using var zip = new ZipArchive(archive, ZipArchiveMode.Read);
+
         ExtractGitHubArchive(zip, destination);
+
         await PopulateGitHubSubmodulesAsync(
             repository,
             commitSha,
@@ -262,6 +286,7 @@ public sealed class ProjectArtifactService(
             token.AccessToken,
             0,
             cancellationToken);
+
         return commitSha;
     }
 
@@ -284,16 +309,20 @@ public sealed class ProjectArtifactService(
             commitSha,
             accessToken,
             cancellationToken);
+
         if (submodules.Count == 0)
         {
             return;
         }
 
         var configurations = ReadGitModules(sourceDirectory);
+
         foreach (var submodule in submodules)
         {
             cancellationToken.ThrowIfCancellationRequested();
+
             var normalizedPath = submodule.Path.Replace('\\', '/').Trim('/');
+
             if (!configurations.TryGetValue(normalizedPath, out var url))
             {
                 throw new InvalidDataException(localizationService.Format(
@@ -303,6 +332,7 @@ public sealed class ProjectArtifactService(
 
             var submoduleRepository = ResolveGitHubRepository(repositoryFullName, url);
             var targetDirectory = ResolveSubmoduleDirectory(sourceDirectory, normalizedPath);
+
             Directory.CreateDirectory(targetDirectory);
 
             await using var archive = await gitHubService.DownloadRepositoryArchiveAsync(
@@ -310,7 +340,9 @@ public sealed class ProjectArtifactService(
                 submodule.CommitSha,
                 accessToken,
                 cancellationToken);
+
             using var zip = new ZipArchive(archive, ZipArchiveMode.Read);
+
             ExtractGitHubArchive(zip, targetDirectory);
 
             await PopulateGitHubSubmodulesAsync(
@@ -327,6 +359,7 @@ public sealed class ProjectArtifactService(
     {
         var path = Path.Combine(sourceDirectory, ".gitmodules");
         var result = new Dictionary<string, string>(StringComparer.Ordinal);
+
         if (!File.Exists(path))
         {
             return result;
@@ -334,6 +367,7 @@ public sealed class ProjectArtifactService(
 
         string? currentPath = null;
         string? currentUrl = null;
+
         foreach (var rawLine in File.ReadLines(path).Append("[end]"))
         {
             var line = rawLine.Trim();
@@ -347,6 +381,7 @@ public sealed class ProjectArtifactService(
 
                 currentPath = null;
                 currentUrl = null;
+
                 continue;
             }
 
@@ -358,6 +393,7 @@ public sealed class ProjectArtifactService(
 
             var key = line[..separator].Trim();
             var value = line[(separator + 1)..].Trim();
+
             if (key.Equals("path", StringComparison.OrdinalIgnoreCase))
             {
                 currentPath = value;
@@ -378,6 +414,7 @@ public sealed class ProjectArtifactService(
         {
             var owner = parentRepository.Split('/')[0];
             var repositoryName = value[3..].TrimEnd('/');
+
             if (repositoryName.EndsWith(".git", StringComparison.OrdinalIgnoreCase))
             {
                 repositoryName = repositoryName[..^4];
@@ -388,6 +425,7 @@ public sealed class ProjectArtifactService(
 
         const string httpsPrefix = "https://github.com/";
         const string sshPrefix = "git@github.com:";
+
         if (value.StartsWith(httpsPrefix, StringComparison.OrdinalIgnoreCase))
         {
             value = value[httpsPrefix.Length..];
@@ -404,6 +442,7 @@ public sealed class ProjectArtifactService(
         }
 
         value = value.Trim('/');
+
         if (value.EndsWith(".git", StringComparison.OrdinalIgnoreCase))
         {
             value = value[..^4];
@@ -425,12 +464,10 @@ public sealed class ProjectArtifactService(
         var target = Path.GetFullPath(Path.Combine(
             root,
             relativePath.Replace('/', Path.DirectorySeparatorChar)));
-        if (!target.StartsWith(rootPath, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidDataException("Git submodule path is outside the repository.");
-        }
 
-        return target;
+        return !target.StartsWith(rootPath, StringComparison.OrdinalIgnoreCase) ?
+            throw new InvalidDataException("Git submodule path is outside the repository.") :
+            target;
     }
 
     private ProjectBuildProvider DetectProvider(
@@ -443,21 +480,25 @@ public sealed class ProjectArtifactService(
         }
 
         var detected = new List<ProjectBuildProvider>();
+
         if (Directory.EnumerateFiles(sourceDirectory, "*.sln*", SearchOption.TopDirectoryOnly).Any() ||
             Directory.EnumerateFiles(sourceDirectory, "*.csproj", SearchOption.AllDirectories).Any())
         {
             detected.Add(ProjectBuildProvider.DotNet);
         }
+
         if (File.Exists(Path.Combine(sourceDirectory, "go.mod")))
         {
             detected.Add(ProjectBuildProvider.Go);
         }
+
         if (File.Exists(Path.Combine(sourceDirectory, "pyproject.toml")) ||
             File.Exists(Path.Combine(sourceDirectory, "requirements.txt")) ||
             Directory.EnumerateFiles(sourceDirectory, "*.py", SearchOption.TopDirectoryOnly).Any())
         {
             detected.Add(ProjectBuildProvider.Python);
         }
+
         if (File.Exists(Path.Combine(sourceDirectory, "CMakeLists.txt")) ||
             Directory.EnumerateFiles(sourceDirectory, "*.cpp", SearchOption.AllDirectories).Any())
         {
@@ -500,9 +541,9 @@ public sealed class ProjectArtifactService(
                     "publish",
                     target,
                     "-c",
-                    string.IsNullOrWhiteSpace(configuration.Configuration)
-                        ? "Release"
-                        : configuration.Configuration.Trim(),
+                    string.IsNullOrWhiteSpace(configuration.Configuration) ?
+                        "Release" :
+                        configuration.Configuration.Trim(),
                     "-r",
                     rid,
                     "--self-contained",
@@ -511,17 +552,20 @@ public sealed class ProjectArtifactService(
                     outputDirectory,
                 };
                     arguments.AddRange(buildArguments);
+
                     await RunProcessAsync(
                         "dotnet",
                         arguments,
                         sourceDirectory,
                         environment,
                         cancellationToken);
+
                     break;
                 }
             case ProjectBuildProvider.Go:
                 {
                     var goArch = MapGoArchitecture(remoteArchitecture);
+
                     var goEnvironment = new Dictionary<string, string?>(
                         environment,
                         StringComparer.Ordinal)
@@ -530,20 +574,26 @@ public sealed class ProjectArtifactService(
                         ["GOARCH"] = goArch,
                         ["CGO_ENABLED"] = "0",
                     };
+
                     var goOutputPath = Path.Combine(
                         outputDirectory,
                         project.RemoteExecutableFileName);
+
                     Directory.CreateDirectory(Path.GetDirectoryName(goOutputPath)!);
+
                     var arguments = new List<string> { "build" };
+
                     arguments.AddRange(buildArguments);
                     arguments.AddRange(
                         ["-o", goOutputPath, "."]);
+
                     await RunProcessAsync(
                         "go",
                         arguments,
                         sourceDirectory,
                         goEnvironment,
                         cancellationToken);
+
                     break;
                 }
             case ProjectBuildProvider.Python:
@@ -552,6 +602,7 @@ public sealed class ProjectArtifactService(
             case ProjectBuildProvider.Cpp:
                 {
                     var runtime = MapLinuxRuntime(remoteArchitecture);
+
                     var toolchainReplacements = new Dictionary<string, string>(StringComparer.Ordinal)
                     {
                         ["{source}"] = sourceDirectory,
@@ -559,13 +610,16 @@ public sealed class ProjectArtifactService(
                         ["{runtime}"] = runtime,
                         ["{architecture}"] = remoteArchitecture,
                     };
+
                     var configuredToolchain = ReplacePlaceholders(
                         configuration.ToolchainFile ?? string.Empty,
                         toolchainReplacements);
+
                     var toolchainFile = Path.GetFullPath(
-                        Path.IsPathRooted(configuredToolchain)
-                            ? configuredToolchain
-                            : Path.Combine(sourceDirectory, configuredToolchain));
+                        Path.IsPathRooted(configuredToolchain) ?
+                            configuredToolchain :
+                            Path.Combine(sourceDirectory, configuredToolchain));
+
                     if (string.IsNullOrWhiteSpace(configuredToolchain) ||
                         !File.Exists(toolchainFile))
                     {
@@ -576,9 +630,12 @@ public sealed class ProjectArtifactService(
                     var buildDirectory = Path.Combine(
                         Path.GetDirectoryName(outputDirectory)!,
                         "cmake-build");
-                    var buildConfiguration = string.IsNullOrWhiteSpace(configuration.Configuration)
-                        ? "Release"
-                        : configuration.Configuration.Trim();
+
+                    var buildConfiguration =
+                        string.IsNullOrWhiteSpace(configuration.Configuration) ?
+                            "Release" :
+                            configuration.Configuration.Trim();
+
                     var configure = new List<string>
                 {
                     "-S",
@@ -586,15 +643,16 @@ public sealed class ProjectArtifactService(
                     "-B",
                     buildDirectory,
                     "-G",
-                    string.IsNullOrWhiteSpace(configuration.CmakeGenerator)
-                        ? "Ninja"
-                        : configuration.CmakeGenerator.Trim(),
+                    string.IsNullOrWhiteSpace(configuration.CmakeGenerator) ?
+                        "Ninja" :
+                        configuration.CmakeGenerator.Trim(),
                     $"-DCMAKE_BUILD_TYPE={buildConfiguration}",
                     $"-DCMAKE_TOOLCHAIN_FILE={toolchainFile}",
                     $"-DCMAKE_RUNTIME_OUTPUT_DIRECTORY={outputDirectory}",
                     $"-DKKVAR_TARGET_ARCHITECTURE={remoteArchitecture}",
                 };
                     configure.AddRange(configureArguments);
+
                     await RunProcessAsync(
                         "cmake",
                         configure,
@@ -610,12 +668,14 @@ public sealed class ProjectArtifactService(
                     buildConfiguration,
                 };
                     build.AddRange(buildArguments);
+
                     await RunProcessAsync(
                         "cmake",
                         build,
                         sourceDirectory,
                         environment,
                         cancellationToken);
+
                     break;
                 }
             case ProjectBuildProvider.Custom:
@@ -627,6 +687,7 @@ public sealed class ProjectArtifactService(
                     }
 
                     var runtime = MapLinuxRuntime(remoteArchitecture);
+
                     var replacements = new Dictionary<string, string>(StringComparer.Ordinal)
                     {
                         ["{source}"] = sourceDirectory,
@@ -634,6 +695,7 @@ public sealed class ProjectArtifactService(
                         ["{runtime}"] = runtime,
                         ["{architecture}"] = remoteArchitecture,
                     };
+
                     var customEnvironment = new Dictionary<string, string?>(
                         environment,
                         StringComparer.Ordinal)
@@ -643,6 +705,7 @@ public sealed class ProjectArtifactService(
                         ["KKVAR_RUNTIME"] = runtime,
                         ["KKVAR_ARCHITECTURE"] = remoteArchitecture,
                     };
+
                     await RunProcessAsync(
                         ReplacePlaceholders(configuration.Command, replacements),
                         buildArguments
@@ -651,6 +714,7 @@ public sealed class ProjectArtifactService(
                         sourceDirectory,
                         customEnvironment,
                         cancellationToken);
+
                     break;
                 }
             default:
@@ -689,23 +753,27 @@ public sealed class ProjectArtifactService(
         string? configuredDirectory,
         string sourceDirectory)
     {
-        var value = string.IsNullOrWhiteSpace(configuredDirectory)
-            ? sourceDirectory
-            : configuredDirectory.Replace(
+        var value = string.IsNullOrWhiteSpace(configuredDirectory) ?
+            sourceDirectory :
+            configuredDirectory.Replace(
                 "{source}",
                 sourceDirectory,
                 StringComparison.Ordinal);
+
         var path = Path.GetFullPath(
-            Path.IsPathRooted(value)
-                ? value
-                : Path.Combine(sourceDirectory, value));
+            Path.IsPathRooted(value) ?
+                value :
+                Path.Combine(sourceDirectory, value));
+
         var sourceRoot = Path.GetFullPath(sourceDirectory) + Path.DirectorySeparatorChar;
+
         if (!path.StartsWith(sourceRoot, StringComparison.OrdinalIgnoreCase) &&
             !string.Equals(path, sourceDirectory, StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException(
                 "Build working directory must stay inside the source directory.");
         }
+
         if (!Directory.Exists(path))
         {
             throw new DirectoryNotFoundException(
@@ -720,6 +788,7 @@ public sealed class ProjectArtifactService(
         IReadOnlyDictionary<string, string> replacements)
     {
         var result = value;
+
         foreach (var replacement in replacements)
         {
             result = result.Replace(
@@ -735,9 +804,9 @@ public sealed class ProjectArtifactService(
         KKProject project,
         ProjectBuildProvider provider) =>
         provider == ProjectBuildProvider.DotNet &&
-        project.RemoteExecutableFileName.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)
-            ? project.RemoteExecutableFileName[..^4]
-            : project.RemoteExecutableFileName;
+        project.RemoteExecutableFileName.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) ?
+            project.RemoteExecutableFileName[..^4] :
+            project.RemoteExecutableFileName;
 
     private async Task RunProcessAsync(
         string fileName,
@@ -755,10 +824,12 @@ public sealed class ProjectArtifactService(
             UseShellExecute = false,
             CreateNoWindow = true,
         };
+
         foreach (var argument in arguments)
         {
             startInfo.ArgumentList.Add(argument);
         }
+
         if (environment is not null)
         {
             foreach (var item in environment)
@@ -775,10 +846,11 @@ public sealed class ProjectArtifactService(
         }
 
         Process process;
+
         try
         {
-            process = Process.Start(startInfo)
-                ?? throw new InvalidOperationException(localizationService.Format(
+            process = Process.Start(startInfo) ??
+                throw new InvalidOperationException(localizationService.Format(
                     "Не удалось запустить {0}.",
                     fileName));
         }
@@ -788,9 +860,12 @@ public sealed class ProjectArtifactService(
                 GetMissingBuildToolMessage(fileName),
                 exception);
         }
+
         using var runningProcess = process;
+
         var outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
         var errorTask = process.StandardError.ReadToEndAsync(cancellationToken);
+
         try
         {
             await process.WaitForExitAsync(cancellationToken);
@@ -805,8 +880,10 @@ public sealed class ProjectArtifactService(
 
             throw;
         }
+
         var output = await outputTask;
         var error = await errorTask;
+
         if (process.ExitCode != 0)
         {
             throw new InvalidOperationException(localizationService.Format(
@@ -854,6 +931,7 @@ public sealed class ProjectArtifactService(
             .ToArray();
 
         var executableName = Path.GetFileNameWithoutExtension(executableFileName);
+
         var matching = projects.Where(item =>
         {
             var assemblyName = item.Document
@@ -881,6 +959,7 @@ public sealed class ProjectArtifactService(
                 ['\r', '\n'],
                 StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
             .ToArray();
+
         var useful = lines.LastOrDefault(line =>
             !line.StartsWith("See also", StringComparison.OrdinalIgnoreCase) &&
             (line.Contains("error:", StringComparison.OrdinalIgnoreCase) ||
@@ -888,10 +967,9 @@ public sealed class ProjectArtifactService(
              line.Contains("not found", StringComparison.OrdinalIgnoreCase) ||
              line.Contains("not recognized", StringComparison.OrdinalIgnoreCase)));
 
-        return useful
-            ?? lines.LastOrDefault(line =>
-                !line.StartsWith("See also", StringComparison.OrdinalIgnoreCase))
-            ?? localizationService.Get("неизвестная ошибка");
+        return useful ?? lines.LastOrDefault(line =>
+                !line.StartsWith("See also", StringComparison.OrdinalIgnoreCase)) ??
+                    localizationService.Get("неизвестная ошибка");
     }
 
     private static void CopyDirectory(
@@ -900,18 +978,22 @@ public sealed class ProjectArtifactService(
         CancellationToken cancellationToken)
     {
         Directory.CreateDirectory(destination);
+
         foreach (var directory in Directory.EnumerateDirectories(source))
         {
             cancellationToken.ThrowIfCancellationRequested();
+
             if (IgnoredDirectories.Contains(Path.GetFileName(directory)))
             {
                 continue;
             }
+
             CopyDirectory(
                 directory,
                 Path.Combine(destination, Path.GetFileName(directory)),
                 cancellationToken);
         }
+
         foreach (var file in Directory.EnumerateFiles(source))
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -923,26 +1005,31 @@ public sealed class ProjectArtifactService(
     {
         var prefix = zip.Entries
             .Select(entry => entry.FullName.Split('/')[0])
-            .FirstOrDefault(segment => !string.IsNullOrWhiteSpace(segment))
-            ?? throw new InvalidDataException(localizationService.Get(
-                "Архив GitHub пуст."));
+            .FirstOrDefault(segment => !string.IsNullOrWhiteSpace(segment)) ??
+                throw new InvalidDataException(localizationService.Get("Архив GitHub пуст."));
 
         var destinationRoot = Path.GetFullPath(destination) + Path.DirectorySeparatorChar;
+
         foreach (var entry in zip.Entries)
         {
-            var relative = entry.FullName.StartsWith(prefix + "/", StringComparison.Ordinal)
-                ? entry.FullName[(prefix.Length + 1)..]
-                : entry.FullName;
+            var relative =
+                entry.FullName.StartsWith(prefix + "/", StringComparison.Ordinal) ?
+                    entry.FullName[(prefix.Length + 1)..] :
+                    entry.FullName;
+
             if (string.IsNullOrEmpty(relative))
             {
                 continue;
             }
+
             var target = Path.GetFullPath(Path.Combine(destination, relative));
+
             if (!target.StartsWith(destinationRoot, StringComparison.OrdinalIgnoreCase))
             {
                 throw new InvalidDataException(localizationService.Get(
                     "Архив GitHub содержит небезопасный путь."));
             }
+
             if (entry.FullName.EndsWith('/'))
             {
                 Directory.CreateDirectory(target);
@@ -965,8 +1052,10 @@ public sealed class ProjectArtifactService(
             FileShare.None,
             81920,
             FileOptions.Asynchronous);
+
         await using var gzip = new GZipStream(file, CompressionLevel.SmallestSize);
         await using var writer = new TarWriter(gzip, leaveOpen: false);
+
         foreach (var path in Directory.EnumerateFileSystemEntries(
                      sourceDirectory,
                      "*",

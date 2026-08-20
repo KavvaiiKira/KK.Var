@@ -9,7 +9,7 @@ public sealed class GitHubAuthenticationService(
     IGitHubService gitHubService,
     IGitHubTokenStore tokenStore) : IGitHubAuthenticationService
 {
-    private readonly SemaphoreSlim _refreshLock = new(1, 1);
+    private readonly SemaphoreSlim _refreshLock = new SemaphoreSlim(1, 1);
 
     public async Task<GitHubToken?> GetTokenAsync(
         CancellationToken cancellationToken = default)
@@ -43,7 +43,9 @@ public sealed class GitHubAuthenticationService(
                 var refreshed = await gitHubService.RefreshAccessTokenAsync(
                     token,
                     cancellationToken);
+
                 await tokenStore.SaveAsync(refreshed, cancellationToken);
+
                 return refreshed;
             }
             catch (OperationCanceledException)

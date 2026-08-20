@@ -45,8 +45,12 @@ public sealed class KKProjectRepository(
         await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         return await db.Projects.AnyAsync(
-            project => project.Name == name &&
-                       (!excludedProjectId.HasValue || project.Id != excludedProjectId.Value),
+            project =>
+                project.Name == name &&
+                (
+                    !excludedProjectId.HasValue ||
+                    project.Id != excludedProjectId.Value
+                ),
             cancellationToken);
     }
 
@@ -58,8 +62,12 @@ public sealed class KKProjectRepository(
         await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         return await db.Projects.AnyAsync(
-            project => project.RemoteServiceName == serviceName &&
-                       (!excludedProjectId.HasValue || project.Id != excludedProjectId.Value),
+            project =>
+                project.RemoteServiceName == serviceName &&
+                (
+                    !excludedProjectId.HasValue ||
+                    project.Id != excludedProjectId.Value
+                ),
             cancellationToken);
     }
 

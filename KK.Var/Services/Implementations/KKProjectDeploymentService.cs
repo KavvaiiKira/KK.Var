@@ -25,7 +25,7 @@ public sealed class KKProjectDeploymentService(
     ILocalizationService localizationService)
     : IKKProjectDeploymentService
 {
-    private readonly SemaphoreSlim _deploymentLock = new(1, 1);
+    private readonly SemaphoreSlim _deploymentLock = new SemaphoreSlim(1, 1);
 
     public Task<IReadOnlyList<KKProjectDeployment>> SearchAsync(
         string? projectName,
@@ -60,11 +60,11 @@ public sealed class KKProjectDeploymentService(
         string logPath,
         CancellationToken cancellationToken = default)
     {
-        _ = await projectRepository.GetByIdAsync(projectId, cancellationToken)
-            ?? throw new KeyNotFoundException($"Project '{projectId}' was not found.");
+        _ = await projectRepository.GetByIdAsync(projectId, cancellationToken) ??
+            throw new KeyNotFoundException($"Project '{projectId}' was not found.");
 
-        var version = await versionRepository.GetByIdAsync(versionId, cancellationToken)
-            ?? throw new KeyNotFoundException($"Version '{versionId}' was not found.");
+        var version = await versionRepository.GetByIdAsync(versionId, cancellationToken) ??
+            throw new KeyNotFoundException($"Version '{versionId}' was not found.");
 
         if (version.KKProjectId != projectId)
         {
@@ -72,6 +72,7 @@ public sealed class KKProjectDeploymentService(
         }
 
         ValidateJsonObject(variablesSnapshotJson, nameof(variablesSnapshotJson));
+
         if (!Guid.TryParseExact(remoteOperationId, "N", out _))
         {
             throw new ArgumentException(
@@ -95,6 +96,7 @@ public sealed class KKProjectDeploymentService(
         };
 
         await deploymentRepository.AddAsync(deployment, cancellationToken);
+
         return deployment;
     }
 
@@ -115,9 +117,8 @@ public sealed class KKProjectDeploymentService(
 
         var deployment = await deploymentRepository.GetByIdAsync(
                 deploymentId,
-                cancellationToken)
-            ?? throw new KeyNotFoundException(
-                $"Deployment '{deploymentId}' was not found.");
+                cancellationToken) ??
+                throw new KeyNotFoundException($"Deployment '{deploymentId}' was not found.");
 
         if (deployment.Status is DeploymentStatus.Succeeded or
             DeploymentStatus.Failed or
@@ -130,9 +131,10 @@ public sealed class KKProjectDeploymentService(
         deployment.Status = status;
         deployment.CompletedAtUtc = DateTime.UtcNow;
         deployment.LogPath = string.IsNullOrWhiteSpace(logPath) ? null : logPath.Trim();
-        deployment.ErrorMessage = string.IsNullOrWhiteSpace(errorMessage)
-            ? null
-            : errorMessage.Trim();
+        deployment.ErrorMessage =
+            string.IsNullOrWhiteSpace(errorMessage) ?
+                null :
+                errorMessage.Trim();
 
         await deploymentRepository.UpdateAsync(deployment, cancellationToken);
     }
@@ -147,11 +149,12 @@ public sealed class KKProjectDeploymentService(
         {
             var project = await projectRepository.GetByIdAsync(
                     request.ProjectId,
-                    cancellationToken)
-                ?? throw new KeyNotFoundException(
-                    localizationService.Get("Проект не найден."));
+                    cancellationToken) ??
+                    throw new KeyNotFoundException(localizationService.Get("Проект не найден."));
+
             var settings = await userSettingsService.LoadAsync(cancellationToken);
             var architecture = settings.RemoteMachine.Architecture;
+
             if (string.IsNullOrWhiteSpace(architecture))
             {
                 throw new InvalidOperationException(localizationService.Get(
@@ -164,6 +167,7 @@ public sealed class KKProjectDeploymentService(
                 architecture,
                 progress,
                 cancellationToken);
+
             var version = await versionService.CreateAsync(
                 new KKProjectVersion
                 {
@@ -201,12 +205,12 @@ public sealed class KKProjectDeploymentService(
         await _deploymentLock.WaitAsync(cancellationToken);
         try
         {
-            var project = await projectRepository.GetByIdAsync(projectId, cancellationToken)
-                ?? throw new KeyNotFoundException(
-                    localizationService.Get("Проект не найден."));
-            var version = await versionRepository.GetByIdAsync(versionId, cancellationToken)
-                ?? throw new KeyNotFoundException(
-                    localizationService.Get("Версия не найдена."));
+            var project = await projectRepository.GetByIdAsync(projectId, cancellationToken) ??
+                throw new KeyNotFoundException(localizationService.Get("Проект не найден."));
+
+            var version = await versionRepository.GetByIdAsync(versionId, cancellationToken) ??
+                throw new KeyNotFoundException(localizationService.Get("Версия не найдена."));
+
             if (version.KKProjectId != projectId)
             {
                 throw new InvalidOperationException(localizationService.Get(
@@ -214,8 +218,11 @@ public sealed class KKProjectDeploymentService(
             }
 
             var artifactPath = ResolveArtifactPath(version.ArtifactRelativePath);
+
             await VerifyArtifactAsync(artifactPath, version, cancellationToken);
+
             var settings = await userSettingsService.LoadAsync(cancellationToken);
+
             return await ExecuteRemoteAsync(
                 project,
                 version,
@@ -241,12 +248,15 @@ public sealed class KKProjectDeploymentService(
         CancellationToken cancellationToken)
     {
         Directory.CreateDirectory(DatabasePaths.LogsDirectory);
+
         var logPath = Path.Combine(
             DatabasePaths.LogsDirectory,
             $"{DateTime.UtcNow:yyyyMMdd-HHmmss}-{Guid.NewGuid():N}.log");
+
         var variables = await environmentService.GetAsync(project.Id, cancellationToken);
         var snapshot = JsonSerializer.Serialize(variables.ToDictionary(pair => pair.Key, pair => pair.Value));
         var remoteOperationId = Guid.NewGuid().ToString("N");
+
         var deployment = await StartAsync(
             project.Id,
             version.Id,
@@ -255,6 +265,7 @@ public sealed class KKProjectDeploymentService(
             remoteOperationId,
             logPath,
             cancellationToken);
+
         var remoteCommitted = false;
 
         try
@@ -263,6 +274,7 @@ public sealed class KKProjectDeploymentService(
                 logPath,
                 false,
                 new System.Text.UTF8Encoding(false));
+
             await remoteDeploymentService.DeployAsync(
                 project,
                 artifactPath,
@@ -272,17 +284,21 @@ public sealed class KKProjectDeploymentService(
                 checkpoint => SaveCheckpointAsync(deployment.Id, checkpoint),
                 progress,
                 cancellationToken);
+
             remoteCommitted = true;
+
             await CompleteAsync(
                 deployment.Id,
                 DeploymentStatus.Succeeded,
                 logPath,
                 cancellationToken: CancellationToken.None);
+
             deployment.Status = DeploymentStatus.Succeeded;
             deployment.CompletedAtUtc = DateTime.UtcNow;
             deployment.LogPath = logPath;
             deployment.Project = project;
             deployment.Version = version;
+
             return deployment;
         }
         catch (Exception exception)
@@ -292,15 +308,18 @@ public sealed class KKProjectDeploymentService(
                 throw;
             }
 
-            var status = exception is OperationCanceledException
-                ? DeploymentStatus.Cancelled
-                : DeploymentStatus.Failed;
+            var status =
+                exception is OperationCanceledException ?
+                    DeploymentStatus.Cancelled :
+                    DeploymentStatus.Failed;
+
             await CompleteAsync(
                 deployment.Id,
                 status,
                 logPath,
                 exception.Message,
                 CancellationToken.None);
+
             throw;
         }
     }
@@ -311,8 +330,7 @@ public sealed class KKProjectDeploymentService(
         await _deploymentLock.WaitAsync(cancellationToken);
         try
         {
-            var runningDeployments = await deploymentRepository.GetRunningAsync(
-                cancellationToken);
+            var runningDeployments = await deploymentRepository.GetRunningAsync(cancellationToken);
             if (runningDeployments.Count == 0)
             {
                 return 0;
@@ -320,18 +338,22 @@ public sealed class KKProjectDeploymentService(
 
             var settings = await userSettingsService.LoadAsync(cancellationToken);
             var recoveredCount = 0;
+
             foreach (var deployment in runningDeployments)
             {
-                var logPath = string.IsNullOrWhiteSpace(deployment.LogPath)
-                    ? Path.Combine(
+                var logPath = string.IsNullOrWhiteSpace(deployment.LogPath) ?
+                    Path.Combine(
                         DatabasePaths.LogsDirectory,
-                        $"{DateTime.UtcNow:yyyyMMdd-HHmmss}-{deployment.Id:N}.log")
-                    : deployment.LogPath;
+                        $"{DateTime.UtcNow:yyyyMMdd-HHmmss}-{deployment.Id:N}.log") :
+                        deployment.LogPath;
+
                 Directory.CreateDirectory(DatabasePaths.LogsDirectory);
+
                 await using var log = new StreamWriter(
                     logPath,
                     true,
                     new System.Text.UTF8Encoding(false));
+
                 var result = await remoteDeploymentService.RecoverAsync(
                     deployment.Project,
                     settings.RemoteMachine,
@@ -340,9 +362,12 @@ public sealed class KKProjectDeploymentService(
                     deployment.UnitChange,
                     log,
                     cancellationToken);
-                var status = result.Outcome == DeploymentRecoveryOutcome.NewVersionActive
-                    ? DeploymentStatus.Succeeded
-                    : DeploymentStatus.Interrupted;
+
+                var status = result.Outcome ==
+                    DeploymentRecoveryOutcome.NewVersionActive ?
+                        DeploymentStatus.Succeeded :
+                        DeploymentStatus.Interrupted;
+
                 var message = result.Outcome switch
                 {
                     DeploymentRecoveryOutcome.NewVersionActive =>
@@ -352,12 +377,14 @@ public sealed class KKProjectDeploymentService(
                     _ => localizationService.Get(
                         "Прерванный Deploy остановлен до переключения версии."),
                 };
+
                 await CompleteAsync(
                     deployment.Id,
                     status,
                     logPath,
                     status == DeploymentStatus.Interrupted ? message : null,
                     cancellationToken);
+
                 recoveredCount++;
             }
 
@@ -375,9 +402,9 @@ public sealed class KKProjectDeploymentService(
     {
         var deployment = await deploymentRepository.GetByIdAsync(
                 deploymentId,
-                CancellationToken.None)
-            ?? throw new KeyNotFoundException(
-                $"Deployment '{deploymentId}' was not found.");
+                CancellationToken.None) ??
+                throw new KeyNotFoundException($"Deployment '{deploymentId}' was not found.");
+
         if (deployment.Status != DeploymentStatus.Running)
         {
             throw new InvalidOperationException("Deployment is no longer running.");
@@ -385,6 +412,7 @@ public sealed class KKProjectDeploymentService(
 
         deployment.Stage = checkpoint.Stage;
         deployment.UnitChange = checkpoint.UnitChange;
+
         await deploymentRepository.UpdateAsync(deployment, CancellationToken.None);
     }
 
@@ -392,11 +420,12 @@ public sealed class KKProjectDeploymentService(
     {
         var root = Path.GetFullPath(DatabasePaths.ArtifactsDirectory) + Path.DirectorySeparatorChar;
         var path = Path.GetFullPath(Path.Combine(root, relativePath.Replace('/', Path.DirectorySeparatorChar)));
+
         if (!path.StartsWith(root, StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidOperationException(localizationService.Get(
-                "Путь к архиву версии недопустим."));
+            throw new InvalidOperationException(localizationService.Get("Путь к архиву версии недопустим."));
         }
+
         return path;
     }
 
@@ -412,13 +441,14 @@ public sealed class KKProjectDeploymentService(
                     "Локальный архив выбранной версии не найден."),
                 path);
         }
+
         await using var stream = File.OpenRead(path);
-        var hash = Convert.ToHexStringLower(
-            await System.Security.Cryptography.SHA256.HashDataAsync(stream, cancellationToken));
+
+        var hash = Convert.ToHexStringLower(await System.Security.Cryptography.SHA256.HashDataAsync(stream, cancellationToken));
+
         if (!string.Equals(hash, version.ArtifactSha256, StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidDataException(localizationService.Get(
-                "Контрольная сумма архива версии не совпадает."));
+            throw new InvalidDataException(localizationService.Get("Контрольная сумма архива версии не совпадает."));
         }
     }
 

@@ -25,8 +25,8 @@ sealed class Program
     internal static Exception? UserSettingsStartupException { get; private set; }
 
     public static IServiceProvider Services =>
-        _host?.Services
-        ?? throw new InvalidOperationException("Application services are not initialized.");
+        _host?.Services ??
+        throw new InvalidOperationException("Application services are not initialized.");
 
     [STAThread]
     public static void Main(string[] args)
@@ -77,16 +77,13 @@ sealed class Program
 
         var databaseOptions = new DatabaseOptions
         {
-            FileName = builder.Configuration[$"{DatabaseOptions.SectionName}:FileName"]
-                ?? "kk-var.db",
+            FileName = builder.Configuration[$"{DatabaseOptions.SectionName}:FileName"] ?? "kk-var.db",
         };
 
         var gitHubOptions = new GitHubOptions
         {
-            ClientId = builder.Configuration[$"{GitHubOptions.SectionName}:ClientId"]
-                ?? string.Empty,
-            Scope = builder.Configuration[$"{GitHubOptions.SectionName}:Scope"]
-                ?? "repo read:user",
+            ClientId = builder.Configuration[$"{GitHubOptions.SectionName}:ClientId"] ?? string.Empty,
+            Scope = builder.Configuration[$"{GitHubOptions.SectionName}:Scope"] ?? "repo read:user",
         };
 
         DatabasePaths.EnsureUserDataDirectory();

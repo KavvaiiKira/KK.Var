@@ -12,8 +12,7 @@ public sealed class ProjectVersionItemViewModel(
 
     public string Tag => Version.Tag;
 
-    public string CreatedAtDisplay =>
-        Version.CreatedAtUtc.ToLocalTime().ToString("g");
+    public string CreatedAtDisplay => Version.CreatedAtUtc.ToLocalTime().ToString("g");
 
     public string ArtifactSizeDisplay => Version.ArtifactSize switch
     {
@@ -25,13 +24,15 @@ public sealed class ProjectVersionItemViewModel(
 
     public bool HasSourceCommit => !string.IsNullOrWhiteSpace(Version.SourceCommitSha);
 
-    public string SourceCommitDisplay => Version.SourceCommitSha is { Length: > 0 } commit
-        ? $"Git {commit[..Math.Min(8, commit.Length)]}"
-        : string.Empty;
+    public string SourceCommitDisplay =>
+        Version.SourceCommitSha is { Length: > 0 } commit ?
+            $"Git {commit[..Math.Min(8, commit.Length)]}" :
+            string.Empty;
 
-    public string Description => string.IsNullOrWhiteSpace(Version.Description)
-        ? Localize("Без описания")
-        : Version.Description;
+    public string Description =>
+        string.IsNullOrWhiteSpace(Version.Description) ?
+            Localize("Без описания") :
+            Version.Description;
 
     public void RefreshLocalization()
     {

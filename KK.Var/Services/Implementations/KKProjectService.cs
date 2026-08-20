@@ -18,7 +18,7 @@ public sealed class KKProjectService(
     ILocalizationService localizationService)
     : IKKProjectService
 {
-    private static readonly Regex ServiceNamePattern = new(
+    private static readonly Regex ServiceNamePattern = new Regex(
         "^[A-Za-z0-9_.@-]+\\.service$",
         RegexOptions.CultureInvariant);
 
@@ -57,6 +57,7 @@ public sealed class KKProjectService(
         project.UpdatedAtUtc = project.CreatedAtUtc;
 
         await repository.AddAsync(project, cancellationToken);
+
         return project;
     }
 
@@ -71,8 +72,8 @@ public sealed class KKProjectService(
             throw new ArgumentException("Project id is required.", nameof(project));
         }
 
-        var existing = await repository.GetByIdAsync(project.Id, cancellationToken)
-            ?? throw new KeyNotFoundException($"Project '{project.Id}' was not found.");
+        var existing = await repository.GetByIdAsync(project.Id, cancellationToken) ??
+            throw new KeyNotFoundException($"Project '{project.Id}' was not found.");
 
         NormalizeAndValidate(project);
 
@@ -96,6 +97,7 @@ public sealed class KKProjectService(
 
         project.CreatedAtUtc = existing.CreatedAtUtc;
         project.UpdatedAtUtc = DateTime.UtcNow;
+
         await repository.UpdateAsync(project, cancellationToken);
     }
 
@@ -148,6 +150,7 @@ public sealed class KKProjectService(
         ValidateLinuxAbsolutePath(
             project.RemoteDeploymentDirectory,
             nameof(project.RemoteDeploymentDirectory));
+
         project.ProjectEnvironmentFilePath = ValidateProjectRelativePath(
             project.ProjectEnvironmentFilePath,
             nameof(project.ProjectEnvironmentFilePath));
@@ -160,9 +163,10 @@ public sealed class KKProjectService(
                 "Unsupported environment file format.");
         }
 
-        project.BuildConfigurationJson = string.IsNullOrWhiteSpace(project.BuildConfigurationJson)
-            ? "{}"
-            : project.BuildConfigurationJson.Trim();
+        project.BuildConfigurationJson =
+            string.IsNullOrWhiteSpace(project.BuildConfigurationJson) ?
+                "{}" :
+                project.BuildConfigurationJson.Trim();
 
         using (var document = JsonDocument.Parse(project.BuildConfigurationJson))
         {
@@ -174,8 +178,9 @@ public sealed class KKProjectService(
 
         var buildConfiguration = JsonSerializer.Deserialize<ProjectBuildConfiguration>(
             project.BuildConfigurationJson,
-            new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-            ?? throw new ArgumentException("Build configuration is invalid.");
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ??
+                throw new ArgumentException("Build configuration is invalid.");
+
         if (buildConfiguration.ConfigureArguments is null ||
             buildConfiguration.BuildArguments is null ||
             buildConfiguration.Environment is null ||
@@ -185,11 +190,13 @@ public sealed class KKProjectService(
         {
             throw new ArgumentException("Build arguments and environment names must not be empty.");
         }
+
         if (project.BuildProvider == ProjectBuildProvider.Custom &&
             string.IsNullOrWhiteSpace(buildConfiguration.Command))
         {
             throw new ArgumentException("Custom build command is required.");
         }
+
         if (project.BuildProvider == ProjectBuildProvider.Cpp &&
             string.IsNullOrWhiteSpace(buildConfiguration.ToolchainFile))
         {
@@ -207,6 +214,7 @@ public sealed class KKProjectService(
                 project.GitHubRepositoryId = null;
                 project.GitHubRepositoryFullName = null;
                 project.GitHubCloneUrl = null;
+
                 break;
 
             case ProjectSourceType.GitHubRepository:
@@ -219,6 +227,7 @@ public sealed class KKProjectService(
                 }
 
                 project.LocalDirectoryPath = null;
+
                 break;
 
             default:
@@ -252,12 +261,9 @@ public sealed class KKProjectService(
     {
         var normalized = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
-        if (normalized?.Length > maxLength)
-        {
-            throw new ArgumentException($"Value cannot exceed {maxLength} characters.");
-        }
-
-        return normalized;
+        return normalized?.Length > maxLength ?
+            throw new ArgumentException($"Value cannot exceed {maxLength} characters.") :
+            normalized;
     }
 
     private void ValidateLinuxAbsolutePath(string path, string parameterName)
@@ -300,7 +306,9 @@ public sealed class KKProjectService(
             "/usr/sbin/",
             "/usr/share/",
         };
+
         var normalized = path + "/";
+
         if (restrictedPrefixes.Any(prefix =>
                 normalized.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
         {

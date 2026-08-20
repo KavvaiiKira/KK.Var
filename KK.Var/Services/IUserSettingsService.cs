@@ -7,7 +7,8 @@ namespace KK.Var.Services;
 
 public interface IUserSettingsService
 {
-    Task<UserSettings> LoadAsync(CancellationToken cancellationToken = default);
+    Task<UserSettings> LoadAsync(
+        CancellationToken cancellationToken = default);
 
     Task SaveAsync(
         UserSettings settings,

@@ -9,11 +9,10 @@ using System.Text.Json.Serialization;
 
 namespace KK.Var.Services.Implementations;
 
-public sealed class UserSettingsService(ISshPasswordStore sshPasswordStore)
-    : IUserSettingsService
+public sealed class UserSettingsService(ISshPasswordStore sshPasswordStore) : IUserSettingsService
 {
     private const string PasswordAuthentication = "Пароль";
-    private static readonly JsonSerializerOptions SerializerOptions = new()
+    private static readonly JsonSerializerOptions SerializerOptions = new JsonSerializerOptions()
     {
         PropertyNameCaseInsensitive = true,
         WriteIndented = true,
@@ -24,7 +23,7 @@ public sealed class UserSettingsService(ISshPasswordStore sshPasswordStore)
         SerializerOptions.Converters.Add(new JsonStringEnumConverter());
     }
 
-    private readonly SemaphoreSlim _fileLock = new(1, 1);
+    private readonly SemaphoreSlim _fileLock = new SemaphoreSlim(1, 1);
 
     public async Task<UserSettings> LoadAsync(
         CancellationToken cancellationToken = default)
@@ -34,6 +33,7 @@ public sealed class UserSettingsService(ISshPasswordStore sshPasswordStore)
         try
         {
             var settings = await LoadCoreAsync(cancellationToken);
+
             settings.RemoteMachine.Password = await sshPasswordStore.LoadAsync(
                 cancellationToken);
 
@@ -88,8 +88,10 @@ public sealed class UserSettingsService(ISshPasswordStore sshPasswordStore)
         try
         {
             var settings = await LoadCoreAsync(cancellationToken);
+
             settings.GitHub.AccountLogin = accountLogin;
             settings.GitHub.ConnectedAtUtc = connectedAtUtc;
+
             await SaveCoreAsync(settings, cancellationToken);
         }
         finally
@@ -106,7 +108,9 @@ public sealed class UserSettingsService(ISshPasswordStore sshPasswordStore)
         try
         {
             var settings = await LoadCoreAsync(cancellationToken);
+
             settings.GitHub = new GitHubSettings();
+
             await SaveCoreAsync(settings, cancellationToken);
         }
         finally
@@ -128,8 +132,8 @@ public sealed class UserSettingsService(ISshPasswordStore sshPasswordStore)
         return await JsonSerializer.DeserializeAsync<UserSettings>(
                    stream,
                    SerializerOptions,
-                   cancellationToken)
-               ?? new UserSettings();
+                   cancellationToken) ??
+                   new UserSettings();
     }
 
     private static async Task SaveCoreAsync(

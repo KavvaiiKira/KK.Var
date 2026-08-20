@@ -13,11 +13,11 @@ public sealed class KKProjectVersionService(
     IKKProjectRepository projectRepository,
     IKKProjectVersionRepository versionRepository) : IKKProjectVersionService
 {
-    private static readonly Regex Sha256Pattern = new(
+    private static readonly Regex Sha256Pattern = new Regex(
         "^[0-9a-fA-F]{64}$",
         RegexOptions.CultureInvariant);
 
-    private static readonly Regex CommitShaPattern = new(
+    private static readonly Regex CommitShaPattern = new Regex(
         "^[0-9a-fA-F]{40,64}$",
         RegexOptions.CultureInvariant);
 
@@ -32,9 +32,8 @@ public sealed class KKProjectVersionService(
     {
         ArgumentNullException.ThrowIfNull(version);
 
-        _ = await projectRepository.GetByIdAsync(version.KKProjectId, cancellationToken)
-            ?? throw new KeyNotFoundException(
-                $"Project '{version.KKProjectId}' was not found.");
+        _ = await projectRepository.GetByIdAsync(version.KKProjectId, cancellationToken) ??
+            throw new KeyNotFoundException($"Project '{version.KKProjectId}' was not found.");
 
         version.Tag = Required(version.Tag, nameof(version.Tag), 200);
         version.ArtifactRelativePath = Required(
@@ -45,12 +44,12 @@ public sealed class KKProjectVersionService(
             version.ArtifactSha256,
             nameof(version.ArtifactSha256),
             64).ToLowerInvariant();
-        version.SourceCommitSha = string.IsNullOrWhiteSpace(version.SourceCommitSha)
-            ? null
-            : version.SourceCommitSha.Trim().ToLowerInvariant();
-        version.Description = string.IsNullOrWhiteSpace(version.Description)
-            ? null
-            : version.Description.Trim();
+        version.SourceCommitSha = string.IsNullOrWhiteSpace(version.SourceCommitSha) ?
+            null :
+            version.SourceCommitSha.Trim().ToLowerInvariant();
+        version.Description = string.IsNullOrWhiteSpace(version.Description) ?
+            null :
+            version.Description.Trim();
 
         ValidateRelativePath(version.ArtifactRelativePath);
 
@@ -85,6 +84,7 @@ public sealed class KKProjectVersionService(
         version.CreatedAtUtc = DateTime.UtcNow;
 
         await versionRepository.AddAsync(version, cancellationToken);
+
         return version;
     }
 
@@ -118,8 +118,7 @@ public sealed class KKProjectVersionService(
         {
             if (segment is "." or "..")
             {
-                throw new ArgumentException(
-                    "Artifact path cannot contain '.' or '..' segments.");
+                throw new ArgumentException("Artifact path cannot contain '.' or '..' segments.");
             }
         }
     }

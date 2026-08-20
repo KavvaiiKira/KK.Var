@@ -318,16 +318,15 @@ public sealed class LocalizationService : ILocalizationService
             ["В репозитории GitHub нет коммитов."] = "The GitHub repository has no commits.",
         };
 
-    public ApplicationLanguage CurrentLanguage { get; private set; } =
-        ApplicationLanguage.Russian;
+    public ApplicationLanguage CurrentLanguage { get; private set; } = ApplicationLanguage.Russian;
 
     public event EventHandler? LanguageChanged;
 
     public string Get(string key) =>
         CurrentLanguage == ApplicationLanguage.English &&
-        English.TryGetValue(key, out var translation)
-            ? translation
-            : key;
+        English.TryGetValue(key, out var translation) ?
+            translation :
+        key;
 
     public string GetKey(string localizedText)
     {
@@ -353,8 +352,9 @@ public sealed class LocalizationService : ILocalizationService
         }
 
         CurrentLanguage = language;
-        var culture = new CultureInfo(
-            language == ApplicationLanguage.English ? "en-US" : "ru-RU");
+
+        var culture = new CultureInfo(language == ApplicationLanguage.English ? "en-US" : "ru-RU");
+
         CultureInfo.CurrentCulture = culture;
         CultureInfo.CurrentUICulture = culture;
         CultureInfo.DefaultThreadCurrentCulture = culture;

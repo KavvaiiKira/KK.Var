@@ -446,11 +446,11 @@ public partial class MainWindow : Window
     private void ShowDeleteProjectConfirmation(KKProject project)
     {
         _projectPendingDelete = project;
-        DeleteProjectMessage.Text = DataContext is MainViewModel viewModel
-            ? viewModel.LocalizeFormat(
+        DeleteProjectMessage.Text = DataContext is MainViewModel viewModel ?
+            viewModel.LocalizeFormat(
                 "Проект «{0}» и все его локальные архивы будут удалены без возможности отмены.",
-                project.Name)
-            : $"Проект «{project.Name}» и все его локальные архивы будут удалены без возможности отмены.";
+                project.Name) :
+                $"Проект «{project.Name}» и все его локальные архивы будут удалены без возможности отмены.";
         DeleteProjectConfirmation.IsVisible = true;
     }
 
@@ -503,12 +503,11 @@ public partial class MainWindow : Window
         }
     }
 
-    private void ToggleMaximizedState()
-    {
-        WindowState = WindowState == WindowState.Maximized
-            ? WindowState.Normal
-            : WindowState.Maximized;
-    }
+    private void ToggleMaximizedState() =>
+        WindowState =
+            WindowState == WindowState.Maximized ?
+                WindowState.Normal :
+                WindowState.Maximized;
 
     private void UpdateWindowChrome()
     {
@@ -522,12 +521,14 @@ public partial class MainWindow : Window
         WindowFrame.BorderThickness = new Thickness(isMaximized ? 0 : 1);
         WindowFrame.CornerRadius = new CornerRadius(isMaximized ? 0 : 14);
         ModalBackdrop.CornerRadius = new CornerRadius(isMaximized ? 0 : 14);
-        TitleBar.CornerRadius = isMaximized
-            ? new CornerRadius(0)
-            : new CornerRadius(14, 14, 0, 0);
-        StatusBar.CornerRadius = isMaximized
-            ? new CornerRadius(0)
-            : new CornerRadius(0, 0, 14, 14);
+
+        TitleBar.CornerRadius = isMaximized ?
+            new CornerRadius(0) :
+            new CornerRadius(14, 14, 0, 0);
+
+        StatusBar.CornerRadius = isMaximized ?
+            new CornerRadius(0) :
+            new CornerRadius(0, 0, 14, 14);
     }
 
     private void ShowSettingsPage(bool showSettings)
@@ -576,7 +577,7 @@ public partial class MainWindow : Window
     }
 
     private static KKProject? GetProject(object? sender) =>
-        (sender as Control)?.DataContext is ProjectTileViewModel tile
-            ? tile.Project
-            : null;
+        (sender as Control)?.DataContext is ProjectTileViewModel tile ?
+            tile.Project :
+            null;
 }

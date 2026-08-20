@@ -8,13 +8,11 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
 {
     public DbSet<KKProject> Projects => Set<KKProject>();
 
-    public DbSet<KKProjectEnvironmentVariable> ProjectEnvironmentVariables =>
-        Set<KKProjectEnvironmentVariable>();
+    public DbSet<KKProjectEnvironmentVariable> ProjectEnvironmentVariables => Set<KKProjectEnvironmentVariable>();
 
     public DbSet<KKProjectVersion> ProjectVersions => Set<KKProjectVersion>();
 
-    public DbSet<KKProjectDeployment> ProjectDeployments =>
-        Set<KKProjectDeployment>();
+    public DbSet<KKProjectDeployment> ProjectDeployments => Set<KKProjectDeployment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
