@@ -494,6 +494,7 @@
                             Padding="0"
                             HorizontalContentAlignment="Center"
                             VerticalContentAlignment="Center"
+                            Click="HelpButton_OnClick"
                             ToolTip.Tip="{DynamicResource 'Помощь'}">
                         <PathIcon Width="17"
                                   Height="17"

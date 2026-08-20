@@ -1224,6 +1224,15 @@ public partial class MainViewModel : ViewModelBase
         await _userSettingsService.SaveAsync(Settings);
     }
 
+    public void OpenReadme()
+    {
+        var uri = Settings.Language == ApplicationLanguage.English
+            ? new Uri("https://github.com/KavvaiiKira/KK.Var/blob/master/README.en.md")
+            : new Uri("https://github.com/KavvaiiKira/KK.Var");
+
+        OpenBrowser(uri);
+    }
+
     public string Localize(string key) => _localizationService?.Get(key) ?? key;
 
     public string LocalizeFormat(string key, params object?[] arguments) =>

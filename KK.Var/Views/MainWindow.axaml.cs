@@ -459,6 +459,14 @@ public partial class MainWindow : Window
         }
     }
 
+    private void HelpButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel)
+        {
+            viewModel.OpenReadme();
+        }
+    }
+
     private void ToggleMaximizedState()
     {
         WindowState = WindowState == WindowState.Maximized
