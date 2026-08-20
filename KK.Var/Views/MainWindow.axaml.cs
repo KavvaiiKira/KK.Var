@@ -10,6 +10,9 @@ namespace KK.Var.Views;
 
 public partial class MainWindow : Window
 {
+    private const double MaximumNormalWidth = 1920;
+    private const double MaximumNormalHeight = 1080;
+
     private bool _firstRunHandled;
     private bool _showSettingsAfterProjectEditorClose;
     private bool _showHistoryAfterProjectEditorClose;
@@ -49,6 +52,39 @@ public partial class MainWindow : Window
         }
 
         BeginMoveDrag(e);
+    }
+
+    private void ResizeNorth_OnPointerPressed(object? sender, PointerPressedEventArgs e) =>
+        BeginWindowResize(WindowEdge.North, e);
+
+    private void ResizeSouth_OnPointerPressed(object? sender, PointerPressedEventArgs e) =>
+        BeginWindowResize(WindowEdge.South, e);
+
+    private void ResizeWest_OnPointerPressed(object? sender, PointerPressedEventArgs e) =>
+        BeginWindowResize(WindowEdge.West, e);
+
+    private void ResizeEast_OnPointerPressed(object? sender, PointerPressedEventArgs e) =>
+        BeginWindowResize(WindowEdge.East, e);
+
+    private void ResizeNorthWest_OnPointerPressed(object? sender, PointerPressedEventArgs e) =>
+        BeginWindowResize(WindowEdge.NorthWest, e);
+
+    private void ResizeNorthEast_OnPointerPressed(object? sender, PointerPressedEventArgs e) =>
+        BeginWindowResize(WindowEdge.NorthEast, e);
+
+    private void ResizeSouthWest_OnPointerPressed(object? sender, PointerPressedEventArgs e) =>
+        BeginWindowResize(WindowEdge.SouthWest, e);
+
+    private void ResizeSouthEast_OnPointerPressed(object? sender, PointerPressedEventArgs e) =>
+        BeginWindowResize(WindowEdge.SouthEast, e);
+
+    private void BeginWindowResize(WindowEdge edge, PointerPressedEventArgs e)
+    {
+        if (WindowState == WindowState.Normal &&
+            e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+        {
+            BeginResizeDrag(edge, e);
+        }
     }
 
     private void MinimizeButton_OnClick(object? sender, RoutedEventArgs e)
@@ -477,6 +513,10 @@ public partial class MainWindow : Window
     private void UpdateWindowChrome()
     {
         var isMaximized = WindowState == WindowState.Maximized;
+
+        MaxWidth = isMaximized ? double.PositiveInfinity : MaximumNormalWidth;
+        MaxHeight = isMaximized ? double.PositiveInfinity : MaximumNormalHeight;
+        ResizeHandles.IsVisible = !isMaximized;
 
         WindowFrame.Margin = new Thickness(isMaximized ? 0 : 8);
         WindowFrame.BorderThickness = new Thickness(isMaximized ? 0 : 1);

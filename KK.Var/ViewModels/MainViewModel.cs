@@ -837,6 +837,7 @@ public partial class MainViewModel : ViewModelBase
 
         try
         {
+            var selectedProjectKey = Canonicalize(SelectedHistoryProject);
             HistoryProjectFilters.Clear();
             HistoryProjectFilters.Add(Localize("Все проекты"));
             foreach (var projectName in Projects
@@ -846,14 +847,10 @@ public partial class MainViewModel : ViewModelBase
                 HistoryProjectFilters.Add(projectName);
             }
 
-            if (!HistoryProjectFilters.Contains(SelectedHistoryProject))
-            {
-                SelectedHistoryProject = Localize("Все проекты");
-            }
-            else
-            {
-                OnPropertyChanged(nameof(SelectedHistoryProject));
-            }
+            var selectedProject = HistoryProjectFilters.FirstOrDefault(item =>
+                Canonicalize(item) == selectedProjectKey) ?? Localize("Все проекты");
+            SelectedHistoryProject = string.Empty;
+            SelectedHistoryProject = selectedProject;
 
             RefreshHistoryStatusFilters();
             OnPropertyChanged(nameof(SelectedHistoryStatus));

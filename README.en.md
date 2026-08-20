@@ -110,7 +110,13 @@ A custom build uses `command`, `workingDirectory`, and `buildArguments`. It supp
 
 A project stores its source, build method, systemd service name, remote directory, executable, and environment file path. A successful build produces a local version containing a user-defined tag, description, archive, checksum, and Git commit SHA for a GitHub source.
 
+**Project overview**
+
 ![KK.Var project details](docs/images/project-details-en.png)
+
+**Locally stored versions and Rollback**
+
+![KK.Var project versions](docs/images/project-versions-en.png)
 
 Rollback uses the selected version's existing local archive, so KK.Var does not need to fetch and build the source again.
 
@@ -121,6 +127,12 @@ Variables are configured per project, retain their user-defined order, and are w
 ![KK.Var environment variables](docs/images/environment-variables-en.png)
 
 KK.Var project environment variables are not intended for secrets. Passwords, private keys, and other sensitive values should not be added to them.
+
+## Operation history
+
+The global history combines Deploy and Rollback operations for every project. It supports project and status filters, while search accepts a project name, version tag, or date. Records are loaded page by page and include successful, failed, interrupted, and cancelled operations.
+
+![KK.Var operation history](docs/images/history-en.png)
 
 ## Requirements
 
@@ -184,6 +196,10 @@ GitHub can be connected immediately or later. Authorization uses Device Flow: th
 To access private repositories, the OAuth App requests the `repo read:user` scopes. GitHub describes `repo` as full control of private repositories, although KK.Var uses the token only to read the repository list, commit SHAs, Git trees, submodules, and source archives. Access can be revoked from GitHub's connected application settings or with the disconnect button in KK.Var settings.
 
 ![KK.Var first launch](docs/images/first-run-en.png)
+
+After the wizard, the same options remain available on the Settings page, where the SSH connection can be changed and verified and GitHub can be connected or disconnected.
+
+![KK.Var settings](docs/images/settings-en.png)
 
 ## Local data
 
