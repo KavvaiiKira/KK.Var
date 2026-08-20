@@ -26,9 +26,13 @@ public sealed class RemoteConnectionService(ILocalizationService localizationSer
 
     private RemoteConnectionCheckResult Check(RemoteMachineSettings settings)
     {
+        SshHostKeyValidator? hostKeyValidator = null;
+
         try
         {
             using var client = CreateClient(settings);
+            hostKeyValidator = new SshHostKeyValidator(settings.HostKeyFingerprint);
+            hostKeyValidator.Attach(client);
             client.ConnectionInfo.Timeout = TimeSpan.FromSeconds(10);
             client.Connect();
 
@@ -42,7 +46,15 @@ public sealed class RemoteConnectionService(ILocalizationService localizationSer
             }
 
             client.Disconnect();
-            return RemoteConnectionCheckResult.Success(architecture);
+            return RemoteConnectionCheckResult.Success(
+                architecture,
+                hostKeyValidator.ObservedFingerprint);
+        }
+        catch (SshConnectionException) when (
+            hostKeyValidator is { RequiresConfirmation: true })
+        {
+            return RemoteConnectionCheckResult.ConfirmationRequired(
+                hostKeyValidator.ObservedFingerprint);
         }
         catch (SshAuthenticationException)
         {

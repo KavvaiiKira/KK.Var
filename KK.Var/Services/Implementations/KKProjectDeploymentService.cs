@@ -32,6 +32,7 @@ public sealed class KKProjectDeploymentService(
         string? searchText,
         DateTime? startedFromUtc,
         DateTime? startedBeforeUtc,
+        DeploymentStatus? status,
         int skip,
         int take,
         CancellationToken cancellationToken = default) =>
@@ -40,6 +41,7 @@ public sealed class KKProjectDeploymentService(
             searchText,
             startedFromUtc,
             startedBeforeUtc,
+            status,
             skip,
             take,
             cancellationToken);
@@ -54,6 +56,8 @@ public sealed class KKProjectDeploymentService(
         Guid versionId,
         DeploymentOperationType operationType,
         string variablesSnapshotJson,
+        string remoteOperationId,
+        string logPath,
         CancellationToken cancellationToken = default)
     {
         _ = await projectRepository.GetByIdAsync(projectId, cancellationToken)
@@ -68,6 +72,12 @@ public sealed class KKProjectDeploymentService(
         }
 
         ValidateJsonObject(variablesSnapshotJson, nameof(variablesSnapshotJson));
+        if (!Guid.TryParseExact(remoteOperationId, "N", out _))
+        {
+            throw new ArgumentException(
+                "Invalid remote operation identifier.",
+                nameof(remoteOperationId));
+        }
 
         var deployment = new KKProjectDeployment
         {
@@ -76,8 +86,12 @@ public sealed class KKProjectDeploymentService(
             KKProjectVersionId = versionId,
             OperationType = operationType,
             Status = DeploymentStatus.Running,
+            RemoteOperationId = remoteOperationId,
+            Stage = DeploymentStage.Preparing,
+            UnitChange = DeploymentUnitChange.Unchanged,
             VariablesSnapshotJson = variablesSnapshotJson.Trim(),
             StartedAtUtc = DateTime.UtcNow,
+            LogPath = logPath,
         };
 
         await deploymentRepository.AddAsync(deployment, cancellationToken);
@@ -93,7 +107,8 @@ public sealed class KKProjectDeploymentService(
     {
         if (status is not (DeploymentStatus.Succeeded or
             DeploymentStatus.Failed or
-            DeploymentStatus.Cancelled))
+            DeploymentStatus.Cancelled or
+            DeploymentStatus.Interrupted))
         {
             throw new ArgumentException("A terminal deployment status is required.");
         }
@@ -106,7 +121,8 @@ public sealed class KKProjectDeploymentService(
 
         if (deployment.Status is DeploymentStatus.Succeeded or
             DeploymentStatus.Failed or
-            DeploymentStatus.Cancelled)
+            DeploymentStatus.Cancelled or
+            DeploymentStatus.Interrupted)
         {
             throw new InvalidOperationException("Deployment is already completed.");
         }
@@ -230,12 +246,16 @@ public sealed class KKProjectDeploymentService(
             $"{DateTime.UtcNow:yyyyMMdd-HHmmss}-{Guid.NewGuid():N}.log");
         var variables = await environmentService.GetAsync(project.Id, cancellationToken);
         var snapshot = JsonSerializer.Serialize(variables.ToDictionary(pair => pair.Key, pair => pair.Value));
+        var remoteOperationId = Guid.NewGuid().ToString("N");
         var deployment = await StartAsync(
             project.Id,
             version.Id,
             operationType,
             snapshot,
+            remoteOperationId,
+            logPath,
             cancellationToken);
+        var remoteCommitted = false;
 
         try
         {
@@ -247,14 +267,17 @@ public sealed class KKProjectDeploymentService(
                 project,
                 artifactPath,
                 settings.RemoteMachine,
+                remoteOperationId,
                 log,
+                checkpoint => SaveCheckpointAsync(deployment.Id, checkpoint),
                 progress,
                 cancellationToken);
+            remoteCommitted = true;
             await CompleteAsync(
                 deployment.Id,
                 DeploymentStatus.Succeeded,
                 logPath,
-                cancellationToken: cancellationToken);
+                cancellationToken: CancellationToken.None);
             deployment.Status = DeploymentStatus.Succeeded;
             deployment.CompletedAtUtc = DateTime.UtcNow;
             deployment.LogPath = logPath;
@@ -264,6 +287,11 @@ public sealed class KKProjectDeploymentService(
         }
         catch (Exception exception)
         {
+            if (remoteCommitted)
+            {
+                throw;
+            }
+
             var status = exception is OperationCanceledException
                 ? DeploymentStatus.Cancelled
                 : DeploymentStatus.Failed;
@@ -275,6 +303,89 @@ public sealed class KKProjectDeploymentService(
                 CancellationToken.None);
             throw;
         }
+    }
+
+    public async Task<int> RecoverInterruptedAsync(
+        CancellationToken cancellationToken = default)
+    {
+        await _deploymentLock.WaitAsync(cancellationToken);
+        try
+        {
+            var runningDeployments = await deploymentRepository.GetRunningAsync(
+                cancellationToken);
+            if (runningDeployments.Count == 0)
+            {
+                return 0;
+            }
+
+            var settings = await userSettingsService.LoadAsync(cancellationToken);
+            var recoveredCount = 0;
+            foreach (var deployment in runningDeployments)
+            {
+                var logPath = string.IsNullOrWhiteSpace(deployment.LogPath)
+                    ? Path.Combine(
+                        DatabasePaths.LogsDirectory,
+                        $"{DateTime.UtcNow:yyyyMMdd-HHmmss}-{deployment.Id:N}.log")
+                    : deployment.LogPath;
+                Directory.CreateDirectory(DatabasePaths.LogsDirectory);
+                await using var log = new StreamWriter(
+                    logPath,
+                    true,
+                    new System.Text.UTF8Encoding(false));
+                var result = await remoteDeploymentService.RecoverAsync(
+                    deployment.Project,
+                    settings.RemoteMachine,
+                    deployment.RemoteOperationId,
+                    deployment.Stage,
+                    deployment.UnitChange,
+                    log,
+                    cancellationToken);
+                var status = result.Outcome == DeploymentRecoveryOutcome.NewVersionActive
+                    ? DeploymentStatus.Succeeded
+                    : DeploymentStatus.Interrupted;
+                var message = result.Outcome switch
+                {
+                    DeploymentRecoveryOutcome.NewVersionActive =>
+                        localizationService.Get("Прерванный Deploy завершён: новая версия работает."),
+                    DeploymentRecoveryOutcome.PreviousVersionRestored =>
+                        localizationService.Get("Прерванный Deploy восстановлен: возвращена предыдущая версия."),
+                    _ => localizationService.Get(
+                        "Прерванный Deploy остановлен до переключения версии."),
+                };
+                await CompleteAsync(
+                    deployment.Id,
+                    status,
+                    logPath,
+                    status == DeploymentStatus.Interrupted ? message : null,
+                    cancellationToken);
+                recoveredCount++;
+            }
+
+            return recoveredCount;
+        }
+        finally
+        {
+            _deploymentLock.Release();
+        }
+    }
+
+    private async Task SaveCheckpointAsync(
+        Guid deploymentId,
+        DeploymentCheckpoint checkpoint)
+    {
+        var deployment = await deploymentRepository.GetByIdAsync(
+                deploymentId,
+                CancellationToken.None)
+            ?? throw new KeyNotFoundException(
+                $"Deployment '{deploymentId}' was not found.");
+        if (deployment.Status != DeploymentStatus.Running)
+        {
+            throw new InvalidOperationException("Deployment is no longer running.");
+        }
+
+        deployment.Stage = checkpoint.Stage;
+        deployment.UnitChange = checkpoint.UnitChange;
+        await deploymentRepository.UpdateAsync(deployment, CancellationToken.None);
     }
 
     private string ResolveArtifactPath(string relativePath)

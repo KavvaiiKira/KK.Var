@@ -199,7 +199,7 @@
                             BorderBrush="{DynamicResource AppBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="14">
-                        <Grid ColumnDefinitions="*,*" ColumnSpacing="18" RowDefinitions="Auto,Auto,Auto">
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="18" RowDefinitions="Auto,Auto,Auto,Auto">
                             <StackPanel Grid.ColumnSpan="2" Margin="0,0,0,16" Spacing="5">
                                 <TextBlock Text="{DynamicResource 'Сборка и запуск'}"
                                            FontSize="19"
@@ -235,6 +235,24 @@
                                 <TextBox Classes="project-field"
                                          Text="{Binding RemoteDeploymentDirectory, Mode=TwoWay}"
                                          PlaceholderText="/opt/kk-var/billing-api" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="3"
+                                        Grid.ColumnSpan="2"
+                                        Margin="0,18,0,0"
+                                        Spacing="7">
+                                <TextBlock Classes="field-label" Text="{DynamicResource 'Параметры сборки (JSON)'}" />
+                                <TextBlock Text="{DynamicResource 'Поддерживаются configuration, configureArguments, buildArguments и environment. Для C++ и Custom нужны дополнительные поля.'}"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource AppTextMutedBrush}" />
+                                <TextBox Classes="project-field"
+                                         MinHeight="92"
+                                         Padding="12,10"
+                                         VerticalContentAlignment="Top"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         FontFamily="Consolas"
+                                         Text="{Binding BuildConfigurationJson, Mode=TwoWay}" />
                             </StackPanel>
                         </Grid>
                     </Border>

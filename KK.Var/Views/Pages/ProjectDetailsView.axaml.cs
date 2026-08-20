@@ -161,6 +161,11 @@ public partial class ProjectDetailsView : UserControl
 
     public void ShowDeploySection()
     {
+        if (DataContext is MainViewModel viewModel)
+        {
+            viewModel.PrepareDeploymentView();
+        }
+
         ShowSection(DeployPanel);
     }
 
@@ -215,6 +220,17 @@ public partial class ProjectDetailsView : UserControl
 
     private void ShowSection(Control panel, Button? activeTab = null)
     {
+        var sectionChanged =
+            (OverviewPanel.IsVisible && panel != OverviewPanel) ||
+            (EnvironmentPanel.IsVisible && panel != EnvironmentPanel) ||
+            (VersionsPanel.IsVisible && panel != VersionsPanel) ||
+            (HistoryPanel.IsVisible && panel != HistoryPanel) ||
+            (DeployPanel.IsVisible && panel != DeployPanel);
+        if (sectionChanged && DataContext is MainViewModel viewModel)
+        {
+            viewModel.ClearStatusNotification();
+        }
+
         OverviewPanel.IsVisible = panel == OverviewPanel;
         EnvironmentPanel.IsVisible = panel == EnvironmentPanel;
         VersionsPanel.IsVisible = panel == VersionsPanel;

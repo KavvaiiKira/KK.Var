@@ -1,0 +1,104 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:KK.Var.Views.Controls"
+        x:Class="KK.Var.Views.StartupRecoveryWindow"
+        Width="680"
+        Height="430"
+        WindowStartupLocation="CenterScreen"
+        WindowDecorations="None"
+        CanResize="False"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent"
+        Title="KK.Var — восстановление">
+
+    <Window.Styles>
+        <Style Selector="Button.recovery-button">
+            <Setter Property="MinHeight" Value="40" />
+            <Setter Property="Padding" Value="18,8" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.recovery-primary">
+            <Setter Property="Background" Value="{DynamicResource AppPrimaryBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+    </Window.Styles>
+
+    <Border Background="{DynamicResource AppBackgroundBrush}"
+            BorderBrush="{DynamicResource AppBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="16">
+        <Grid RowDefinitions="54,*,82">
+            <Border Grid.Row="0"
+                    Background="{DynamicResource AppSurfaceBrush}"
+                    CornerRadius="16,16,0,0">
+                <Grid ColumnDefinitions="Auto,*">
+                    <StackPanel Margin="18,0,0,0"
+                                Orientation="Horizontal"
+                                Spacing="10"
+                                VerticalAlignment="Center">
+                        <controls:BrandMark Width="30" Height="30" />
+                        <TextBlock Text="KK.Var"
+                                   VerticalAlignment="Center"
+                                   FontFamily="{DynamicResource BrandFontFamily}"
+                                   FontWeight="Bold" />
+                    </StackPanel>
+                    <Border Grid.Column="1"
+                            Background="Transparent"
+                            PointerPressed="TitleBar_OnPointerPressed" />
+                </Grid>
+            </Border>
+
+            <StackPanel Grid.Row="1"
+                        Margin="54,36"
+                        Spacing="18">
+                <TextBlock x:Name="TitleText"
+                           FontSize="26"
+                           FontWeight="Bold"
+                           Foreground="{DynamicResource AppTextBrush}" />
+                <TextBlock x:Name="DescriptionText"
+                           FontSize="14"
+                           Foreground="{DynamicResource AppTextMutedBrush}"
+                           TextWrapping="Wrap" />
+                <Border Padding="14"
+                        Background="{DynamicResource AppSurfaceRaisedBrush}"
+                        BorderBrush="{DynamicResource AppBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8">
+                    <TextBlock x:Name="ErrorText"
+                               MaxHeight="92"
+                               Foreground="{DynamicResource AppDangerBrush}"
+                               TextWrapping="Wrap" />
+                </Border>
+                <TextBlock x:Name="StatusText"
+                           Foreground="{DynamicResource AppTextMutedBrush}"
+                           TextWrapping="Wrap" />
+            </StackPanel>
+
+            <Border Grid.Row="2"
+                    Padding="20"
+                    Background="{DynamicResource AppSurfaceBrush}"
+                    CornerRadius="0,0,16,16">
+                <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                    <Button x:Name="OpenDataDirectoryButton"
+                            Classes="recovery-button"
+                            Content="Открыть папку данных"
+                            Click="OpenDataDirectoryButton_OnClick" />
+                    <Button x:Name="CloseButton"
+                            Grid.Column="2"
+                            Classes="recovery-button"
+                            Margin="0,0,10,0"
+                            Content="Завершить"
+                            Click="CloseButton_OnClick" />
+                    <Button x:Name="RecoverButton"
+                            Grid.Column="3"
+                            Classes="recovery-button recovery-primary"
+                            Content="Создать копию и сбросить"
+                            Click="RecoverButton_OnClick" />
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

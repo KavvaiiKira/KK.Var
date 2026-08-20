@@ -19,6 +19,16 @@ public sealed class KKProjectDeploymentConfiguration
         builder.Property(deployment => deployment.Status)
             .HasConversion<int>();
 
+        builder.Property(deployment => deployment.Stage)
+            .HasConversion<int>();
+
+        builder.Property(deployment => deployment.UnitChange)
+            .HasConversion<int>();
+
+        builder.Property(deployment => deployment.RemoteOperationId)
+            .IsRequired()
+            .HasMaxLength(32);
+
         builder.Property(deployment => deployment.VariablesSnapshotJson)
             .IsRequired();
 

@@ -270,8 +270,9 @@
                                                 <Grid Grid.Row="2"
                                                       ColumnDefinitions="*,*"
                                                       RowDefinitions="Auto,Auto"
+                                                      ColumnSpacing="12"
                                                       RowSpacing="13">
-                                                    <StackPanel Spacing="3">
+                                                    <StackPanel MinWidth="0" Spacing="3">
                                                         <TextBlock Text="{DynamicResource 'Последний deploy'}"
                                                                    FontSize="11"
                                                                    Foreground="{DynamicResource AppTextMutedBrush}" />
@@ -279,7 +280,7 @@
                                                                    FontSize="13"
                                                                    FontWeight="SemiBold" />
                                                     </StackPanel>
-                                                    <StackPanel Grid.Column="1" Spacing="3">
+                                                    <StackPanel Grid.Column="1" MinWidth="0" Spacing="3">
                                                         <TextBlock Text="{DynamicResource 'Версия'}"
                                                                    FontSize="11"
                                                                    Foreground="{DynamicResource AppTextMutedBrush}" />
@@ -289,21 +290,27 @@
                                                                    Foreground="{DynamicResource AppPrimaryHoverBrush}" />
                                                     </StackPanel>
                                                     <StackPanel Grid.Row="1"
+                                                                MinWidth="0"
                                                                 Spacing="3">
                                                         <TextBlock Text="Systemd service"
                                                                    FontSize="11"
                                                                    Foreground="{DynamicResource AppTextMutedBrush}" />
                                                         <TextBlock Text="{Binding Project.RemoteServiceName}"
+                                                                   MaxWidth="145"
+                                                                   TextTrimming="CharacterEllipsis"
+                                                                   ToolTip.Tip="{Binding Project.RemoteServiceName}"
                                                                    FontFamily="Consolas"
                                                                    FontSize="12" />
                                                     </StackPanel>
                                                     <StackPanel Grid.Row="1"
                                                                 Grid.Column="1"
+                                                                MinWidth="0"
                                                                 Spacing="3">
                                                         <TextBlock Text="Service file"
                                                                    FontSize="11"
                                                                    Foreground="{DynamicResource AppTextMutedBrush}" />
                                                         <TextBlock Text="{Binding Project.RemoteExecutablePath}"
+                                                                   MaxWidth="145"
                                                                    TextTrimming="CharacterEllipsis"
                                                                    ToolTip.Tip="{Binding Project.RemoteExecutablePath}"
                                                                    FontFamily="Consolas"
@@ -530,7 +537,7 @@
                                    TextWrapping="Wrap"
                                    FontSize="13"
                                    Foreground="{DynamicResource AppTextMutedBrush}" />
-                        <TextBlock Text="{DynamicResource 'Версии, переменные окружения и история deploy будут удалены из базы данных.'}"
+                        <TextBlock Text="{DynamicResource 'Версии, переменные окружения, история deploy и локальные архивы также будут удалены.'}"
                                    TextWrapping="Wrap"
                                    FontSize="12"
                                    Foreground="{DynamicResource AppDangerBrush}" />

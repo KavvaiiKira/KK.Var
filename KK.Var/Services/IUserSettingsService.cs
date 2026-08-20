@@ -13,10 +13,6 @@ public interface IUserSettingsService
         UserSettings settings,
         CancellationToken cancellationToken = default);
 
-    Task SaveRemoteMachineArchitectureAsync(
-        string architecture,
-        CancellationToken cancellationToken = default);
-
     Task SaveGitHubConnectionAsync(
         string accountLogin,
         DateTimeOffset connectedAtUtc,

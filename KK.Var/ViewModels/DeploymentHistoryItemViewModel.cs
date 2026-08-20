@@ -31,12 +31,14 @@ public sealed class DeploymentHistoryItemViewModel(
         DeploymentStatus.Succeeded => Localize("Успешно"),
         DeploymentStatus.Failed => Localize("Ошибка"),
         DeploymentStatus.Cancelled => Localize("Отменено"),
+        DeploymentStatus.Interrupted => Localize("Прервано"),
         _ => Deployment.Status.ToString(),
     };
 
     public bool IsSuccessful => Deployment.Status == DeploymentStatus.Succeeded;
 
-    public bool IsFailed => Deployment.Status == DeploymentStatus.Failed;
+    public bool IsFailed => Deployment.Status is
+        DeploymentStatus.Failed or DeploymentStatus.Interrupted;
 
     public string Details => string.IsNullOrWhiteSpace(Deployment.ErrorMessage)
         ? OperationDisplay

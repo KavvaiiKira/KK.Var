@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using KK.Var.Enums;
 using KK.Var.Models;
 
 namespace KK.Var.Repositories;
@@ -13,6 +14,7 @@ public interface IKKProjectDeploymentRepository
         string? searchText,
         DateTime? startedFromUtc,
         DateTime? startedBeforeUtc,
+        DeploymentStatus? status,
         int skip,
         int take,
         CancellationToken cancellationToken = default);
@@ -27,6 +29,9 @@ public interface IKKProjectDeploymentRepository
 
     Task<KKProjectDeployment?> GetLatestSuccessfulAsync(
         Guid projectId,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<KKProjectDeployment>> GetRunningAsync(
         CancellationToken cancellationToken = default);
 
     Task AddAsync(

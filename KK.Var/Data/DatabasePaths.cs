@@ -17,11 +17,17 @@ public static class DatabasePaths
     public static string GitHubTokenFilePath =>
         Path.Combine(UserDataDirectory, "github-token.dat");
 
+    public static string SshPasswordFilePath =>
+        Path.Combine(UserDataDirectory, "ssh-password.dat");
+
     public static string ArtifactsDirectory =>
         Path.Combine(UserDataDirectory, "artifacts");
 
     public static string LogsDirectory =>
         Path.Combine(UserDataDirectory, "logs");
+
+    public static string RecoveryDirectory =>
+        Path.Combine(UserDataDirectory, "recovery");
 
     public static string GetDatabaseFilePath(string fileName)
     {

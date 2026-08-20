@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -11,7 +12,10 @@ using KK.Var.Repositories;
 
 namespace KK.Var.Services.Implementations;
 
-public sealed class KKProjectService(IKKProjectRepository repository)
+public sealed class KKProjectService(
+    IKKProjectRepository repository,
+    IProjectArtifactService artifactService,
+    ILocalizationService localizationService)
     : IKKProjectService
 {
     private static readonly Regex ServiceNamePattern = new(
@@ -95,12 +99,15 @@ public sealed class KKProjectService(IKKProjectRepository repository)
         await repository.UpdateAsync(project, cancellationToken);
     }
 
-    public Task DeleteAsync(
+    public async Task DeleteAsync(
         Guid id,
-        CancellationToken cancellationToken = default) =>
-        repository.DeleteAsync(id, cancellationToken);
+        CancellationToken cancellationToken = default)
+    {
+        await artifactService.DeleteAllAsync(id, cancellationToken);
+        await repository.DeleteAsync(id, cancellationToken);
+    }
 
-    private static void NormalizeAndValidate(KKProject project)
+    private void NormalizeAndValidate(KKProject project)
     {
         project.Name = Required(project.Name, nameof(project.Name), 200);
         project.Description = Optional(project.Description, 2000);
@@ -110,7 +117,7 @@ public sealed class KKProjectService(IKKProjectRepository repository)
         project.RemoteDeploymentDirectory = Required(
             project.RemoteDeploymentDirectory,
             nameof(project.RemoteDeploymentDirectory),
-            1024);
+            1024).TrimEnd('/');
         project.ProjectEnvironmentFilePath = Required(
             project.ProjectEnvironmentFilePath,
             nameof(project.ProjectEnvironmentFilePath),
@@ -163,6 +170,30 @@ public sealed class KKProjectService(IKKProjectRepository repository)
             {
                 throw new ArgumentException("Build configuration must be a JSON object.");
             }
+        }
+
+        var buildConfiguration = JsonSerializer.Deserialize<ProjectBuildConfiguration>(
+            project.BuildConfigurationJson,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+            ?? throw new ArgumentException("Build configuration is invalid.");
+        if (buildConfiguration.ConfigureArguments is null ||
+            buildConfiguration.BuildArguments is null ||
+            buildConfiguration.Environment is null ||
+            buildConfiguration.ConfigureArguments.Any(string.IsNullOrWhiteSpace) ||
+            buildConfiguration.BuildArguments.Any(string.IsNullOrWhiteSpace) ||
+            buildConfiguration.Environment.Keys.Any(string.IsNullOrWhiteSpace))
+        {
+            throw new ArgumentException("Build arguments and environment names must not be empty.");
+        }
+        if (project.BuildProvider == ProjectBuildProvider.Custom &&
+            string.IsNullOrWhiteSpace(buildConfiguration.Command))
+        {
+            throw new ArgumentException("Custom build command is required.");
+        }
+        if (project.BuildProvider == ProjectBuildProvider.Cpp &&
+            string.IsNullOrWhiteSpace(buildConfiguration.ToolchainFile))
+        {
+            throw new ArgumentException("C++ Linux toolchain file is required.");
         }
 
         switch (project.SourceType)
@@ -229,20 +260,60 @@ public sealed class KKProjectService(IKKProjectRepository repository)
         return normalized;
     }
 
-    private static void ValidateLinuxAbsolutePath(string path, string parameterName)
+    private void ValidateLinuxAbsolutePath(string path, string parameterName)
     {
         if (!path.StartsWith("/", StringComparison.Ordinal) || path.IndexOf('\0') >= 0)
         {
-            throw new ArgumentException("An absolute Linux path is required.", parameterName);
+            throw new InvalidOperationException(localizationService.Get(
+                "Укажите абсолютный Linux-путь к отдельной директории приложения."));
         }
 
-        foreach (var segment in path.Split('/', StringSplitOptions.RemoveEmptyEntries))
+        var segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length < 2)
+        {
+            throw new InvalidOperationException(localizationService.Get(
+                "Нельзя разворачивать проект в корневую директорию Linux. Укажите отдельную директорию приложения, например /opt/my-app."));
+        }
+
+        if (segments[0].Equals("home", StringComparison.OrdinalIgnoreCase) &&
+            segments.Length < 3)
+        {
+            throw new InvalidOperationException(localizationService.Get(
+                "Нельзя разворачивать проект прямо в домашнюю директорию пользователя. Укажите вложенную директорию приложения."));
+        }
+
+        var restrictedPrefixes = new[]
+        {
+            "/bin/",
+            "/boot/",
+            "/dev/",
+            "/etc/",
+            "/lib/",
+            "/lib64/",
+            "/proc/",
+            "/run/",
+            "/sbin/",
+            "/sys/",
+            "/usr/bin/",
+            "/usr/lib/",
+            "/usr/lib64/",
+            "/usr/sbin/",
+            "/usr/share/",
+        };
+        var normalized = path + "/";
+        if (restrictedPrefixes.Any(prefix =>
+                normalized.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new InvalidOperationException(localizationService.Get(
+                "Нельзя разворачивать проект в защищённую системную директорию Linux. Выберите отдельную директорию приложения."));
+        }
+
+        foreach (var segment in segments)
         {
             if (segment is "." or "..")
             {
-                throw new ArgumentException(
-                    "Linux path cannot contain '.' or '..' segments.",
-                    parameterName);
+                throw new InvalidOperationException(localizationService.Get(
+                    "Путь развёртывания не может содержать сегменты . или ..."));
             }
         }
     }

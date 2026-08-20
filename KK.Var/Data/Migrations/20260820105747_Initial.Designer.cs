@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace KK.Var.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260819131356_Initial")]
+    [Migration("20260820105747_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -131,10 +131,21 @@ namespace KK.Var.Data.Migrations
                     b.Property<int>("OperationType")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("RemoteOperationId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Stage")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("StartedAtUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("UnitChange")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("VariablesSnapshotJson")

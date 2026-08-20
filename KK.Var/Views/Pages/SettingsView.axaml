@@ -324,6 +324,39 @@
                                         Command="{Binding CheckRemoteConnectionCommand}" />
                             </Grid>
                         </Border>
+
+                        <Border IsVisible="{Binding IsHostKeyConfirmationRequired}"
+                                Padding="14"
+                                Background="#241A3A"
+                                BorderBrush="{DynamicResource AppPrimaryBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="20">
+                                <StackPanel Spacing="5">
+                                    <TextBlock Text="{DynamicResource 'Подтвердите SSH-сервер'}"
+                                               FontSize="12"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="{DynamicResource 'Сверьте отпечаток с данными администратора удалённой машины.'}"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource AppTextMutedBrush}" />
+                                    <TextBlock Text="{Binding PendingHostKeyFingerprint}"
+                                               FontSize="12"
+                                               FontFamily="Consolas"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1"
+                                            VerticalAlignment="Center"
+                                            Orientation="Horizontal"
+                                            Spacing="8">
+                                    <Button Classes="settings-secondary"
+                                            Content="{DynamicResource 'Отмена'}"
+                                            Command="{Binding CancelHostKeyConfirmationCommand}" />
+                                    <Button Classes="settings-primary"
+                                            Content="{DynamicResource 'Доверять и продолжить'}"
+                                            Command="{Binding ConfirmHostKeyCommand}" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
                     </StackPanel>
                 </Border>
             </StackPanel>

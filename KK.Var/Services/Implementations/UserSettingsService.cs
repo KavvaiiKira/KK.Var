@@ -9,8 +9,10 @@ using System.Text.Json.Serialization;
 
 namespace KK.Var.Services.Implementations;
 
-public sealed class UserSettingsService : IUserSettingsService
+public sealed class UserSettingsService(ISshPasswordStore sshPasswordStore)
+    : IUserSettingsService
 {
+    private const string PasswordAuthentication = "Пароль";
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
         PropertyNameCaseInsensitive = true,
@@ -31,7 +33,11 @@ public sealed class UserSettingsService : IUserSettingsService
 
         try
         {
-            return await LoadCoreAsync(cancellationToken);
+            var settings = await LoadCoreAsync(cancellationToken);
+            settings.RemoteMachine.Password = await sshPasswordStore.LoadAsync(
+                cancellationToken);
+
+            return settings;
         }
         finally
         {
@@ -49,26 +55,19 @@ public sealed class UserSettingsService : IUserSettingsService
 
         try
         {
-            await SaveCoreAsync(settings, cancellationToken);
-        }
-        finally
-        {
-            _fileLock.Release();
-        }
-    }
+            if (settings.RemoteMachine.AuthenticationMethod == PasswordAuthentication &&
+                !string.IsNullOrWhiteSpace(settings.RemoteMachine.Password))
+            {
+                await sshPasswordStore.SaveAsync(
+                    settings.RemoteMachine.Password,
+                    cancellationToken);
+            }
+            else
+            {
+                await sshPasswordStore.DeleteAsync(cancellationToken);
+                settings.RemoteMachine.Password = null;
+            }
 
-    public async Task SaveRemoteMachineArchitectureAsync(
-        string architecture,
-        CancellationToken cancellationToken = default)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(architecture);
-
-        await _fileLock.WaitAsync(cancellationToken);
-
-        try
-        {
-            var settings = await LoadCoreAsync(cancellationToken);
-            settings.RemoteMachine.Architecture = architecture;
             await SaveCoreAsync(settings, cancellationToken);
         }
         finally

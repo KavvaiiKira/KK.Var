@@ -19,11 +19,10 @@ public partial class CreateProjectViewModel : ViewModelBase
 
     private readonly IKKProjectService? _projectService;
     private readonly IGitHubService? _gitHubService;
-    private readonly IGitHubTokenStore? _gitHubTokenStore;
+    private readonly IGitHubAuthenticationService? _gitHubAuthenticationService;
     private readonly ILocalizationService? _localizationService;
     private bool _isResetting;
     private Guid? _editingProjectId;
-    private string _buildConfigurationJson = "{}";
     private KKProject? _editingProject;
 
     public CreateProjectViewModel()
@@ -34,12 +33,12 @@ public partial class CreateProjectViewModel : ViewModelBase
     public CreateProjectViewModel(
         IKKProjectService projectService,
         IGitHubService gitHubService,
-        IGitHubTokenStore gitHubTokenStore,
+        IGitHubAuthenticationService gitHubAuthenticationService,
         ILocalizationService localizationService)
     {
         _projectService = projectService;
         _gitHubService = gitHubService;
-        _gitHubTokenStore = gitHubTokenStore;
+        _gitHubAuthenticationService = gitHubAuthenticationService;
         _localizationService = localizationService;
         RefreshLocalization();
     }
@@ -85,6 +84,9 @@ public partial class CreateProjectViewModel : ViewModelBase
     public partial string ProjectEnvironmentFilePath { get; set; } = string.Empty;
 
     [ObservableProperty]
+    public partial string BuildConfigurationJson { get; set; } = "{}";
+
+    [ObservableProperty]
     public partial bool HasUnsavedChanges { get; set; }
 
     [ObservableProperty]
@@ -114,7 +116,6 @@ public partial class CreateProjectViewModel : ViewModelBase
     {
         _isResetting = true;
         _editingProjectId = null;
-        _buildConfigurationJson = "{}";
         _editingProject = null;
 
         Name = string.Empty;
@@ -127,6 +128,7 @@ public partial class CreateProjectViewModel : ViewModelBase
         RemoteExecutableFileName = string.Empty;
         RemoteDeploymentDirectory = string.Empty;
         ProjectEnvironmentFilePath = string.Empty;
+        BuildConfigurationJson = "{}";
         ErrorMessage = string.Empty;
         HasUnsavedChanges = false;
         OnPropertyChanged(nameof(IsEditing));
@@ -142,7 +144,6 @@ public partial class CreateProjectViewModel : ViewModelBase
 
         _isResetting = true;
         _editingProjectId = project.Id;
-        _buildConfigurationJson = project.BuildConfigurationJson;
         _editingProject = project;
 
         Name = project.Name;
@@ -169,6 +170,7 @@ public partial class CreateProjectViewModel : ViewModelBase
         RemoteExecutableFileName = project.RemoteExecutableFileName;
         RemoteDeploymentDirectory = project.RemoteDeploymentDirectory;
         ProjectEnvironmentFilePath = project.ProjectEnvironmentFilePath;
+        BuildConfigurationJson = project.BuildConfigurationJson;
         ErrorMessage = string.Empty;
         HasUnsavedChanges = false;
 
@@ -207,7 +209,7 @@ public partial class CreateProjectViewModel : ViewModelBase
                 : null,
             GitHubCloneUrl = IsGitHubSource ? SelectedGitHubRepository?.CloneUrl : null,
             BuildProvider = MapBuildProvider(),
-            BuildConfigurationJson = _buildConfigurationJson,
+            BuildConfigurationJson = BuildConfigurationJson,
             RemoteServiceName = RemoteServiceName,
             RemoteExecutableFileName = RemoteExecutableFileName,
             RemoteDeploymentDirectory = RemoteDeploymentDirectory,
@@ -252,7 +254,9 @@ public partial class CreateProjectViewModel : ViewModelBase
     [RelayCommand]
     private async Task RefreshGitHubRepositoriesAsync()
     {
-        if (_gitHubService is null || _gitHubTokenStore is null || IsLoadingRepositories)
+        if (_gitHubService is null ||
+            _gitHubAuthenticationService is null ||
+            IsLoadingRepositories)
         {
             return;
         }
@@ -262,9 +266,9 @@ public partial class CreateProjectViewModel : ViewModelBase
 
         try
         {
-            var token = await _gitHubTokenStore.LoadAsync();
+            var token = await _gitHubAuthenticationService.GetTokenAsync();
 
-            if (string.IsNullOrWhiteSpace(token))
+            if (token is null)
             {
                 ErrorMessage = Localize(
                     "Сначала подключите GitHub на странице настроек.");
@@ -272,7 +276,8 @@ public partial class CreateProjectViewModel : ViewModelBase
             }
 
             var selectedRepositoryId = SelectedGitHubRepository?.Id;
-            var repositories = await _gitHubService.GetRepositoriesAsync(token);
+            var repositories = await _gitHubService.GetRepositoriesAsync(
+                token.AccessToken);
             GitHubRepositories.Clear();
 
             foreach (var repository in repositories)
@@ -318,13 +323,40 @@ public partial class CreateProjectViewModel : ViewModelBase
 
     partial void OnSelectedGitHubRepositoryChanged(GitHubRepository? value) => MarkDirty();
 
-    partial void OnSelectedBuildProviderChanged(string value) => MarkDirty();
+    partial void OnSelectedBuildProviderChanged(string value)
+    {
+        if (_isResetting)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(BuildConfigurationJson) ||
+            BuildConfigurationJson.Trim() == "{}")
+        {
+            BuildConfigurationJson = MapBuildProvider() switch
+            {
+                ProjectBuildProvider.DotNet =>
+                    "{\r\n  \"configuration\": \"Release\",\r\n  \"workingDirectory\": \".\",\r\n  \"buildArguments\": [],\r\n  \"environment\": {}\r\n}",
+                ProjectBuildProvider.Go or ProjectBuildProvider.Python =>
+                    "{\r\n  \"workingDirectory\": \".\",\r\n  \"buildArguments\": [],\r\n  \"environment\": {}\r\n}",
+                ProjectBuildProvider.Cpp =>
+                    "{\r\n  \"configuration\": \"Release\",\r\n  \"workingDirectory\": \".\",\r\n  \"toolchainFile\": \"toolchains/linux-{architecture}.cmake\",\r\n  \"cmakeGenerator\": \"Ninja\",\r\n  \"configureArguments\": [],\r\n  \"buildArguments\": [],\r\n  \"environment\": {}\r\n}",
+                ProjectBuildProvider.Custom =>
+                    "{\r\n  \"command\": \"\",\r\n  \"workingDirectory\": \".\",\r\n  \"buildArguments\": [\"{output}\", \"{runtime}\"],\r\n  \"environment\": {}\r\n}",
+                _ => "{}",
+            };
+        }
+
+        MarkDirty();
+    }
 
     partial void OnRemoteServiceNameChanged(string value) => MarkDirty();
 
     partial void OnRemoteExecutableFileNameChanged(string value) => MarkDirty();
 
     partial void OnRemoteDeploymentDirectoryChanged(string value) => MarkDirty();
+
+    partial void OnBuildConfigurationJsonChanged(string value) => MarkDirty();
 
     partial void OnProjectEnvironmentFilePathChanged(string value) => MarkDirty();
 
@@ -374,6 +406,40 @@ public partial class CreateProjectViewModel : ViewModelBase
         {
             return Localize(
                 "Укажите путь к файлу переменных окружения внутри проекта.");
+        }
+
+        try
+        {
+            var configurationJson = string.IsNullOrWhiteSpace(BuildConfigurationJson)
+                ? "{}"
+                : BuildConfigurationJson;
+            using var document = System.Text.Json.JsonDocument.Parse(configurationJson);
+            if (document.RootElement.ValueKind != System.Text.Json.JsonValueKind.Object)
+            {
+                return Localize("Параметры сборки должны быть JSON-объектом.");
+            }
+            var configuration = System.Text.Json.JsonSerializer
+                .Deserialize<ProjectBuildConfiguration>(
+                    configurationJson,
+                    new System.Text.Json.JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                    }) ?? new ProjectBuildConfiguration();
+            var provider = MapBuildProvider();
+            if (provider == ProjectBuildProvider.Custom &&
+                string.IsNullOrWhiteSpace(configuration.Command))
+            {
+                return Localize("Укажите command для пользовательской сборки.");
+            }
+            if (provider == ProjectBuildProvider.Cpp &&
+                string.IsNullOrWhiteSpace(configuration.ToolchainFile))
+            {
+                return Localize("Укажите toolchainFile для сборки C++ под Linux.");
+            }
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return Localize("Параметры сборки содержат некорректный JSON.");
         }
 
         return string.Empty;

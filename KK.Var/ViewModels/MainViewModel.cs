@@ -20,7 +20,7 @@ public partial class MainViewModel : ViewModelBase
 {
     private const string PrivateKeyAuthentication = "SSH-ключ";
     private const string PasswordAuthentication = "Пароль";
-    private const int HistoryPageSize = 50;
+    private const int HistoryPageSize = 20;
     private const string JsonEnvironmentFormat = "JSON";
     private const string DotEnvEnvironmentFormat = ".env";
     private const string ShellEnvironmentFormat = "Shell (export)";
@@ -30,6 +30,7 @@ public partial class MainViewModel : ViewModelBase
     private readonly IRemoteConnectionService? _remoteConnectionService;
     private readonly IGitHubService? _gitHubService;
     private readonly IGitHubTokenStore? _gitHubTokenStore;
+    private readonly IGitHubAuthenticationService? _gitHubAuthenticationService;
     private readonly IKKProjectService? _projectService;
     private readonly IKKProjectEnvironmentService? _projectEnvironmentService;
     private readonly IKKProjectVersionService? _projectVersionService;
@@ -54,6 +55,7 @@ public partial class MainViewModel : ViewModelBase
         IRemoteConnectionService remoteConnectionService,
         IGitHubService gitHubService,
         IGitHubTokenStore gitHubTokenStore,
+        IGitHubAuthenticationService gitHubAuthenticationService,
         IKKProjectService projectService,
         IKKProjectEnvironmentService projectEnvironmentService,
         IKKProjectVersionService projectVersionService,
@@ -65,6 +67,7 @@ public partial class MainViewModel : ViewModelBase
         _remoteConnectionService = remoteConnectionService;
         _gitHubService = gitHubService;
         _gitHubTokenStore = gitHubTokenStore;
+        _gitHubAuthenticationService = gitHubAuthenticationService;
         _projectService = projectService;
         _projectEnvironmentService = projectEnvironmentService;
         _projectVersionService = projectVersionService;
@@ -92,6 +95,8 @@ public partial class MainViewModel : ViewModelBase
     public ObservableCollection<DeploymentHistoryItemViewModel> HistoryItems { get; } = [];
 
     public ObservableCollection<string> HistoryProjectFilters { get; } = [];
+
+    public ObservableCollection<string> HistoryStatusFilters { get; } = [];
 
     public IReadOnlyList<string> EnvironmentFileFormats { get; } =
         [JsonEnvironmentFormat, DotEnvEnvironmentFormat, ShellEnvironmentFormat, YamlEnvironmentFormat];
@@ -129,6 +134,9 @@ public partial class MainViewModel : ViewModelBase
     public partial bool IsDeploymentRunning { get; set; }
 
     [ObservableProperty]
+    public partial Guid? ActiveDeploymentProjectId { get; set; }
+
+    [ObservableProperty]
     public partial int DeploymentProgressPercentage { get; set; }
 
     [ObservableProperty]
@@ -148,6 +156,9 @@ public partial class MainViewModel : ViewModelBase
 
     [ObservableProperty]
     public partial string SelectedHistoryProject { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string SelectedHistoryStatus { get; set; } = string.Empty;
 
     [ObservableProperty]
     public partial string SelectedEnvironmentFileFormat { get; set; } =
@@ -170,6 +181,12 @@ public partial class MainViewModel : ViewModelBase
 
     [ObservableProperty]
     public partial bool IsConnectionCheckRunning { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsHostKeyConfirmationRequired { get; set; }
+
+    [ObservableProperty]
+    public partial string PendingHostKeyFingerprint { get; set; } = string.Empty;
 
     [ObservableProperty]
     public partial string RemoteMachineArchitecture { get; set; } =
@@ -225,6 +242,20 @@ public partial class MainViewModel : ViewModelBase
     public bool HasErrorNotification => HasNotification && IsNotificationError;
 
     public bool HasSuccessNotification => HasNotification && !IsNotificationError;
+
+    private Guid? _deploymentLogProjectId;
+
+    public bool IsSelectedProjectDeploymentRunning =>
+        IsDeploymentRunning &&
+        ActiveDeploymentProjectId == SelectedProject?.Id;
+
+    public string VisibleDeploymentLogText =>
+        _deploymentLogProjectId == SelectedProject?.Id
+            ? DeploymentLogText
+            : string.Empty;
+
+    public bool HasVisibleDeploymentLog =>
+        !string.IsNullOrWhiteSpace(VisibleDeploymentLogText);
 
     public bool HasNoHistoryItems => HistoryItems.Count == 0;
 
@@ -324,17 +355,42 @@ public partial class MainViewModel : ViewModelBase
             ? Localize(PasswordAuthentication)
             : Localize(PrivateKeyAuthentication);
 
+        if (_projectDeploymentService is not null && Settings.IsFirstRunCompleted)
+        {
+            try
+            {
+                var recoveredCount = await _projectDeploymentService
+                    .RecoverInterruptedAsync();
+                if (recoveredCount > 0)
+                {
+                    PublishNotification(
+                        LocalizeFormat(
+                            "Восстановлено прерванных операций: {0}",
+                            recoveredCount),
+                        isError: false);
+                }
+            }
+            catch (Exception exception)
+            {
+                PublishNotification(
+                    LocalizeFormat(
+                        "Не удалось восстановить прерванный Deploy: {0}",
+                        exception.Message),
+                    isError: true);
+            }
+        }
+
         GitHubAccountDisplay = string.IsNullOrWhiteSpace(Settings.GitHub.AccountLogin)
             ? Localize("Не подключён")
             : Settings.GitHub.AccountLogin;
 
-        if (_gitHubTokenStore is not null)
+        if (_gitHubAuthenticationService is not null)
         {
             try
             {
-                var token = await _gitHubTokenStore.LoadAsync();
+                var token = await _gitHubAuthenticationService.GetTokenAsync();
                 IsGitHubConnected =
-                    !string.IsNullOrWhiteSpace(token) &&
+                    token is not null &&
                     !string.IsNullOrWhiteSpace(Settings.GitHub.AccountLogin);
             }
             catch (Exception exception)
@@ -382,6 +438,7 @@ public partial class MainViewModel : ViewModelBase
             var versionsTask = _projectVersionService.GetByProjectIdAsync(project.Id);
             var historyTask = _projectDeploymentService.SearchAsync(
                 project.Name,
+                null,
                 null,
                 null,
                 null,
@@ -469,6 +526,7 @@ public partial class MainViewModel : ViewModelBase
                 null,
                 null,
                 null,
+                null,
                 ProjectHistory.Count,
                 HistoryPageSize + 1);
 
@@ -503,24 +561,28 @@ public partial class MainViewModel : ViewModelBase
             return false;
         }
 
+        var projectId = SelectedProject.Id;
+        ActiveDeploymentProjectId = projectId;
+        _deploymentLogProjectId = projectId;
         IsDeploymentRunning = true;
         DeploymentProgressPercentage = 0;
         DeploymentLogText = string.Empty;
-        var progress = new Progress<DeploymentProgress>(HandleDeploymentProgress);
+        NotifySelectedDeploymentStateChanged();
+        var progress = new UiThreadProgress<DeploymentProgress>(HandleDeploymentProgress);
 
         try
         {
             var deployedTag = DeploymentVersionTag.Trim();
             await _projectDeploymentService.DeployAsync(
                 new DeploymentRequest(
-                    SelectedProject.Id,
+                    projectId,
                     deployedTag,
                     DeploymentDescription),
                 progress);
             PublishNotification(
                 LocalizeFormat("Версия «{0}» успешно развёрнута", deployedTag),
                 isError: false);
-            await ReloadSelectedProjectAsync(SelectedProject.Id);
+            await ReloadSelectedProjectAsync(projectId);
             return true;
         }
         catch (Exception exception)
@@ -532,9 +594,24 @@ public partial class MainViewModel : ViewModelBase
         finally
         {
             IsDeploymentRunning = false;
+            ActiveDeploymentProjectId = null;
             DeploymentProgressPercentage = 0;
             DeploymentProgressMessage = string.Empty;
         }
+    }
+
+    public void PrepareDeploymentView()
+    {
+        if (IsDeploymentRunning)
+        {
+            return;
+        }
+
+        DeploymentProgressPercentage = 0;
+        DeploymentProgressMessage = string.Empty;
+        _deploymentLogProjectId = SelectedProject?.Id;
+        DeploymentLogText = string.Empty;
+        NotifySelectedDeploymentStateChanged();
     }
 
     public async Task<bool> RollbackAsync(ProjectVersionItemViewModel item)
@@ -546,21 +623,25 @@ public partial class MainViewModel : ViewModelBase
             return false;
         }
 
+        var projectId = SelectedProject.Id;
+        ActiveDeploymentProjectId = projectId;
+        _deploymentLogProjectId = projectId;
         IsDeploymentRunning = true;
         DeploymentProgressPercentage = 0;
         DeploymentLogText = string.Empty;
-        var progress = new Progress<DeploymentProgress>(HandleDeploymentProgress);
+        NotifySelectedDeploymentStateChanged();
+        var progress = new UiThreadProgress<DeploymentProgress>(HandleDeploymentProgress);
 
         try
         {
             await _projectDeploymentService.RollbackAsync(
-                SelectedProject.Id,
+                projectId,
                 item.Version.Id,
                 progress);
             PublishNotification(
                 LocalizeFormat("Выполнен rollback на версию «{0}»", item.Tag),
                 isError: false);
-            await ReloadSelectedProjectAsync(SelectedProject.Id);
+            await ReloadSelectedProjectAsync(projectId);
             return true;
         }
         catch (Exception exception)
@@ -572,6 +653,7 @@ public partial class MainViewModel : ViewModelBase
         finally
         {
             IsDeploymentRunning = false;
+            ActiveDeploymentProjectId = null;
             DeploymentProgressPercentage = 0;
             DeploymentProgressMessage = string.Empty;
         }
@@ -768,6 +850,13 @@ public partial class MainViewModel : ViewModelBase
             {
                 SelectedHistoryProject = Localize("Все проекты");
             }
+            else
+            {
+                OnPropertyChanged(nameof(SelectedHistoryProject));
+            }
+
+            RefreshHistoryStatusFilters();
+            OnPropertyChanged(nameof(SelectedHistoryStatus));
 
             await LoadHistoryPageAsync(reset: true, CancellationToken.None);
         }
@@ -804,12 +893,7 @@ public partial class MainViewModel : ViewModelBase
         DateTime? startedFromUtc = null;
         DateTime? startedBeforeUtc = null;
 
-        if (DateTime.TryParseExact(
-                search,
-                "dd/MM/yyyy",
-                CultureInfo.InvariantCulture,
-                DateTimeStyles.None,
-                out var localDate))
+        if (TryParseHistoryDate(search, out var localDate))
         {
             startedFromUtc = TimeZoneInfo.ConvertTimeToUtc(
                 DateTime.SpecifyKind(localDate, DateTimeKind.Unspecified));
@@ -825,6 +909,7 @@ public partial class MainViewModel : ViewModelBase
             search,
             startedFromUtc,
             startedBeforeUtc,
+            ParseSelectedHistoryStatus(),
             reset ? 0 : HistoryItems.Count,
             HistoryPageSize + 1,
             cancellationToken);
@@ -1005,7 +1090,7 @@ public partial class MainViewModel : ViewModelBase
                 authorization,
                 cancellationToken);
             var user = await _gitHubService.GetCurrentUserAsync(
-                token,
+                token.AccessToken,
                 cancellationToken);
             await _gitHubTokenStore.SaveAsync(token, cancellationToken);
 
@@ -1117,7 +1202,7 @@ public partial class MainViewModel : ViewModelBase
             return;
         }
 
-        SettingsError = ValidateRemoteMachineSettings();
+        SettingsError = ValidateRemoteMachineSettings(requireTrustedHostKey: false);
         SettingsStatus = string.Empty;
 
         if (!string.IsNullOrEmpty(SettingsError))
@@ -1133,6 +1218,16 @@ public partial class MainViewModel : ViewModelBase
         {
             var result = await _remoteConnectionService.CheckAsync(Settings.RemoteMachine);
 
+            if (result.RequiresHostKeyConfirmation)
+            {
+                PendingHostKeyFingerprint = result.HostKeyFingerprint;
+                IsHostKeyConfirmationRequired = true;
+                SettingsError = string.Empty;
+                RemoteMachineArchitecture = FormatArchitecture(
+                    Settings.RemoteMachine.Architecture);
+                return;
+            }
+
             if (!result.IsSuccessful)
             {
                 SettingsError = result.ErrorMessage;
@@ -1142,8 +1237,10 @@ public partial class MainViewModel : ViewModelBase
             }
 
             Settings.RemoteMachine.Architecture = result.Architecture;
-            await _userSettingsService.SaveRemoteMachineArchitectureAsync(
-                result.Architecture);
+            Settings.RemoteMachine.HostKeyFingerprint = result.HostKeyFingerprint;
+            Settings.RemoteMachine.HostKeyHost = Settings.RemoteMachine.Host?.Trim();
+            Settings.RemoteMachine.HostKeyPort = Settings.RemoteMachine.Port;
+            await _userSettingsService.SaveAsync(Settings);
             SettingsError = string.Empty;
             SettingsStatus = Localize("Подключение успешно");
             RemoteMachineArchitecture = FormatArchitecture(result.Architecture);
@@ -1152,6 +1249,28 @@ public partial class MainViewModel : ViewModelBase
         {
             IsConnectionCheckRunning = false;
         }
+    }
+
+    [RelayCommand]
+    private async Task ConfirmHostKeyAsync()
+    {
+        if (string.IsNullOrWhiteSpace(PendingHostKeyFingerprint))
+        {
+            return;
+        }
+
+        Settings.RemoteMachine.HostKeyFingerprint = PendingHostKeyFingerprint;
+        PendingHostKeyFingerprint = string.Empty;
+        IsHostKeyConfirmationRequired = false;
+        await CheckRemoteConnectionAsync();
+    }
+
+    [RelayCommand]
+    private void CancelHostKeyConfirmation()
+    {
+        PendingHostKeyFingerprint = string.Empty;
+        IsHostKeyConfirmationRequired = false;
+        SettingsStatus = string.Empty;
     }
 
     public void ClearSettingsStatus()
@@ -1181,6 +1300,7 @@ public partial class MainViewModel : ViewModelBase
 
         var authenticationKey = _localizationService.GetKey(AuthenticationMethod);
         var wasAllProjects = SelectedHistoryProject == Localize("Все проекты");
+        var selectedStatusKey = Canonicalize(SelectedHistoryStatus);
         var nextLanguage = _localizationService.CurrentLanguage == ApplicationLanguage.Russian
             ? ApplicationLanguage.English
             : ApplicationLanguage.Russian;
@@ -1205,6 +1325,8 @@ public partial class MainViewModel : ViewModelBase
         {
             SelectedHistoryProject = Localize("Все проекты");
         }
+
+        RefreshHistoryStatusFilters(selectedStatusKey);
 
         RebuildProjectTiles();
         foreach (var item in HistoryItems)
@@ -1296,11 +1418,40 @@ public partial class MainViewModel : ViewModelBase
     partial void OnIsDeploymentRunningChanged(bool value)
     {
         NotifyOperationStateChanged();
+        NotifySelectedDeploymentStateChanged();
+    }
+
+    partial void OnActiveDeploymentProjectIdChanged(Guid? value)
+    {
+        NotifySelectedDeploymentStateChanged();
     }
 
     partial void OnDeploymentProgressMessageChanged(string value)
     {
         OnPropertyChanged(nameof(OperationStatusText));
+    }
+
+    partial void OnDeploymentLogTextChanged(string value)
+    {
+        OnPropertyChanged(nameof(VisibleDeploymentLogText));
+        OnPropertyChanged(nameof(HasVisibleDeploymentLog));
+    }
+
+    partial void OnDeploymentVersionTagChanged(string value)
+    {
+        if (!IsNotificationError)
+        {
+            return;
+        }
+
+        var isRequiredError = NotificationMessage == Localize("Укажите тег новой версии.");
+        var isFormatError = NotificationMessage == Localize(
+            "Тег версии может содержать только латинские буквы, цифры, точку, дефис и подчёркивание.");
+        if ((isRequiredError && !string.IsNullOrWhiteSpace(value)) ||
+            (isFormatError && IsValidVersionTag(value)))
+        {
+            ClearStatusNotification();
+        }
     }
 
     private void HandleDeploymentProgress(DeploymentProgress progress)
@@ -1339,8 +1490,43 @@ public partial class MainViewModel : ViewModelBase
         var project = Projects.FirstOrDefault(item => item.Id == projectId)
             ?? throw new KeyNotFoundException(
                 Localize("Проект не найден после обновления."));
-        SelectedProject = project;
-        await LoadProjectDetailsAsync(project);
+        if (SelectedProject?.Id == projectId)
+        {
+            SelectedProject = project;
+            await LoadProjectDetailsAsync(project);
+        }
+    }
+
+    private bool TryParseHistoryDate(string value, out DateTime date)
+    {
+        var formats = _localizationService?.CurrentLanguage == ApplicationLanguage.English
+            ? new[] { "MM/dd/yyyy", "dd/MM/yyyy", "yyyy-MM-dd", "dd.MM.yyyy" }
+            : new[] { "dd/MM/yyyy", "dd.MM.yyyy", "yyyy-MM-dd", "MM/dd/yyyy" };
+        return DateTime.TryParseExact(
+            value,
+            formats,
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.None,
+            out date);
+    }
+
+    private void NotifySelectedDeploymentStateChanged()
+    {
+        OnPropertyChanged(nameof(IsSelectedProjectDeploymentRunning));
+        OnPropertyChanged(nameof(VisibleDeploymentLogText));
+        OnPropertyChanged(nameof(HasVisibleDeploymentLog));
+    }
+
+    private static bool IsValidVersionTag(string value)
+    {
+        var tag = value.Trim();
+        if (tag.Length is < 1 or > 200 || !char.IsAsciiLetterOrDigit(tag[0]))
+        {
+            return false;
+        }
+
+        return tag.All(character =>
+            char.IsAsciiLetterOrDigit(character) || character is '.' or '-' or '_');
     }
 
     partial void OnHistorySearchTextChanged(string value)
@@ -1357,6 +1543,48 @@ public partial class MainViewModel : ViewModelBase
         _historySearchCancellation?.Dispose();
         _historySearchCancellation = new CancellationTokenSource();
         _ = ReloadHistoryAfterDelayAsync(_historySearchCancellation.Token);
+    }
+
+    partial void OnSelectedHistoryStatusChanged(string value)
+    {
+        _historySearchCancellation?.Cancel();
+        _historySearchCancellation?.Dispose();
+        _historySearchCancellation = new CancellationTokenSource();
+        _ = ReloadHistoryAfterDelayAsync(_historySearchCancellation.Token);
+    }
+
+    private DeploymentStatus? ParseSelectedHistoryStatus() =>
+        Canonicalize(SelectedHistoryStatus) switch
+        {
+            "Успешно" => DeploymentStatus.Succeeded,
+            "Ошибка" => DeploymentStatus.Failed,
+            "Прервано" => DeploymentStatus.Interrupted,
+            "Отменено" => DeploymentStatus.Cancelled,
+            "Выполняется" => DeploymentStatus.Running,
+            "Ожидает" => DeploymentStatus.Pending,
+            _ => null,
+        };
+
+    private void RefreshHistoryStatusFilters(string? selectedKey = null)
+    {
+        selectedKey ??= Canonicalize(SelectedHistoryStatus);
+        HistoryStatusFilters.Clear();
+        foreach (var key in new[]
+                 {
+                     "Все статусы",
+                     "Успешно",
+                     "Ошибка",
+                     "Прервано",
+                     "Отменено",
+                     "Выполняется",
+                     "Ожидает",
+                 })
+        {
+            HistoryStatusFilters.Add(Localize(key));
+        }
+
+        SelectedHistoryStatus = HistoryStatusFilters.FirstOrDefault(item =>
+            Canonicalize(item) == selectedKey) ?? Localize("Все статусы");
     }
 
     partial void OnSelectedEnvironmentFileFormatChanged(string value)
@@ -1427,12 +1655,13 @@ public partial class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(SelectedProjectSourceDisplay));
         OnPropertyChanged(nameof(SelectedProjectLastDeploymentDisplay));
         OnPropertyChanged(nameof(SelectedProjectLatestVersionTag));
+        NotifySelectedDeploymentStateChanged();
     }
 
     private string Canonicalize(string value) =>
         _localizationService?.GetKey(value) ?? value;
 
-    private string ValidateRemoteMachineSettings()
+    private string ValidateRemoteMachineSettings(bool requireTrustedHostKey = true)
     {
         if (string.IsNullOrWhiteSpace(Settings.RemoteMachine.Host))
         {
@@ -1459,6 +1688,17 @@ public partial class MainViewModel : ViewModelBase
             string.IsNullOrWhiteSpace(Settings.RemoteMachine.Password))
         {
             return Localize("Укажите пароль SSH.");
+        }
+
+        if (requireTrustedHostKey &&
+            (string.IsNullOrWhiteSpace(Settings.RemoteMachine.HostKeyFingerprint) ||
+             !string.Equals(
+                 Settings.RemoteMachine.HostKeyHost,
+                 Settings.RemoteMachine.Host?.Trim(),
+                 StringComparison.OrdinalIgnoreCase) ||
+             Settings.RemoteMachine.HostKeyPort != Settings.RemoteMachine.Port))
+        {
+            return Localize("Проверьте подключение и подтвердите отпечаток SSH-сервера.");
         }
 
         return string.Empty;

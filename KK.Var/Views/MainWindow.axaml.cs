@@ -412,9 +412,9 @@ public partial class MainWindow : Window
         _projectPendingDelete = project;
         DeleteProjectMessage.Text = DataContext is MainViewModel viewModel
             ? viewModel.LocalizeFormat(
-                "Проект «{0}» будет удалён без возможности отмены.",
+                "Проект «{0}» и все его локальные архивы будут удалены без возможности отмены.",
                 project.Name)
-            : $"Проект «{project.Name}» будет удалён без возможности отмены.";
+            : $"Проект «{project.Name}» и все его локальные архивы будут удалены без возможности отмены.";
         DeleteProjectConfirmation.IsVisible = true;
     }
 

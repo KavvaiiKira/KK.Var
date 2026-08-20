@@ -2,9 +2,11 @@ using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using KK.Var.Data;
+using KK.Var.Models;
 
 namespace KK.Var.Services.Implementations;
 
@@ -14,10 +16,11 @@ public sealed class GitHubTokenStore : IGitHubTokenStore
         Encoding.UTF8.GetBytes("KK.Var.GitHub.Token.v1");
 
     public async Task SaveAsync(
-        string token,
+        GitHubToken token,
         CancellationToken cancellationToken = default)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(token);
+        ArgumentNullException.ThrowIfNull(token);
+        ArgumentException.ThrowIfNullOrWhiteSpace(token.AccessToken);
         if (!OperatingSystem.IsWindows())
         {
             throw new PlatformNotSupportedException(
@@ -27,7 +30,7 @@ public sealed class GitHubTokenStore : IGitHubTokenStore
         DatabasePaths.EnsureUserDataDirectory();
 
         var encryptedToken = ProtectedData.Protect(
-            Encoding.UTF8.GetBytes(token),
+            JsonSerializer.SerializeToUtf8Bytes(token),
             AdditionalEntropy,
             DataProtectionScope.CurrentUser);
         var temporaryPath = DatabasePaths.GitHubTokenFilePath + ".tmp";
@@ -42,7 +45,7 @@ public sealed class GitHubTokenStore : IGitHubTokenStore
             overwrite: true);
     }
 
-    public async Task<string?> LoadAsync(
+    public async Task<GitHubToken?> LoadAsync(
         CancellationToken cancellationToken = default)
     {
         if (!OperatingSystem.IsWindows())
@@ -64,7 +67,8 @@ public sealed class GitHubTokenStore : IGitHubTokenStore
             AdditionalEntropy,
             DataProtectionScope.CurrentUser);
 
-        return Encoding.UTF8.GetString(token);
+        return JsonSerializer.Deserialize<GitHubToken>(token)
+            ?? throw new InvalidDataException("GitHub token data is invalid.");
     }
 
     public Task DeleteAsync(CancellationToken cancellationToken = default)

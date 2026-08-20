@@ -10,7 +10,7 @@
 </p>
 
 > [!IMPORTANT]
-> KK.Var is under active development and has no stable release yet. The management application currently supports Windows only, while deploy targets Linux machines running systemd.
+> KK.Var 0.1.0 is the first public release. The management application supports Windows only, while deploy targets Linux machines running systemd.
 
 ![KK.Var project list](docs/images/projects-en.png)
 
@@ -23,23 +23,28 @@ No separate agent needs to be installed on the server. KK.Var uploads the prepar
 ## Features
 
 - projects sourced from GitHub or local directories;
+- GitHub repositories downloaded together with their Git submodules;
 - GitHub connection through OAuth Device Flow;
 - automatic project type detection;
-- .NET and Go builds targeting the remote Linux architecture;
+- .NET, Go, and C++ builds targeting the remote Linux architecture;
 - Python project preparation and deployment;
-- immutable local version archives with SHA-256 checksums;
+- a custom build command for other project types;
+- immutable local version archives with SHA-256 checksums and Git commit SHAs for GitHub sources;
 - user-defined release tags and descriptions;
 - deploy and rollback from the graphical interface;
+- interrupted Deploy recovery after an application or computer crash;
 - systemd unit creation and updates;
 - `daemon-reload` only when the unit file is created or changed;
 - service startup verification through `systemctl`;
-- searchable and filterable deploy and rollback history;
+- deploy and rollback history with search, project and status filters, and pagination;
 - ordered environment variables;
 - JSON, `.env`, Shell, and YAML environment file formats;
 - a custom environment file name and location for each project;
 - Russian and English UI with live language switching;
 - local settings and SQLite database storage;
-- GitHub token protection through Windows DPAPI.
+- GitHub token and SSH password protection through Windows DPAPI;
+- SSH server fingerprint confirmation and verification;
+- additional build arguments and build-process environment variables through JSON configuration.
 
 ## How deploy works
 
@@ -74,17 +79,36 @@ Linux and macOS builds are not currently distributed: GitHub token storage relie
 
 | Type | Auto-detection | Current behavior |
 |---|---:|---|
-| .NET | ✅ | Release `dotnet publish`, self-contained for `linux-x64` or `linux-arm64` |
+| .NET | ✅ | `dotnet publish`, using Release and self-contained `linux-x64` or `linux-arm64` by default |
 | Go | ✅ | `go build` with `GOOS=linux`; the target architecture is detected automatically |
 | Python | ✅ | source delivery, remote `.venv` creation, and dependency installation |
-| C++ | ✅ | project detection is available; an automatic Linux cross-toolchain is not implemented yet |
-| Custom build | manual | reserved for future user-defined build commands |
+| C++ | ✅ | CMake build using a user-provided Linux toolchain file |
+| Custom build | manual | direct user command with a controlled output directory |
 
 KK.Var looks for `.sln`/`.slnx` and `.csproj`, `go.mod`, `pyproject.toml`, `requirements.txt`, Python files, `CMakeLists.txt`, and C++ sources. If several candidates are found, the build method must be selected manually.
 
+### Build parameters
+
+A project can provide additional build parameters as JSON:
+
+```json
+{
+  "configuration": "Release",
+  "configureArguments": [],
+  "buildArguments": ["--verbosity", "minimal"],
+  "environment": {
+    "NUGET_XMLDOC_MODE": "skip"
+  }
+}
+```
+
+`configuration` selects the configuration, `buildArguments` are added to `dotnet publish`, `go build`, `cmake --build`, or `pip install`, and `environment` is applied to the local build process. C++ also uses `toolchainFile`, `cmakeGenerator`, and `configureArguments`.
+
+A custom build uses `command`, `workingDirectory`, and `buildArguments`. It supports `{source}`, `{output}`, `{runtime}`, and `{architecture}` placeholders and matching `KKVAR_*` environment variables. The command must place deployable files in `{output}` and is executed directly without an implicit `cmd.exe`.
+
 ## Projects and versions
 
-A project stores its source, build method, systemd service name, remote directory, executable, and environment file path. A successful build produces a local version containing a user-defined tag, description, archive, checksum, and source commit reference when the project comes from GitHub.
+A project stores its source, build method, systemd service name, remote directory, executable, and environment file path. A successful build produces a local version containing a user-defined tag, description, archive, checksum, and Git commit SHA for a GitHub source.
 
 ![KK.Var project details](docs/images/project-details-en.png)
 
@@ -105,6 +129,7 @@ KK.Var project environment variables are not intended for secrets. Passwords, pr
 - Windows;
 - .NET 10 SDK to build KK.Var from source;
 - the toolchain required by the deployed project: .NET SDK or Go;
+- CMake, Ninja, and a Linux cross-toolchain for C++ projects;
 - GitHub access when a GitHub repository is used;
 - network access to the target Linux machine.
 
@@ -118,6 +143,15 @@ KK.Var project environment variables are not intended for secrets. Passwords, pr
 
 KK.Var detects the architecture with `uname -m` during the SSH connection check, so the user does not need to enter it manually.
 
+## Installation
+
+1. Open [GitHub Releases](https://github.com/KavvaiiKira/KK.Var/releases/latest).
+2. Download `KK.Var-0.1.0-win-x64.zip` for standard 64-bit Windows or `KK.Var-0.1.0-win-x86.zip` when a 32-bit build is required.
+3. Optionally compare the archive's SHA-256 with the value published in the release notes.
+4. Extract the archive into a separate directory and run `KK.Var.exe`.
+
+Published builds are self-contained, so users do not need the .NET Runtime or .NET SDK to run KK.Var. The first release is not signed with a commercial certificate, so Windows SmartScreen may warn about an unknown publisher. Confirm that the archive came from this repository's release page and verify its SHA-256.
+
 ## Build from source
 
 ```powershell
@@ -127,6 +161,14 @@ dotnet restore
 dotnet run --project KK.Var/KK.Var.csproj
 ```
 
+To create self-contained release archives, run:
+
+```powershell
+.\build-release.ps1
+```
+
+The script creates `KK.Var-0.1.0-win-x86.zip` for 32-bit Windows and `KK.Var-0.1.0-win-x64.zip` for 64-bit Windows in `artifacts/release`. Users of these archives do not need the .NET SDK.
+
 ## First launch
 
 On first launch, the application opens a setup wizard. To get started, provide:
@@ -134,9 +176,12 @@ On first launch, the application opens a setup wizard. To get started, provide:
 1. the Linux machine address and SSH port;
 2. the SSH user name;
 3. an authentication method — private SSH key or password;
-4. verify the connection and save the settings.
+4. compare and confirm the SSH server fingerprint;
+5. verify the connection and save the settings.
 
-GitHub can be connected immediately or later. Authorization uses Device Flow: the application displays a one-time code and opens GitHub, while the resulting token is encrypted and stored locally.
+GitHub can be connected immediately or later. Authorization uses Device Flow: the application displays a one-time code and opens GitHub, while the resulting access token is encrypted and stored locally. If GitHub revokes the token or the user revokes access in their account settings, GitHub must be connected again.
+
+To access private repositories, the OAuth App requests the `repo read:user` scopes. GitHub describes `repo` as full control of private repositories, although KK.Var uses the token only to read the repository list, commit SHAs, Git trees, submodules, and source archives. Access can be revoked from GitHub's connected application settings or with the disconnect button in KK.Var settings.
 
 ![KK.Var first launch](docs/images/first-run-en.png)
 
@@ -144,19 +189,25 @@ GitHub can be connected immediately or later. Authorization uses Device Flow: th
 
 Application data is stored in `%LOCALAPPDATA%\KK.Var`:
 
-- `settings.json` — application and connection settings;
+- `settings.json` — application and connection settings without the SSH password;
 - `kk-var.db` — projects, versions, variables, and operation history;
 - `artifacts` — local version archives;
 - `logs` — diagnostic logs;
-- `github-token.dat` — GitHub token protected by Windows DPAPI.
+- `github-token.dat` — GitHub token protected by Windows DPAPI;
+- `ssh-password.dat` — SSH password protected by Windows DPAPI;
+- `recovery` — backups of damaged settings or SQLite files created through the recovery screen.
 
-Review diagnostic logs before publishing them. Do not commit `github-token.dat` to a repository or share it with other users.
+If `settings.json` is damaged or SQLite cannot be opened, the application shows a recovery screen instead of terminating. Reset happens only after confirmation, and the original files are preserved under `recovery`.
+
+Deleting a project also deletes its local version archives.
+
+Review diagnostic logs before publishing them. Do not commit or share `github-token.dat` or `ssh-password.dat`.
 
 ## Current limitations
 
 - the management application runs on Windows only;
 - deploy targets Linux machines and systemd services only;
-- C++ cross-compilation and custom build scripts are not implemented yet;
+- only one deploy or rollback can run at a time;
 - KK.Var does not manage database migrations or backups for deployed applications;
 - the remote machine must already be reachable over SSH and allow the required `sudo` commands.
 

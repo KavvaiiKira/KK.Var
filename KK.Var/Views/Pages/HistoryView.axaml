@@ -37,7 +37,7 @@
 
     <Grid RowDefinitions="Auto,*">
         <Grid Margin="30,26,30,18"
-              ColumnDefinitions="*,Auto,280"
+              ColumnDefinitions="*,Auto,Auto,280"
               ColumnSpacing="12">
             <StackPanel Spacing="5">
                 <TextBlock Text="{DynamicResource 'История'}"
@@ -55,10 +55,17 @@
                       ItemsSource="{Binding HistoryProjectFilters}"
                       SelectedItem="{Binding SelectedHistoryProject}" />
 
-            <TextBox Grid.Column="2"
+            <ComboBox Grid.Column="2"
+                      Classes="history-input"
+                      MinWidth="160"
+                      VerticalAlignment="Center"
+                      ItemsSource="{Binding HistoryStatusFilters}"
+                      SelectedItem="{Binding SelectedHistoryStatus}" />
+
+            <TextBox Grid.Column="3"
                      Classes="history-input"
                      VerticalAlignment="Center"
-                     PlaceholderText="{DynamicResource 'Проект, версия или ДД/ММ/ГГГГ'}"
+                     PlaceholderText="{DynamicResource 'Проект, версия или дата'}"
                      Text="{Binding HistorySearchText, UpdateSourceTrigger=PropertyChanged}" />
         </Grid>
 

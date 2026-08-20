@@ -11,8 +11,12 @@ public interface IGitHubService
     Task<GitHubDeviceAuthorization> StartDeviceAuthorizationAsync(
         CancellationToken cancellationToken = default);
 
-    Task<string> WaitForAccessTokenAsync(
+    Task<GitHubToken> WaitForAccessTokenAsync(
         GitHubDeviceAuthorization authorization,
+        CancellationToken cancellationToken = default);
+
+    Task<GitHubToken> RefreshAccessTokenAsync(
+        GitHubToken token,
         CancellationToken cancellationToken = default);
 
     Task<GitHubUser> GetCurrentUserAsync(
@@ -25,6 +29,18 @@ public interface IGitHubService
 
     Task<Stream> DownloadRepositoryArchiveAsync(
         string repositoryFullName,
+        string commitSha,
+        string accessToken,
+        CancellationToken cancellationToken = default);
+
+    Task<string> GetDefaultBranchCommitShaAsync(
+        string repositoryFullName,
+        string accessToken,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<GitHubSubmodule>> GetSubmodulesAsync(
+        string repositoryFullName,
+        string commitSha,
         string accessToken,
         CancellationToken cancellationToken = default);
 }

@@ -18,6 +18,12 @@ sealed class Program
 {
     private static IHost? _host;
 
+    internal static Exception? DatabaseStartupException { get; private set; }
+
+    internal static UserSettings? StartupUserSettings { get; private set; }
+
+    internal static Exception? UserSettingsStartupException { get; private set; }
+
     public static IServiceProvider Services =>
         _host?.Services
         ?? throw new InvalidOperationException("Application services are not initialized.");
@@ -30,7 +36,27 @@ sealed class Program
         try
         {
             _host.Start();
-            ApplyDatabaseMigrations();
+            try
+            {
+                StartupUserSettings = Services
+                    .GetRequiredService<IUserSettingsService>()
+                    .LoadAsync()
+                    .GetAwaiter()
+                    .GetResult();
+            }
+            catch (Exception exception)
+            {
+                UserSettingsStartupException = exception;
+            }
+
+            try
+            {
+                ApplyDatabaseMigrations();
+            }
+            catch (Exception exception)
+            {
+                DatabaseStartupException = exception;
+            }
             BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
         finally
@@ -72,10 +98,15 @@ sealed class Program
                 $"Data Source={DatabasePaths.GetDatabaseFilePath(databaseOptions.FileName)}"));
 
         builder.Services.AddSingleton<IUserSettingsService, UserSettingsService>();
+        builder.Services.AddSingleton<IStartupRecoveryService, StartupRecoveryService>();
+        builder.Services.AddSingleton<ISshPasswordStore, SshPasswordStore>();
         builder.Services.AddSingleton<ILocalizationService, LocalizationService>();
         builder.Services.AddSingleton<IRemoteConnectionService, RemoteConnectionService>();
         builder.Services.AddSingleton<IGitHubTokenStore, GitHubTokenStore>();
         builder.Services.AddSingleton<IGitHubService, GitHubService>();
+        builder.Services.AddSingleton<
+            IGitHubAuthenticationService,
+            GitHubAuthenticationService>();
         builder.Services.AddSingleton<IKKProjectRepository, KKProjectRepository>();
         builder.Services.AddSingleton<
             IKKProjectEnvironmentVariableRepository,
@@ -112,6 +143,11 @@ sealed class Program
             .CreateDbContext();
 
         dbContext.Database.Migrate();
+    }
+
+    internal static void MarkDatabaseRecovered()
+    {
+        DatabaseStartupException = null;
     }
 
     public static AppBuilder BuildAvaloniaApp()

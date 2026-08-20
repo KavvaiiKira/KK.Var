@@ -7,4 +7,5 @@ public enum DeploymentStatus
     Succeeded = 3,
     Failed = 4,
     Cancelled = 5,
+    Interrupted = 6,
 }

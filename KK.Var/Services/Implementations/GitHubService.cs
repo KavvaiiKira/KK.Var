@@ -76,7 +76,7 @@ public sealed class GitHubService : IGitHubService, IDisposable
             TimeSpan.FromSeconds(interval));
     }
 
-    public async Task<string> WaitForAccessTokenAsync(
+    public async Task<GitHubToken> WaitForAccessTokenAsync(
         GitHubDeviceAuthorization authorization,
         CancellationToken cancellationToken = default)
     {
@@ -111,7 +111,7 @@ public sealed class GitHubService : IGitHubService, IDisposable
 
             if (root.TryGetProperty("access_token", out var tokenElement))
             {
-                return tokenElement.GetString()!;
+                return ReadToken(root);
             }
 
             var error = root.TryGetProperty("error", out var errorElement)
@@ -148,6 +148,48 @@ public sealed class GitHubService : IGitHubService, IDisposable
 
         throw new InvalidOperationException(_localizationService.Get(
             "Срок действия кода GitHub истёк. Запустите подключение ещё раз."));
+    }
+
+    public async Task<GitHubToken> RefreshAccessTokenAsync(
+        GitHubToken token,
+        CancellationToken cancellationToken = default)
+    {
+        EnsureConfigured();
+        if (string.IsNullOrWhiteSpace(token.RefreshToken))
+        {
+            throw new InvalidOperationException(_localizationService.Get(
+                "Сеанс GitHub истёк. Подключите GitHub заново."));
+        }
+
+        using var content = new FormUrlEncodedContent(
+        [
+            new KeyValuePair<string, string>("client_id", _options.ClientId),
+            new KeyValuePair<string, string>("grant_type", "refresh_token"),
+            new KeyValuePair<string, string>("refresh_token", token.RefreshToken),
+        ]);
+        using var request = new HttpRequestMessage(HttpMethod.Post, AccessTokenUri)
+        {
+            Content = content,
+        };
+        request.Headers.Accept.Clear();
+        request.Headers.Accept.Add(
+            new MediaTypeWithQualityHeaderValue("application/json"));
+
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
+        var json = await response.Content.ReadAsStringAsync(cancellationToken);
+        EnsureSuccess(response, json);
+
+        using var document = JsonDocument.Parse(json);
+        var root = document.RootElement;
+        if (!root.TryGetProperty("access_token", out _))
+        {
+            throw new InvalidOperationException(GetGitHubError(
+                root,
+                _localizationService.Get(
+                    "Не удалось обновить сеанс GitHub. Подключите GitHub заново.")));
+        }
+
+        return ReadToken(root);
     }
 
     public async Task<GitHubUser> GetCurrentUserAsync(
@@ -205,6 +247,7 @@ public sealed class GitHubService : IGitHubService, IDisposable
 
     public async Task<Stream> DownloadRepositoryArchiveAsync(
         string repositoryFullName,
+        string commitSha,
         string accessToken,
         CancellationToken cancellationToken = default)
     {
@@ -215,8 +258,15 @@ public sealed class GitHubService : IGitHubService, IDisposable
                 "Некорректное имя репозитория GitHub."));
         }
 
+        if (string.IsNullOrWhiteSpace(commitSha))
+        {
+            throw new ArgumentException(
+                _localizationService.Get("Не указан Git commit SHA."),
+                nameof(commitSha));
+        }
+
         var uri = new Uri(
-            $"https://api.github.com/repos/{repositoryFullName}/zipball");
+            $"https://api.github.com/repos/{repositoryFullName}/zipball/{commitSha}");
         using var request = CreateApiRequest(uri, accessToken);
         using var response = await _httpClient.SendAsync(
             request,
@@ -230,6 +280,111 @@ public sealed class GitHubService : IGitHubService, IDisposable
         var result = new MemoryStream();
         await response.Content.CopyToAsync(result, cancellationToken);
         result.Position = 0;
+        return result;
+    }
+
+    public async Task<string> GetDefaultBranchCommitShaAsync(
+        string repositoryFullName,
+        string accessToken,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(repositoryFullName) ||
+            repositoryFullName.Split('/').Length != 2)
+        {
+            throw new ArgumentException(_localizationService.Get(
+                "Некорректное имя репозитория GitHub."));
+        }
+
+        var uri = new Uri(
+            $"https://api.github.com/repos/{repositoryFullName}/commits?per_page=1");
+        using var request = CreateApiRequest(uri, accessToken);
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
+        var json = await response.Content.ReadAsStringAsync(cancellationToken);
+        EnsureSuccess(response, json);
+
+        using var document = JsonDocument.Parse(json);
+        var commits = document.RootElement;
+        if (commits.ValueKind != JsonValueKind.Array || commits.GetArrayLength() == 0)
+        {
+            throw new InvalidDataException(_localizationService.Get(
+                "В репозитории GitHub нет коммитов."));
+        }
+
+        return commits[0].GetProperty("sha").GetString()
+            ?? throw new InvalidDataException(_localizationService.Get(
+                "GitHub не вернул Git commit SHA."));
+    }
+
+    public async Task<IReadOnlyList<GitHubSubmodule>> GetSubmodulesAsync(
+        string repositoryFullName,
+        string commitSha,
+        string accessToken,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(repositoryFullName) ||
+            repositoryFullName.Split('/').Length != 2)
+        {
+            throw new ArgumentException(_localizationService.Get(
+                "Некорректное имя репозитория GitHub."));
+        }
+
+        if (string.IsNullOrWhiteSpace(commitSha))
+        {
+            throw new ArgumentException(
+                _localizationService.Get("Не указан Git commit SHA."),
+                nameof(commitSha));
+        }
+
+        var commitUri = new Uri(
+            $"https://api.github.com/repos/{repositoryFullName}/git/commits/{commitSha}");
+        using var commitRequest = CreateApiRequest(commitUri, accessToken);
+        using var commitResponse = await _httpClient.SendAsync(
+            commitRequest,
+            cancellationToken);
+        var commitJson = await commitResponse.Content.ReadAsStringAsync(cancellationToken);
+        EnsureSuccess(commitResponse, commitJson);
+
+        using var commitDocument = JsonDocument.Parse(commitJson);
+        var treeSha = commitDocument.RootElement
+            .GetProperty("tree")
+            .GetProperty("sha")
+            .GetString()
+            ?? throw new InvalidDataException(_localizationService.Get(
+                "GitHub не вернул SHA дерева репозитория."));
+
+        var treeUri = new Uri(
+            $"https://api.github.com/repos/{repositoryFullName}/git/trees/{treeSha}?recursive=1");
+        using var treeRequest = CreateApiRequest(treeUri, accessToken);
+        using var treeResponse = await _httpClient.SendAsync(treeRequest, cancellationToken);
+        var json = await treeResponse.Content.ReadAsStringAsync(cancellationToken);
+        EnsureSuccess(treeResponse, json);
+
+        using var document = JsonDocument.Parse(json);
+        var result = new List<GitHubSubmodule>();
+        if (!document.RootElement.TryGetProperty("tree", out var tree))
+        {
+            return result;
+        }
+
+        foreach (var item in tree.EnumerateArray())
+        {
+            if (!item.TryGetProperty("type", out var type) ||
+                type.GetString() != "commit" ||
+                !item.TryGetProperty("path", out var path) ||
+                !item.TryGetProperty("sha", out var sha))
+            {
+                continue;
+            }
+
+            var pathValue = path.GetString();
+            var shaValue = sha.GetString();
+            if (!string.IsNullOrWhiteSpace(pathValue) &&
+                !string.IsNullOrWhiteSpace(shaValue))
+            {
+                result.Add(new GitHubSubmodule(pathValue, shaValue));
+            }
+        }
+
         return result;
     }
 
@@ -302,6 +457,33 @@ public sealed class GitHubService : IGitHubService, IDisposable
             : root.TryGetProperty("message", out var message)
                 ? message.GetString() ?? fallback
                 : fallback;
+
+    private static GitHubToken ReadToken(JsonElement root)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var accessToken = root.GetProperty("access_token").GetString()!;
+        var refreshToken = root.TryGetProperty("refresh_token", out var refreshTokenElement)
+            ? refreshTokenElement.GetString()
+            : null;
+        DateTimeOffset? accessTokenExpiresAtUtc =
+            root.TryGetProperty("expires_in", out var expiresElement) &&
+            expiresElement.ValueKind == JsonValueKind.Number
+            ? now.AddSeconds(expiresElement.GetInt32())
+            : null;
+        DateTimeOffset? refreshTokenExpiresAtUtc =
+            root.TryGetProperty(
+                "refresh_token_expires_in",
+                out var refreshExpiresElement) &&
+            refreshExpiresElement.ValueKind == JsonValueKind.Number
+                ? now.AddSeconds(refreshExpiresElement.GetInt32())
+                : null;
+
+        return new GitHubToken(
+            accessToken,
+            refreshToken,
+            accessTokenExpiresAtUtc,
+            refreshTokenExpiresAtUtc);
+    }
 
     private void EnsureConfigured()
     {

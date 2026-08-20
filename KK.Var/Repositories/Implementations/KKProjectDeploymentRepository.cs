@@ -18,6 +18,7 @@ public sealed class KKProjectDeploymentRepository(
         string? searchText,
         DateTime? startedFromUtc,
         DateTime? startedBeforeUtc,
+        DeploymentStatus? status,
         int skip,
         int take,
         CancellationToken cancellationToken = default)
@@ -43,6 +44,11 @@ public sealed class KKProjectDeploymentRepository(
         if (!string.IsNullOrWhiteSpace(projectName))
         {
             query = query.Where(deployment => deployment.Project.Name == projectName);
+        }
+
+        if (status.HasValue)
+        {
+            query = query.Where(deployment => deployment.Status == status.Value);
         }
 
         if (startedFromUtc.HasValue && startedBeforeUtc.HasValue)
@@ -104,6 +110,20 @@ public sealed class KKProjectDeploymentRepository(
                 deployment.Status == DeploymentStatus.Succeeded)
             .OrderByDescending(deployment => deployment.CompletedAtUtc)
             .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<KKProjectDeployment>> GetRunningAsync(
+        CancellationToken cancellationToken = default)
+    {
+        await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        return await db.ProjectDeployments
+            .AsNoTracking()
+            .Include(deployment => deployment.Project)
+            .Include(deployment => deployment.Version)
+            .Where(deployment => deployment.Status == DeploymentStatus.Running)
+            .OrderBy(deployment => deployment.StartedAtUtc)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task AddAsync(

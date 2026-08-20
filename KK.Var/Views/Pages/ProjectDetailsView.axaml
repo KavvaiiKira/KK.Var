@@ -198,8 +198,15 @@
                                 <Border Margin="0,0,0,10" Padding="18" Background="{DynamicResource AppSurfaceBrush}"
                                         BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="10">
                                     <Grid ColumnDefinitions="180,170,120,*,Auto" ColumnSpacing="18">
-                                        <TextBlock Text="{Binding Tag}" FontWeight="Bold"
-                                                   Foreground="{DynamicResource AppPrimaryHoverBrush}" />
+                                        <StackPanel Spacing="3">
+                                            <TextBlock Text="{Binding Tag}" FontWeight="Bold"
+                                                       Foreground="{DynamicResource AppPrimaryHoverBrush}" />
+                                            <TextBlock Text="{Binding SourceCommitDisplay}"
+                                                       IsVisible="{Binding HasSourceCommit}"
+                                                       FontSize="11"
+                                                       Foreground="{DynamicResource AppTextMutedBrush}"
+                                                       ToolTip.Tip="{Binding Version.SourceCommitSha}" />
+                                        </StackPanel>
                                         <TextBlock Grid.Column="1" Text="{Binding CreatedAtDisplay}" />
                                         <TextBlock Grid.Column="2" Text="{Binding ArtifactSizeDisplay}" />
                                         <TextBlock Grid.Column="3" Text="{Binding Description}" TextTrimming="CharacterEllipsis" />
@@ -255,21 +262,23 @@
                         <Grid Margin="0,12,0,0" ColumnDefinitions="220,*" RowDefinitions="Auto,Auto" RowSpacing="12">
                             <TextBlock Text="{DynamicResource 'Следующая версия'}" Foreground="{DynamicResource AppTextMutedBrush}" />
                             <TextBox Grid.Column="1" PlaceholderText="{DynamicResource 'Например, release-1'}"
+                                     IsReadOnly="{Binding IsDeploymentRunning}"
                                      Text="{Binding DeploymentVersionTag}" />
                             <TextBlock Grid.Row="1" Text="{DynamicResource 'Описание'}" Foreground="{DynamicResource AppTextMutedBrush}" />
                             <TextBox Grid.Row="1" Grid.Column="1" PlaceholderText="{DynamicResource 'Что изменилось в этой версии'}"
+                                     IsReadOnly="{Binding IsDeploymentRunning}"
                                      Text="{Binding DeploymentDescription}" />
                         </Grid>
                         <ProgressBar Height="4" Minimum="0" Maximum="100"
-                                     IsVisible="{Binding IsDeploymentRunning}"
+                                     IsVisible="{Binding IsSelectedProjectDeploymentRunning}"
                                      Value="{Binding DeploymentProgressPercentage}" />
-                        <Border IsVisible="{Binding !!DeploymentLogText}"
+                        <Border IsVisible="{Binding HasVisibleDeploymentLog}"
                                 Height="210" Padding="12"
                                 Background="{DynamicResource AppBackgroundBrush}"
                                 BorderBrush="{DynamicResource AppBorderBrush}"
                                 BorderThickness="1" CornerRadius="8">
                             <TextBox x:Name="DeploymentLog"
-                                     Text="{Binding DeploymentLogText}"
+                                     Text="{Binding VisibleDeploymentLogText}"
                                      IsReadOnly="True"
                                      AcceptsReturn="True"
                                      TextWrapping="NoWrap"

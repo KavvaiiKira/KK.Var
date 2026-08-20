@@ -15,6 +15,12 @@ public sealed class KKProjectDeployment
 
     public DeploymentStatus Status { get; set; } = DeploymentStatus.Pending;
 
+    public string RemoteOperationId { get; set; } = string.Empty;
+
+    public DeploymentStage Stage { get; set; } = DeploymentStage.Preparing;
+
+    public DeploymentUnitChange UnitChange { get; set; } = DeploymentUnitChange.Unchanged;
+
     public string VariablesSnapshotJson { get; set; } = "{}";
 
     public DateTime StartedAtUtc { get; set; } = DateTime.UtcNow;

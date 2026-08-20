@@ -14,6 +14,7 @@ public interface IKKProjectDeploymentService
         string? searchText,
         DateTime? startedFromUtc,
         DateTime? startedBeforeUtc,
+        DeploymentStatus? status,
         int skip,
         int take,
         CancellationToken cancellationToken = default);
@@ -27,6 +28,8 @@ public interface IKKProjectDeploymentService
         Guid versionId,
         DeploymentOperationType operationType,
         string variablesSnapshotJson,
+        string remoteOperationId,
+        string logPath,
         CancellationToken cancellationToken = default);
 
     Task CompleteAsync(
@@ -45,5 +48,8 @@ public interface IKKProjectDeploymentService
         Guid projectId,
         Guid versionId,
         IProgress<DeploymentProgress>? progress = null,
+        CancellationToken cancellationToken = default);
+
+    Task<int> RecoverInterruptedAsync(
         CancellationToken cancellationToken = default);
 }

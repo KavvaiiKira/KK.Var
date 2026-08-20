@@ -23,6 +23,12 @@ public sealed class ProjectVersionItemViewModel(
         _ => $"{Version.ArtifactSize} {Localize("Б")}",
     };
 
+    public bool HasSourceCommit => !string.IsNullOrWhiteSpace(Version.SourceCommitSha);
+
+    public string SourceCommitDisplay => Version.SourceCommitSha is { Length: > 0 } commit
+        ? $"Git {commit[..Math.Min(8, commit.Length)]}"
+        : string.Empty;
+
     public string Description => string.IsNullOrWhiteSpace(Version.Description)
         ? Localize("Без описания")
         : Version.Description;
@@ -31,6 +37,8 @@ public sealed class ProjectVersionItemViewModel(
     {
         OnPropertyChanged(nameof(CreatedAtDisplay));
         OnPropertyChanged(nameof(ArtifactSizeDisplay));
+        OnPropertyChanged(nameof(HasSourceCommit));
+        OnPropertyChanged(nameof(SourceCommitDisplay));
         OnPropertyChanged(nameof(Description));
     }
 

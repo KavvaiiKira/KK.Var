@@ -128,10 +128,21 @@ namespace KK.Var.Data.Migrations
                     b.Property<int>("OperationType")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("RemoteOperationId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Stage")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("StartedAtUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("UnitChange")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("VariablesSnapshotJson")
