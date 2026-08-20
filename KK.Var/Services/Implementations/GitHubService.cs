@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.IO;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -193,6 +194,35 @@ public sealed class GitHubService : IGitHubService, IDisposable
         }
 
         return repositories;
+    }
+
+    public async Task<Stream> DownloadRepositoryArchiveAsync(
+        string repositoryFullName,
+        string accessToken,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(repositoryFullName) ||
+            repositoryFullName.Split('/').Length != 2)
+        {
+            throw new ArgumentException("Некорректное имя репозитория GitHub.");
+        }
+
+        var uri = new Uri(
+            $"https://api.github.com/repos/{repositoryFullName}/zipball");
+        using var request = CreateApiRequest(uri, accessToken);
+        using var response = await _httpClient.SendAsync(
+            request,
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken);
+        var error = response.IsSuccessStatusCode
+            ? string.Empty
+            : await response.Content.ReadAsStringAsync(cancellationToken);
+        EnsureSuccess(response, error);
+
+        var result = new MemoryStream();
+        await response.Content.CopyToAsync(result, cancellationToken);
+        result.Position = 0;
+        return result;
     }
 
     public void Dispose()

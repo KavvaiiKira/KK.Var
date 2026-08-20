@@ -119,6 +119,24 @@ public partial class MainViewModel : ViewModelBase
     public partial bool IsEnvironmentSaving { get; set; }
 
     [ObservableProperty]
+    public partial bool IsDeploymentRunning { get; set; }
+
+    [ObservableProperty]
+    public partial int DeploymentProgressPercentage { get; set; }
+
+    [ObservableProperty]
+    public partial string DeploymentProgressMessage { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string DeploymentVersionTag { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string DeploymentDescription { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string DeploymentLogText { get; set; } = string.Empty;
+
+    [ObservableProperty]
     public partial string HistorySearchText { get; set; } = string.Empty;
 
     [ObservableProperty]
@@ -204,6 +222,7 @@ public partial class MainViewModel : ViewModelBase
         IsProjectOperationRunning ||
         IsProjectDetailsLoading ||
         IsEnvironmentSaving ||
+        IsDeploymentRunning ||
         ProjectEditor.IsSaving ||
         ProjectEditor.IsLoadingRepositories;
 
@@ -239,6 +258,13 @@ public partial class MainViewModel : ViewModelBase
             if (IsEnvironmentSaving)
             {
                 return "Сохранение переменных окружения";
+            }
+
+            if (IsDeploymentRunning)
+            {
+                return string.IsNullOrWhiteSpace(DeploymentProgressMessage)
+                    ? "Выполнение deploy"
+                    : DeploymentProgressMessage;
             }
 
             return ProjectEditor.IsSaving
@@ -370,6 +396,8 @@ public partial class MainViewModel : ViewModelBase
 
             OnPropertyChanged(nameof(HasNoProjectVersions));
             OnPropertyChanged(nameof(HasNoProjectHistory));
+            DeploymentVersionTag = $"release-{DateTime.Now:yyyyMMdd-HHmmss}";
+            DeploymentDescription = string.Empty;
         }
         catch (Exception exception)
         {
@@ -410,6 +438,95 @@ public partial class MainViewModel : ViewModelBase
         catch (Exception exception)
         {
             PublishNotification(exception.Message, isError: true);
+        }
+    }
+
+    public async Task<bool> DeploySelectedProjectAsync()
+    {
+        if (_projectDeploymentService is null ||
+            SelectedProject is null ||
+            IsDeploymentRunning)
+        {
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(DeploymentVersionTag))
+        {
+            PublishNotification("Укажите тег новой версии.", isError: true);
+            return false;
+        }
+
+        IsDeploymentRunning = true;
+        DeploymentProgressPercentage = 0;
+        DeploymentLogText = string.Empty;
+        var progress = new Progress<DeploymentProgress>(HandleDeploymentProgress);
+
+        try
+        {
+            var deployedTag = DeploymentVersionTag.Trim();
+            await _projectDeploymentService.DeployAsync(
+                new DeploymentRequest(
+                    SelectedProject.Id,
+                    deployedTag,
+                    DeploymentDescription),
+                progress);
+            PublishNotification(
+                $"Версия «{deployedTag}» успешно развёрнута",
+                isError: false);
+            await LoadProjectDetailsAsync(SelectedProject);
+            return true;
+        }
+        catch (Exception exception)
+        {
+            AppendDeploymentLog($"ОШИБКА: {exception.Message}");
+            PublishNotification(exception.Message, isError: true);
+            return false;
+        }
+        finally
+        {
+            IsDeploymentRunning = false;
+            DeploymentProgressPercentage = 0;
+            DeploymentProgressMessage = string.Empty;
+        }
+    }
+
+    public async Task<bool> RollbackAsync(ProjectVersionItemViewModel item)
+    {
+        if (_projectDeploymentService is null ||
+            SelectedProject is null ||
+            IsDeploymentRunning)
+        {
+            return false;
+        }
+
+        IsDeploymentRunning = true;
+        DeploymentProgressPercentage = 0;
+        DeploymentLogText = string.Empty;
+        var progress = new Progress<DeploymentProgress>(HandleDeploymentProgress);
+
+        try
+        {
+            await _projectDeploymentService.RollbackAsync(
+                SelectedProject.Id,
+                item.Version.Id,
+                progress);
+            PublishNotification(
+                $"Выполнен rollback на версию «{item.Tag}»",
+                isError: false);
+            await LoadProjectDetailsAsync(SelectedProject);
+            return true;
+        }
+        catch (Exception exception)
+        {
+            AppendDeploymentLog($"ОШИБКА: {exception.Message}");
+            PublishNotification(exception.Message, isError: true);
+            return false;
+        }
+        finally
+        {
+            IsDeploymentRunning = false;
+            DeploymentProgressPercentage = 0;
+            DeploymentProgressMessage = string.Empty;
         }
     }
 
@@ -1043,6 +1160,55 @@ public partial class MainViewModel : ViewModelBase
     partial void OnIsEnvironmentSavingChanged(bool value)
     {
         NotifyOperationStateChanged();
+    }
+
+    partial void OnIsDeploymentRunningChanged(bool value)
+    {
+        NotifyOperationStateChanged();
+    }
+
+    partial void OnDeploymentProgressMessageChanged(string value)
+    {
+        OnPropertyChanged(nameof(OperationStatusText));
+    }
+
+    private void HandleDeploymentProgress(DeploymentProgress progress)
+    {
+        if (progress.Percentage >= 0)
+        {
+            DeploymentProgressPercentage = progress.Percentage;
+            DeploymentProgressMessage = progress.Message;
+            AppendDeploymentLog(progress.Message);
+        }
+
+        if (!string.IsNullOrWhiteSpace(progress.LogLine))
+        {
+            foreach (var line in progress.LogLine.Split(
+                         ['\r', '\n'],
+                         StringSplitOptions.RemoveEmptyEntries))
+            {
+                AppendDeploymentLog(line);
+            }
+        }
+    }
+
+    private void AppendDeploymentLog(string message)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            return;
+        }
+
+        var line = $"[{DateTime.Now:HH:mm:ss}] {message.Trim()}";
+        var lines = string.IsNullOrEmpty(DeploymentLogText)
+            ? new List<string>()
+            : DeploymentLogText.Split(Environment.NewLine).ToList();
+        lines.Add(line);
+        if (lines.Count > 250)
+        {
+            lines.RemoveRange(0, lines.Count - 250);
+        }
+        DeploymentLogText = string.Join(Environment.NewLine, lines);
     }
 
     partial void OnHistorySearchTextChanged(string value)

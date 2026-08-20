@@ -132,6 +132,28 @@ public partial class ProjectDetailsView : UserControl
         }
     }
 
+    private async void RunDeployButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel)
+        {
+            await viewModel.DeploySelectedProjectAsync();
+        }
+    }
+
+    private async void RollbackButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel &&
+            (sender as Control)?.DataContext is ProjectVersionItemViewModel version)
+        {
+            await viewModel.RollbackAsync(version);
+        }
+    }
+
+    private void DeploymentLog_OnTextChanged(object? sender, TextChangedEventArgs e)
+    {
+        DeploymentLog.CaretIndex = DeploymentLog.Text?.Length ?? 0;
+    }
+
     public void ShowOverviewSection()
     {
         ShowSection(OverviewPanel, OverviewTab);

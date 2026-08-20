@@ -35,4 +35,15 @@ public interface IKKProjectDeploymentService
         string? logPath = null,
         string? errorMessage = null,
         CancellationToken cancellationToken = default);
+
+    Task<KKProjectDeployment> DeployAsync(
+        DeploymentRequest request,
+        IProgress<DeploymentProgress>? progress = null,
+        CancellationToken cancellationToken = default);
+
+    Task<KKProjectDeployment> RollbackAsync(
+        Guid projectId,
+        Guid versionId,
+        IProgress<DeploymentProgress>? progress = null,
+        CancellationToken cancellationToken = default);
 }

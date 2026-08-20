@@ -197,12 +197,15 @@
                             <DataTemplate x:DataType="vm:ProjectVersionItemViewModel">
                                 <Border Margin="0,0,0,10" Padding="18" Background="{DynamicResource AppSurfaceBrush}"
                                         BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="10">
-                                    <Grid ColumnDefinitions="180,170,120,*" ColumnSpacing="18">
+                                    <Grid ColumnDefinitions="180,170,120,*,Auto" ColumnSpacing="18">
                                         <TextBlock Text="{Binding Tag}" FontWeight="Bold"
                                                    Foreground="{DynamicResource AppPrimaryHoverBrush}" />
                                         <TextBlock Grid.Column="1" Text="{Binding CreatedAtDisplay}" />
                                         <TextBlock Grid.Column="2" Text="{Binding ArtifactSizeDisplay}" />
                                         <TextBlock Grid.Column="3" Text="{Binding Description}" TextTrimming="CharacterEllipsis" />
+                                        <Button Grid.Column="4" Classes="details-secondary"
+                                                Padding="14,8" Content="Rollback"
+                                                Click="RollbackButton_OnClick" />
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -251,13 +254,37 @@
                                    Foreground="{DynamicResource AppTextMutedBrush}" />
                         <Grid Margin="0,12,0,0" ColumnDefinitions="220,*" RowDefinitions="Auto,Auto" RowSpacing="12">
                             <TextBlock Text="Следующая версия" Foreground="{DynamicResource AppTextMutedBrush}" />
-                            <TextBox Grid.Column="1" PlaceholderText="Например, release-1" />
+                            <TextBox Grid.Column="1" PlaceholderText="Например, release-1"
+                                     Text="{Binding DeploymentVersionTag}" />
                             <TextBlock Grid.Row="1" Text="Описание" Foreground="{DynamicResource AppTextMutedBrush}" />
-                            <TextBox Grid.Row="1" Grid.Column="1" PlaceholderText="Что изменилось в этой версии" />
+                            <TextBox Grid.Row="1" Grid.Column="1" PlaceholderText="Что изменилось в этой версии"
+                                     Text="{Binding DeploymentDescription}" />
                         </Grid>
+                        <ProgressBar Height="4" Minimum="0" Maximum="100"
+                                     IsVisible="{Binding IsDeploymentRunning}"
+                                     Value="{Binding DeploymentProgressPercentage}" />
+                        <Border IsVisible="{Binding !!DeploymentLogText}"
+                                Height="210" Padding="12"
+                                Background="{DynamicResource AppBackgroundBrush}"
+                                BorderBrush="{DynamicResource AppBorderBrush}"
+                                BorderThickness="1" CornerRadius="8">
+                            <TextBox x:Name="DeploymentLog"
+                                     Text="{Binding DeploymentLogText}"
+                                     IsReadOnly="True"
+                                     AcceptsReturn="True"
+                                     TextWrapping="NoWrap"
+                                     FontFamily="Consolas"
+                                     FontSize="12"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     TextChanged="DeploymentLog_OnTextChanged"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto" />
+                        </Border>
                         <Button Classes="deploy" Margin="0,12,0,0" HorizontalAlignment="Left"
-                                IsEnabled="False" Content="Собрать и выполнить deploy"
-                                ToolTip.Tip="Будет доступно после подключения движка сборки и SSH-deploy" />
+                                IsEnabled="{Binding !IsDeploymentRunning}"
+                                Content="Собрать и выполнить deploy"
+                                Click="RunDeployButton_OnClick" />
                     </StackPanel>
                 </Border>
             </Grid>

@@ -89,6 +89,8 @@ sealed class Program
             IKKProjectEnvironmentService,
             KKProjectEnvironmentService>();
         builder.Services.AddSingleton<IKKProjectVersionService, KKProjectVersionService>();
+        builder.Services.AddSingleton<IProjectArtifactService, ProjectArtifactService>();
+        builder.Services.AddSingleton<IRemoteDeploymentService, RemoteDeploymentService>();
         builder.Services.AddSingleton<
             IKKProjectDeploymentService,
             KKProjectDeploymentService>();

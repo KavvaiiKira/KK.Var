@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using KK.Var.Models;
@@ -19,6 +20,11 @@ public interface IGitHubService
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<GitHubRepository>> GetRepositoriesAsync(
+        string accessToken,
+        CancellationToken cancellationToken = default);
+
+    Task<Stream> DownloadRepositoryArchiveAsync(
+        string repositoryFullName,
         string accessToken,
         CancellationToken cancellationToken = default);
 }
