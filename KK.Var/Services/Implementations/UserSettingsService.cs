@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using KK.Var.Configuration;
 using KK.Var.Data;
+using System.Text.Json.Serialization;
 
 namespace KK.Var.Services.Implementations;
 
@@ -15,6 +16,11 @@ public sealed class UserSettingsService : IUserSettingsService
         PropertyNameCaseInsensitive = true,
         WriteIndented = true,
     };
+
+    static UserSettingsService()
+    {
+        SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    }
 
     private readonly SemaphoreSlim _fileLock = new(1, 1);
 

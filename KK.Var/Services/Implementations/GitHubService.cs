@@ -23,11 +23,15 @@ public sealed class GitHubService : IGitHubService, IDisposable
         new("https://api.github.com/user/repos?per_page=100&sort=updated&affiliation=owner,collaborator,organization_member");
 
     private readonly GitHubOptions _options;
+    private readonly ILocalizationService _localizationService;
     private readonly HttpClient _httpClient;
 
-    public GitHubService(GitHubOptions options)
+    public GitHubService(
+        GitHubOptions options,
+        ILocalizationService localizationService)
     {
         _options = options;
+        _localizationService = localizationService;
         _httpClient = new HttpClient
         {
             Timeout = TimeSpan.FromSeconds(30),
@@ -122,25 +126,28 @@ public sealed class GitHubService : IGitHubService, IDisposable
                     pollingInterval += TimeSpan.FromSeconds(5);
                     continue;
                 case "access_denied":
-                    throw new InvalidOperationException(
-                        "Авторизация GitHub была отменена пользователем.");
+                    throw new InvalidOperationException(_localizationService.Get(
+                        "Авторизация GitHub была отменена пользователем."));
                 case "expired_token":
-                    throw new InvalidOperationException(
-                        "Срок действия кода GitHub истёк. Запустите подключение ещё раз.");
+                    throw new InvalidOperationException(_localizationService.Get(
+                        "Срок действия кода GitHub истёк. Запустите подключение ещё раз."));
                 case "device_flow_disabled":
-                    throw new InvalidOperationException(
-                        "Для GitHub OAuth App не включён Device Flow.");
+                    throw new InvalidOperationException(_localizationService.Get(
+                        "Для GitHub OAuth App не включён Device Flow."));
                 case "incorrect_client_credentials":
-                    throw new InvalidOperationException(
-                        "GitHub Client ID указан неверно.");
+                    throw new InvalidOperationException(_localizationService.Get(
+                        "GitHub Client ID указан неверно."));
                 default:
                     throw new InvalidOperationException(
-                        GetGitHubError(root, "GitHub не выдал токен доступа."));
+                        GetGitHubError(
+                            root,
+                            _localizationService.Get(
+                                "GitHub не выдал токен доступа.")));
             }
         }
 
-        throw new InvalidOperationException(
-            "Срок действия кода GitHub истёк. Запустите подключение ещё раз.");
+        throw new InvalidOperationException(_localizationService.Get(
+            "Срок действия кода GitHub истёк. Запустите подключение ещё раз."));
     }
 
     public async Task<GitHubUser> GetCurrentUserAsync(
@@ -204,7 +211,8 @@ public sealed class GitHubService : IGitHubService, IDisposable
         if (string.IsNullOrWhiteSpace(repositoryFullName) ||
             repositoryFullName.Split('/').Length != 2)
         {
-            throw new ArgumentException("Некорректное имя репозитория GitHub.");
+            throw new ArgumentException(_localizationService.Get(
+                "Некорректное имя репозитория GitHub."));
         }
 
         var uri = new Uri(
@@ -265,14 +273,16 @@ public sealed class GitHubService : IGitHubService, IDisposable
         return null;
     }
 
-    private static void EnsureSuccess(HttpResponseMessage response, string json)
+    private void EnsureSuccess(HttpResponseMessage response, string json)
     {
         if (response.IsSuccessStatusCode)
         {
             return;
         }
 
-        var message = $"GitHub вернул ошибку HTTP {(int)response.StatusCode}.";
+        var message = _localizationService.Format(
+            "GitHub вернул ошибку HTTP {0}.",
+            (int)response.StatusCode);
 
         try
         {
@@ -297,8 +307,8 @@ public sealed class GitHubService : IGitHubService, IDisposable
     {
         if (!_options.IsConfigured)
         {
-            throw new InvalidOperationException(
-                "GitHub Client ID не настроен в appsettings.json.");
+            throw new InvalidOperationException(_localizationService.Get(
+                "GitHub Client ID не настроен в appsettings.json."));
         }
     }
 }

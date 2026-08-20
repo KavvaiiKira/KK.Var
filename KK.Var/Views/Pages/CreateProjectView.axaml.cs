@@ -4,6 +4,8 @@ using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using KK.Var.Models;
 using KK.Var.ViewModels;
+using KK.Var.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace KK.Var.Views.Pages;
 
@@ -72,7 +74,9 @@ public partial class CreateProjectView : UserControl
         var folders = await storageProvider.OpenFolderPickerAsync(
             new FolderPickerOpenOptions
             {
-                Title = "Выберите папку проекта",
+                Title = Program.Services
+                    .GetRequiredService<ILocalizationService>()
+                    .Get("Выберите папку проекта"),
                 AllowMultiple = false,
             });
 

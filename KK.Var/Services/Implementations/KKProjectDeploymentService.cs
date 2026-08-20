@@ -21,7 +21,8 @@ public sealed class KKProjectDeploymentService(
     IKKProjectEnvironmentService environmentService,
     IProjectArtifactService artifactService,
     IRemoteDeploymentService remoteDeploymentService,
-    IUserSettingsService userSettingsService)
+    IUserSettingsService userSettingsService,
+    ILocalizationService localizationService)
     : IKKProjectDeploymentService
 {
     private readonly SemaphoreSlim _deploymentLock = new(1, 1);
@@ -131,13 +132,14 @@ public sealed class KKProjectDeploymentService(
             var project = await projectRepository.GetByIdAsync(
                     request.ProjectId,
                     cancellationToken)
-                ?? throw new KeyNotFoundException("Проект не найден.");
+                ?? throw new KeyNotFoundException(
+                    localizationService.Get("Проект не найден."));
             var settings = await userSettingsService.LoadAsync(cancellationToken);
             var architecture = settings.RemoteMachine.Architecture;
             if (string.IsNullOrWhiteSpace(architecture))
             {
-                throw new InvalidOperationException(
-                    "Сначала проверьте SSH-подключение, чтобы определить архитектуру удалённой машины.");
+                throw new InvalidOperationException(localizationService.Get(
+                    "Сначала проверьте SSH-подключение, чтобы определить архитектуру удалённой машины."));
             }
 
             var artifact = await artifactService.CreateAsync(
@@ -184,12 +186,15 @@ public sealed class KKProjectDeploymentService(
         try
         {
             var project = await projectRepository.GetByIdAsync(projectId, cancellationToken)
-                ?? throw new KeyNotFoundException("Проект не найден.");
+                ?? throw new KeyNotFoundException(
+                    localizationService.Get("Проект не найден."));
             var version = await versionRepository.GetByIdAsync(versionId, cancellationToken)
-                ?? throw new KeyNotFoundException("Версия не найдена.");
+                ?? throw new KeyNotFoundException(
+                    localizationService.Get("Версия не найдена."));
             if (version.KKProjectId != projectId)
             {
-                throw new InvalidOperationException("Версия принадлежит другому проекту.");
+                throw new InvalidOperationException(localizationService.Get(
+                    "Версия принадлежит другому проекту."));
             }
 
             var artifactPath = ResolveArtifactPath(version.ArtifactRelativePath);
@@ -272,32 +277,37 @@ public sealed class KKProjectDeploymentService(
         }
     }
 
-    private static string ResolveArtifactPath(string relativePath)
+    private string ResolveArtifactPath(string relativePath)
     {
         var root = Path.GetFullPath(DatabasePaths.ArtifactsDirectory) + Path.DirectorySeparatorChar;
         var path = Path.GetFullPath(Path.Combine(root, relativePath.Replace('/', Path.DirectorySeparatorChar)));
         if (!path.StartsWith(root, StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidOperationException("Путь к архиву версии недопустим.");
+            throw new InvalidOperationException(localizationService.Get(
+                "Путь к архиву версии недопустим."));
         }
         return path;
     }
 
-    private static async Task VerifyArtifactAsync(
+    private async Task VerifyArtifactAsync(
         string path,
         KKProjectVersion version,
         CancellationToken cancellationToken)
     {
         if (!File.Exists(path))
         {
-            throw new FileNotFoundException("Локальный архив выбранной версии не найден.", path);
+            throw new FileNotFoundException(
+                localizationService.Get(
+                    "Локальный архив выбранной версии не найден."),
+                path);
         }
         await using var stream = File.OpenRead(path);
         var hash = Convert.ToHexStringLower(
             await System.Security.Cryptography.SHA256.HashDataAsync(stream, cancellationToken));
         if (!string.Equals(hash, version.ArtifactSha256, StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidDataException("Контрольная сумма архива версии не совпадает.");
+            throw new InvalidDataException(localizationService.Get(
+                "Контрольная сумма архива версии не совпадает."));
         }
     }
 

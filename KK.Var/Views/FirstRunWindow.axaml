@@ -53,13 +53,13 @@
             <Border Grid.Row="0"
                     Background="{DynamicResource AppSurfaceBrush}"
                     CornerRadius="16,16,0,0">
-                <Grid ColumnDefinitions="Auto,*,Auto">
+                <Grid ColumnDefinitions="Auto,*,Auto,Auto">
                     <StackPanel Margin="16,0,0,0"
                                 VerticalAlignment="Center"
                                 Orientation="Horizontal"
                                 Spacing="10">
                         <controls:BrandMark Width="28" Height="28" />
-                        <TextBlock Text="Первый запуск"
+                        <TextBlock Text="{DynamicResource 'Первый запуск'}"
                                    VerticalAlignment="Center"
                                    FontFamily="{DynamicResource BrandFontFamily}"
                                    FontSize="13"
@@ -71,14 +71,25 @@
                             Background="Transparent"
                             PointerPressed="TitleBar_OnPointerPressed" />
 
-                    <Button Grid.Column="2"
+                    <Button x:Name="LanguageButton"
+                            Grid.Column="2"
+                            Width="42"
+                            Height="30"
+                            Margin="0,0,4,0"
+                            Padding="0"
+                            Background="Transparent"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"
+                            Click="LanguageButton_OnClick" />
+
+                    <Button Grid.Column="3"
                             Width="34"
                             Height="34"
                             Margin="0,0,8,0"
                             Padding="0"
                             Background="Transparent"
                             Click="CloseButton_OnClick"
-                            ToolTip.Tip="Закрыть">
+                            ToolTip.Tip="{DynamicResource 'Закрыть'}">
                         <PathIcon Width="16"
                                   Height="16"
                                   Foreground="{DynamicResource AppTextMutedBrush}"
@@ -93,12 +104,12 @@
                                 VerticalAlignment="Center"
                                 Spacing="18">
                         <controls:BrandLogo />
-                        <TextBlock Text="Простой локальный CI/CD"
+                        <TextBlock Text="{DynamicResource 'Простой локальный CI/CD'}"
                                    HorizontalAlignment="Center"
                                    FontSize="27"
                                    FontWeight="Bold" />
                         <TextBlock MaxWidth="530"
-                                   Text="KK.Var собирает проекты с GitHub или из локальной папки, хранит ваши версии локально и доставляет их на Linux-машину."
+                                   Text="{DynamicResource 'KK.Var собирает проекты с GitHub или из локальной папки, хранит ваши версии локально и доставляет их на Linux-машину.'}"
                                    TextAlignment="Center"
                                    TextWrapping="Wrap"
                                    FontSize="14"
@@ -110,11 +121,11 @@
                 <Grid x:Name="WorkflowSlide" IsVisible="False">
                     <StackPanel VerticalAlignment="Center" Spacing="24">
                         <StackPanel Spacing="6">
-                            <TextBlock Text="Как проходит deploy"
+                            <TextBlock Text="{DynamicResource 'Как проходит deploy'}"
                                        HorizontalAlignment="Center"
                                        FontSize="26"
                                        FontWeight="Bold" />
-                            <TextBlock Text="Три понятных этапа без удалённого хранилища релизов"
+                            <TextBlock Text="{DynamicResource 'Три понятных этапа без удалённого хранилища релизов'}"
                                        HorizontalAlignment="Center"
                                        FontSize="13"
                                        Foreground="{DynamicResource AppTextMutedBrush}" />
@@ -129,8 +140,8 @@
                                     CornerRadius="12">
                                 <StackPanel Spacing="7">
                                     <TextBlock Text="01" Foreground="{DynamicResource AppPrimaryHoverBrush}" FontWeight="Bold" />
-                                    <TextBlock Text="Источник" FontSize="16" FontWeight="SemiBold" />
-                                    <TextBlock Text="GitHub или папка" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                    <TextBlock Text="{DynamicResource 'Источник'}" FontSize="16" FontWeight="SemiBold" />
+                                    <TextBlock Text="{DynamicResource 'GitHub или папка'}" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
                                 </StackPanel>
                             </Border>
                             <TextBlock Grid.Column="1" Text="›" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24" Foreground="{DynamicResource AppTextMutedBrush}" />
@@ -142,7 +153,7 @@
                                     CornerRadius="12">
                                 <StackPanel Spacing="7">
                                     <TextBlock Text="02" Foreground="{DynamicResource AppPrimaryHoverBrush}" FontWeight="Bold" />
-                                    <TextBlock Text="Сборка" FontSize="16" FontWeight="SemiBold" />
+                                    <TextBlock Text="{DynamicResource 'Сборка'}" FontSize="16" FontWeight="SemiBold" />
                                     <TextBlock Text="C#, Python, Go, C++" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
                                 </StackPanel>
                             </Border>
@@ -156,7 +167,7 @@
                                 <StackPanel Spacing="7">
                                     <TextBlock Text="03" Foreground="{DynamicResource AppPrimaryHoverBrush}" FontWeight="Bold" />
                                     <TextBlock Text="Linux" FontSize="16" FontWeight="SemiBold" />
-                                    <TextBlock Text="SSH и systemd" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                    <TextBlock Text="{DynamicResource 'SSH и systemd'}" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
                                 </StackPanel>
                             </Border>
                         </Grid>
@@ -178,20 +189,20 @@
                         <StackPanel Grid.Column="1"
                                     VerticalAlignment="Center"
                                     Spacing="15">
-                            <TextBlock Text="Осталось настроить доступ"
+                            <TextBlock Text="{DynamicResource 'Осталось настроить доступ'}"
                                        FontSize="25"
                                        FontWeight="Bold" />
-                            <TextBlock Text="После этого шага откроется страница настроек. Для начала работы обязательно укажите:"
+                            <TextBlock Text="{DynamicResource 'После этого шага откроется страница настроек. Для начала работы обязательно укажите:'}"
                                        TextWrapping="Wrap"
                                        FontSize="13"
                                        LineHeight="20"
                                        Foreground="{DynamicResource AppTextMutedBrush}" />
                             <StackPanel Spacing="9">
-                                <TextBlock Text="• адрес и SSH-порт Linux-машины" FontSize="13" />
-                                <TextBlock Text="• пользователя SSH" FontSize="13" />
-                                <TextBlock Text="• приватный ключ или пароль" FontSize="13" />
+                                <TextBlock Text="{DynamicResource '• адрес и SSH-порт Linux-машины'}" FontSize="13" />
+                                <TextBlock Text="{DynamicResource '• пользователя SSH'}" FontSize="13" />
+                                <TextBlock Text="{DynamicResource '• приватный ключ или пароль'}" FontSize="13" />
                             </StackPanel>
-                            <TextBlock Text="GitHub можно подключить сейчас или позже."
+                            <TextBlock Text="{DynamicResource 'GitHub можно подключить сейчас или позже.'}"
                                        FontSize="12"
                                        Foreground="{DynamicResource AppPrimaryHoverBrush}" />
                         </StackPanel>
@@ -208,7 +219,7 @@
                 <Grid ColumnDefinitions="Auto,*,Auto">
                     <Button x:Name="BackButton"
                             Classes="wizard-secondary"
-                            Content="Назад"
+                            Content="{DynamicResource 'Назад'}"
                             IsEnabled="False"
                             Click="BackButton_OnClick" />
 
@@ -225,7 +236,7 @@
                     <Button x:Name="NextButton"
                             Grid.Column="2"
                             Classes="wizard-primary"
-                            Content="Далее"
+                            Content="{DynamicResource 'Далее'}"
                             Click="NextButton_OnClick" />
                 </Grid>
             </Border>

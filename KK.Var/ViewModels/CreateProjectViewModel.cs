@@ -20,6 +20,7 @@ public partial class CreateProjectViewModel : ViewModelBase
     private readonly IKKProjectService? _projectService;
     private readonly IGitHubService? _gitHubService;
     private readonly IGitHubTokenStore? _gitHubTokenStore;
+    private readonly ILocalizationService? _localizationService;
     private bool _isResetting;
     private Guid? _editingProjectId;
     private string _buildConfigurationJson = "{}";
@@ -27,27 +28,29 @@ public partial class CreateProjectViewModel : ViewModelBase
 
     public CreateProjectViewModel()
     {
+        RefreshLocalization();
     }
 
     public CreateProjectViewModel(
         IKKProjectService projectService,
         IGitHubService gitHubService,
-        IGitHubTokenStore gitHubTokenStore)
+        IGitHubTokenStore gitHubTokenStore,
+        ILocalizationService localizationService)
     {
         _projectService = projectService;
         _gitHubService = gitHubService;
         _gitHubTokenStore = gitHubTokenStore;
+        _localizationService = localizationService;
+        RefreshLocalization();
     }
 
     public event EventHandler<KKProject>? ProjectCreated;
 
     public event EventHandler<KKProject>? ProjectUpdated;
 
-    public IReadOnlyList<string> SourceTypes { get; } =
-        [LocalSource, GitHubSource];
+    public ObservableCollection<string> SourceTypes { get; } = [];
 
-    public IReadOnlyList<string> BuildProviders { get; } =
-        [AutomaticBuild, ".NET", "Python", "Go", "C++", "Свой сценарий"];
+    public ObservableCollection<string> BuildProviders { get; } = [];
 
     public ObservableCollection<GitHubRepository> GitHubRepositories { get; } = [];
 
@@ -93,15 +96,19 @@ public partial class CreateProjectViewModel : ViewModelBase
     [ObservableProperty]
     public partial string ErrorMessage { get; set; } = string.Empty;
 
-    public bool IsLocalSource => SelectedSourceType == LocalSource;
+    public bool IsLocalSource => Canonicalize(SelectedSourceType) == LocalSource;
 
-    public bool IsGitHubSource => SelectedSourceType == GitHubSource;
+    public bool IsGitHubSource => Canonicalize(SelectedSourceType) == GitHubSource;
 
     public bool IsEditing => _editingProjectId.HasValue;
 
-    public string EditorTitle => IsEditing ? "Редактирование проекта" : "Новый проект";
+    public string EditorTitle => IsEditing
+        ? Localize("Редактирование проекта")
+        : Localize("Новый проект");
 
-    public string SaveButtonText => IsEditing ? "Сохранить изменения" : "Сохранить проект";
+    public string SaveButtonText => IsEditing
+        ? Localize("Сохранить изменения")
+        : Localize("Сохранить проект");
 
     public void Reset()
     {
@@ -112,10 +119,10 @@ public partial class CreateProjectViewModel : ViewModelBase
 
         Name = string.Empty;
         Description = string.Empty;
-        SelectedSourceType = LocalSource;
+        SelectedSourceType = Localize(LocalSource);
         LocalDirectoryPath = string.Empty;
         SelectedGitHubRepository = null;
-        SelectedBuildProvider = AutomaticBuild;
+        SelectedBuildProvider = Localize(AutomaticBuild);
         RemoteServiceName = string.Empty;
         RemoteExecutableFileName = string.Empty;
         RemoteDeploymentDirectory = string.Empty;
@@ -140,9 +147,10 @@ public partial class CreateProjectViewModel : ViewModelBase
 
         Name = project.Name;
         Description = project.Description ?? string.Empty;
-        SelectedSourceType = project.SourceType == ProjectSourceType.GitHubRepository
-            ? GitHubSource
-            : LocalSource;
+        SelectedSourceType = Localize(
+            project.SourceType == ProjectSourceType.GitHubRepository
+                ? GitHubSource
+                : LocalSource);
         LocalDirectoryPath = project.LocalDirectoryPath ?? string.Empty;
         SelectedGitHubRepository = project.SourceType == ProjectSourceType.GitHubRepository &&
                                    project.GitHubRepositoryId.HasValue &&
@@ -258,7 +266,8 @@ public partial class CreateProjectViewModel : ViewModelBase
 
             if (string.IsNullOrWhiteSpace(token))
             {
-                ErrorMessage = "Сначала подключите GitHub на странице настроек.";
+                ErrorMessage = Localize(
+                    "Сначала подключите GitHub на странице настроек.");
                 return;
             }
 
@@ -299,7 +308,7 @@ public partial class CreateProjectViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsLocalSource));
         OnPropertyChanged(nameof(IsGitHubSource));
 
-        if (value == GitHubSource && GitHubRepositories.Count == 0)
+        if (Canonicalize(value) == GitHubSource && GitHubRepositories.Count == 0)
         {
             _ = RefreshGitHubRepositoriesAsync();
         }
@@ -332,37 +341,39 @@ public partial class CreateProjectViewModel : ViewModelBase
     {
         if (string.IsNullOrWhiteSpace(Name))
         {
-            return "Укажите название проекта.";
+            return Localize("Укажите название проекта.");
         }
 
         if (IsLocalSource && string.IsNullOrWhiteSpace(LocalDirectoryPath))
         {
-            return "Выберите локальную папку проекта.";
+            return Localize("Выберите локальную папку проекта.");
         }
 
         if (IsGitHubSource && SelectedGitHubRepository is null)
         {
-            return "Выберите репозиторий GitHub.";
+            return Localize("Выберите репозиторий GitHub.");
         }
 
         if (string.IsNullOrWhiteSpace(RemoteServiceName))
         {
-            return "Укажите название systemd-сервиса.";
+            return Localize("Укажите название systemd-сервиса.");
         }
 
         if (string.IsNullOrWhiteSpace(RemoteExecutableFileName))
         {
-            return "Укажите исполняемый файл или точку входа.";
+            return Localize("Укажите исполняемый файл или точку входа.");
         }
 
         if (string.IsNullOrWhiteSpace(RemoteDeploymentDirectory))
         {
-            return "Укажите директорию развёртывания на удалённой машине.";
+            return Localize(
+                "Укажите директорию развёртывания на удалённой машине.");
         }
 
         if (string.IsNullOrWhiteSpace(ProjectEnvironmentFilePath))
         {
-            return "Укажите путь к файлу переменных окружения внутри проекта.";
+            return Localize(
+                "Укажите путь к файлу переменных окружения внутри проекта.");
         }
 
         return string.Empty;
@@ -370,21 +381,60 @@ public partial class CreateProjectViewModel : ViewModelBase
 
     private ProjectBuildProvider MapBuildProvider() => SelectedBuildProvider switch
     {
-        ".NET" => ProjectBuildProvider.DotNet,
-        "Python" => ProjectBuildProvider.Python,
-        "Go" => ProjectBuildProvider.Go,
-        "C++" => ProjectBuildProvider.Cpp,
-        "Свой сценарий" => ProjectBuildProvider.Custom,
+        var value when Canonicalize(value) == ".NET" => ProjectBuildProvider.DotNet,
+        var value when Canonicalize(value) == "Python" => ProjectBuildProvider.Python,
+        var value when Canonicalize(value) == "Go" => ProjectBuildProvider.Go,
+        var value when Canonicalize(value) == "C++" => ProjectBuildProvider.Cpp,
+        var value when Canonicalize(value) == "Свой сценарий" => ProjectBuildProvider.Custom,
         _ => ProjectBuildProvider.Unknown,
     };
 
-    private static string MapBuildProvider(ProjectBuildProvider provider) => provider switch
+    private string MapBuildProvider(ProjectBuildProvider provider) => provider switch
     {
         ProjectBuildProvider.DotNet => ".NET",
         ProjectBuildProvider.Python => "Python",
         ProjectBuildProvider.Go => "Go",
         ProjectBuildProvider.Cpp => "C++",
-        ProjectBuildProvider.Custom => "Свой сценарий",
-        _ => AutomaticBuild,
+        ProjectBuildProvider.Custom => Localize("Свой сценарий"),
+        _ => Localize(AutomaticBuild),
     };
+
+    public void RefreshLocalization()
+    {
+        var sourceKey = Canonicalize(SelectedSourceType);
+        var providerKey = Canonicalize(SelectedBuildProvider);
+        if (string.IsNullOrWhiteSpace(sourceKey))
+        {
+            sourceKey = LocalSource;
+        }
+        if (string.IsNullOrWhiteSpace(providerKey))
+        {
+            providerKey = AutomaticBuild;
+        }
+
+        _isResetting = true;
+        SourceTypes.Clear();
+        SourceTypes.Add(Localize(LocalSource));
+        SourceTypes.Add(Localize(GitHubSource));
+        BuildProviders.Clear();
+        BuildProviders.Add(Localize(AutomaticBuild));
+        BuildProviders.Add(".NET");
+        BuildProviders.Add("Python");
+        BuildProviders.Add("Go");
+        BuildProviders.Add("C++");
+        BuildProviders.Add(Localize("Свой сценарий"));
+        SelectedSourceType = Localize(sourceKey);
+        SelectedBuildProvider = Localize(providerKey);
+        _isResetting = false;
+
+        OnPropertyChanged(nameof(IsLocalSource));
+        OnPropertyChanged(nameof(IsGitHubSource));
+        OnPropertyChanged(nameof(EditorTitle));
+        OnPropertyChanged(nameof(SaveButtonText));
+    }
+
+    private string Localize(string key) => _localizationService?.Get(key) ?? key;
+
+    private string Canonicalize(string value) =>
+        _localizationService?.GetKey(value) ?? value;
 }

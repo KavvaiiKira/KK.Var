@@ -10,7 +10,8 @@ using Renci.SshNet.Common;
 
 namespace KK.Var.Services.Implementations;
 
-public sealed class RemoteConnectionService : IRemoteConnectionService
+public sealed class RemoteConnectionService(ILocalizationService localizationService)
+    : IRemoteConnectionService
 {
     private const string PasswordAuthentication = "Пароль";
 
@@ -23,7 +24,7 @@ public sealed class RemoteConnectionService : IRemoteConnectionService
         return Task.Run(() => Check(settings), cancellationToken);
     }
 
-    private static RemoteConnectionCheckResult Check(RemoteMachineSettings settings)
+    private RemoteConnectionCheckResult Check(RemoteMachineSettings settings)
     {
         try
         {
@@ -36,8 +37,8 @@ public sealed class RemoteConnectionService : IRemoteConnectionService
 
             if (command.ExitStatus != 0 || string.IsNullOrWhiteSpace(architecture))
             {
-                return RemoteConnectionCheckResult.Failure(
-                    "SSH подключён, но определить архитектуру машины не удалось.");
+                return RemoteConnectionCheckResult.Failure(localizationService.Get(
+                    "SSH подключён, но определить архитектуру машины не удалось."));
             }
 
             client.Disconnect();
@@ -45,33 +46,39 @@ public sealed class RemoteConnectionService : IRemoteConnectionService
         }
         catch (SshAuthenticationException)
         {
-            return RemoteConnectionCheckResult.Failure(
-                "SSH-сервер отклонил указанные данные для входа.");
+            return RemoteConnectionCheckResult.Failure(localizationService.Get(
+                "SSH-сервер отклонил указанные данные для входа."));
         }
         catch (SshConnectionException exception)
         {
             return RemoteConnectionCheckResult.Failure(
-                $"Не удалось установить SSH-соединение: {exception.Message}");
+                localizationService.Format(
+                    "Не удалось установить SSH-соединение: {0}",
+                    exception.Message));
         }
         catch (SocketException exception)
         {
             return RemoteConnectionCheckResult.Failure(
-                $"Удалённая машина недоступна: {exception.Message}");
+                localizationService.Format(
+                    "Удалённая машина недоступна: {0}",
+                    exception.Message));
         }
         catch (FileNotFoundException)
         {
-            return RemoteConnectionCheckResult.Failure(
-                "Файл приватного SSH-ключа не найден.");
+            return RemoteConnectionCheckResult.Failure(localizationService.Get(
+                "Файл приватного SSH-ключа не найден."));
         }
         catch (UnauthorizedAccessException)
         {
-            return RemoteConnectionCheckResult.Failure(
-                "Нет доступа к файлу приватного SSH-ключа.");
+            return RemoteConnectionCheckResult.Failure(localizationService.Get(
+                "Нет доступа к файлу приватного SSH-ключа."));
         }
         catch (Exception exception)
         {
             return RemoteConnectionCheckResult.Failure(
-                $"Проверка подключения завершилась ошибкой: {exception.Message}");
+                localizationService.Format(
+                    "Проверка подключения завершилась ошибкой: {0}",
+                    exception.Message));
         }
     }
 

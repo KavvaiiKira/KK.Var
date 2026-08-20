@@ -20,7 +20,8 @@ namespace KK.Var.Services.Implementations;
 public sealed class ProjectArtifactService(
     IKKProjectEnvironmentService environmentService,
     IGitHubService gitHubService,
-    IGitHubTokenStore gitHubTokenStore) : IProjectArtifactService
+    IGitHubTokenStore gitHubTokenStore,
+    ILocalizationService localizationService) : IProjectArtifactService
 {
     private static readonly Regex TagPattern = new(
         "^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$",
@@ -42,8 +43,8 @@ public sealed class ProjectArtifactService(
         var tag = versionTag.Trim();
         if (!TagPattern.IsMatch(tag))
         {
-            throw new ArgumentException(
-                "Тег версии может содержать только латинские буквы, цифры, точку, дефис и подчёркивание.");
+            throw new ArgumentException(localizationService.Get(
+                "Тег версии может содержать только латинские буквы, цифры, точку, дефис и подчёркивание."));
         }
 
         var operationDirectory = Path.Combine(
@@ -59,11 +60,17 @@ public sealed class ProjectArtifactService(
 
         try
         {
-            progress?.Report(new DeploymentProgress(5, "Подготовка исходного кода"));
+            progress?.Report(new DeploymentProgress(
+                5,
+                localizationService.Get("Подготовка исходного кода")));
             await AcquireSourceAsync(project, sourceDirectory, cancellationToken);
 
             var provider = DetectProvider(project, sourceDirectory);
-            progress?.Report(new DeploymentProgress(15, $"Сборка: {FormatProvider(provider)}"));
+            progress?.Report(new DeploymentProgress(
+                15,
+                localizationService.Format(
+                    "Сборка: {0}",
+                    FormatProvider(provider))));
             await BuildAsync(
                 provider,
                 project,
@@ -82,11 +89,14 @@ public sealed class ProjectArtifactService(
                 project.RemoteExecutableFileName.Replace('/', Path.DirectorySeparatorChar)));
             if (!File.Exists(executablePath))
             {
-                throw new InvalidOperationException(
-                    $"После сборки не найден исполняемый файл «{project.RemoteExecutableFileName}».");
+                throw new InvalidOperationException(localizationService.Format(
+                    "После сборки не найден исполняемый файл «{0}».",
+                    project.RemoteExecutableFileName));
             }
 
-            progress?.Report(new DeploymentProgress(45, "Создание локального архива"));
+            progress?.Report(new DeploymentProgress(
+                45,
+                localizationService.Get("Создание локального архива")));
             var projectDirectory = Path.Combine(
                 DatabasePaths.ArtifactsDirectory,
                 project.Id.ToString("N"));
@@ -98,8 +108,9 @@ public sealed class ProjectArtifactService(
 
             if (File.Exists(artifactPath))
             {
-                throw new InvalidOperationException(
-                    $"Артефакт версии «{tag}» уже существует.");
+                throw new InvalidOperationException(localizationService.Format(
+                    "Артефакт версии «{0}» уже существует.",
+                    tag));
             }
 
             await CreateTarGzAsync(outputDirectory, artifactPath, cancellationToken);
@@ -139,11 +150,13 @@ public sealed class ProjectArtifactService(
         if (project.SourceType == ProjectSourceType.LocalDirectory)
         {
             var source = project.LocalDirectoryPath
-                ?? throw new InvalidOperationException("Не указана локальная папка проекта.");
+                ?? throw new InvalidOperationException(localizationService.Get(
+                    "Не указана локальная папка проекта."));
             if (!Directory.Exists(source))
             {
-                throw new DirectoryNotFoundException(
-                    $"Локальная папка проекта не найдена: {source}");
+                throw new DirectoryNotFoundException(localizationService.Format(
+                    "Локальная папка проекта не найдена: {0}",
+                    source));
             }
 
             await Task.Run(
@@ -153,12 +166,13 @@ public sealed class ProjectArtifactService(
         }
 
         var repository = project.GitHubRepositoryFullName
-            ?? throw new InvalidOperationException("Не указан репозиторий GitHub.");
+            ?? throw new InvalidOperationException(localizationService.Get(
+                "Не указан репозиторий GitHub."));
         var token = await gitHubTokenStore.LoadAsync(cancellationToken);
         if (string.IsNullOrWhiteSpace(token))
         {
-            throw new InvalidOperationException(
-                "Подключите GitHub в настройках перед сборкой проекта.");
+            throw new InvalidOperationException(localizationService.Get(
+                "Подключите GitHub в настройках перед сборкой проекта."));
         }
 
         await using var archive = await gitHubService.DownloadRepositoryArchiveAsync(
@@ -169,7 +183,7 @@ public sealed class ProjectArtifactService(
         ExtractGitHubArchive(zip, destination);
     }
 
-    private static ProjectBuildProvider DetectProvider(
+    private ProjectBuildProvider DetectProvider(
         KKProject project,
         string sourceDirectory)
     {
@@ -203,14 +217,14 @@ public sealed class ProjectArtifactService(
         return detected.Count switch
         {
             1 => detected[0],
-            0 => throw new InvalidOperationException(
-                "Не удалось автоматически определить способ сборки проекта."),
-            _ => throw new InvalidOperationException(
-                "Найдено несколько способов сборки. Выберите нужный в настройках проекта."),
+            0 => throw new InvalidOperationException(localizationService.Get(
+                "Не удалось автоматически определить способ сборки проекта.")),
+            _ => throw new InvalidOperationException(localizationService.Get(
+                "Найдено несколько способов сборки. Выберите нужный в настройках проекта.")),
         };
     }
 
-    private static async Task BuildAsync(
+    private async Task BuildAsync(
         ProjectBuildProvider provider,
         KKProject project,
         string sourceDirectory,
@@ -254,33 +268,35 @@ public sealed class ProjectArtifactService(
                 CopyDirectory(sourceDirectory, outputDirectory, cancellationToken);
                 break;
             case ProjectBuildProvider.Cpp:
-                throw new NotSupportedException(
-                    "Для C++ требуется настроенный Linux cross-toolchain. Он будет добавлен как отдельная конфигурация сборки.");
+                throw new NotSupportedException(localizationService.Get(
+                    "Для C++ требуется настроенный Linux cross-toolchain. Он будет добавлен как отдельная конфигурация сборки."));
             case ProjectBuildProvider.Custom:
-                throw new NotSupportedException(
-                    "Свой сценарий сборки ещё не настроен для этого проекта.");
+                throw new NotSupportedException(localizationService.Get(
+                    "Свой сценарий сборки ещё не настроен для этого проекта."));
             default:
                 throw new ArgumentOutOfRangeException(nameof(provider));
         }
     }
 
-    private static string MapDotNetRuntime(string architecture) => architecture switch
+    private string MapDotNetRuntime(string architecture) => architecture switch
     {
         "x86_64" or "amd64" => "linux-x64",
         "aarch64" or "arm64" => "linux-arm64",
-        _ => throw new NotSupportedException(
-            $"Архитектура удалённой машины «{architecture}» пока не поддерживается для .NET."),
+        _ => throw new NotSupportedException(localizationService.Format(
+            "Архитектура удалённой машины «{0}» пока не поддерживается для .NET.",
+            architecture)),
     };
 
-    private static string MapGoArchitecture(string architecture) => architecture switch
+    private string MapGoArchitecture(string architecture) => architecture switch
     {
         "x86_64" or "amd64" => "amd64",
         "aarch64" or "arm64" => "arm64",
-        _ => throw new NotSupportedException(
-            $"Архитектура удалённой машины «{architecture}» пока не поддерживается для Go."),
+        _ => throw new NotSupportedException(localizationService.Format(
+            "Архитектура удалённой машины «{0}» пока не поддерживается для Go.",
+            architecture)),
     };
 
-    private static async Task RunProcessAsync(
+    private async Task RunProcessAsync(
         string fileName,
         IReadOnlyList<string> arguments,
         string workingDirectory,
@@ -309,7 +325,9 @@ public sealed class ProjectArtifactService(
         }
 
         using var process = Process.Start(startInfo)
-            ?? throw new InvalidOperationException($"Не удалось запустить {fileName}.");
+            ?? throw new InvalidOperationException(localizationService.Format(
+                "Не удалось запустить {0}.",
+                fileName));
         var outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
         var errorTask = process.StandardError.ReadToEndAsync(cancellationToken);
         await process.WaitForExitAsync(cancellationToken);
@@ -317,12 +335,14 @@ public sealed class ProjectArtifactService(
         var error = await errorTask;
         if (process.ExitCode != 0)
         {
-            throw new InvalidOperationException(
-                $"Сборка завершилась с кодом {process.ExitCode}: {LastUsefulLine(error, output)}");
+            throw new InvalidOperationException(localizationService.Format(
+                "Сборка завершилась с кодом {0}: {1}",
+                process.ExitCode,
+                LastUsefulLine(error, output)));
         }
     }
 
-    private static string SelectDotNetProject(
+    private string SelectDotNetProject(
         string sourceDirectory,
         string executableFileName)
     {
@@ -359,16 +379,16 @@ public sealed class ProjectArtifactService(
         {
             1 => matching[0].Path,
             0 when projects.Length == 1 => projects[0].Path,
-            0 => throw new InvalidOperationException(
-                "Не удалось однозначно выбрать исполняемый .csproj. Имя выходной сборки должно совпадать с исполняемым файлом проекта."),
-            _ => throw new InvalidOperationException(
-                "Найдено несколько исполняемых .csproj с одинаковым именем сборки."),
+            0 => throw new InvalidOperationException(localizationService.Get(
+                "Не удалось однозначно выбрать исполняемый .csproj. Имя выходной сборки должно совпадать с исполняемым файлом проекта.")),
+            _ => throw new InvalidOperationException(localizationService.Get(
+                "Найдено несколько исполняемых .csproj с одинаковым именем сборки.")),
         };
     }
 
-    private static string LastUsefulLine(params string[] values) => values
+    private string LastUsefulLine(params string[] values) => values
         .SelectMany(value => value.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
-        .LastOrDefault() ?? "неизвестная ошибка";
+        .LastOrDefault() ?? localizationService.Get("неизвестная ошибка");
 
     private static void CopyDirectory(
         string source,
@@ -395,12 +415,13 @@ public sealed class ProjectArtifactService(
         }
     }
 
-    private static void ExtractGitHubArchive(ZipArchive zip, string destination)
+    private void ExtractGitHubArchive(ZipArchive zip, string destination)
     {
         var prefix = zip.Entries
             .Select(entry => entry.FullName.Split('/')[0])
             .FirstOrDefault(segment => !string.IsNullOrWhiteSpace(segment))
-            ?? throw new InvalidDataException("Архив GitHub пуст.");
+            ?? throw new InvalidDataException(localizationService.Get(
+                "Архив GitHub пуст."));
 
         var destinationRoot = Path.GetFullPath(destination) + Path.DirectorySeparatorChar;
         foreach (var entry in zip.Entries)
@@ -415,7 +436,8 @@ public sealed class ProjectArtifactService(
             var target = Path.GetFullPath(Path.Combine(destination, relative));
             if (!target.StartsWith(destinationRoot, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidDataException("Архив GitHub содержит небезопасный путь.");
+                throw new InvalidDataException(localizationService.Get(
+                    "Архив GitHub содержит небезопасный путь."));
             }
             if (entry.FullName.EndsWith('/'))
             {

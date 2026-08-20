@@ -72,6 +72,7 @@ sealed class Program
                 $"Data Source={DatabasePaths.GetDatabaseFilePath(databaseOptions.FileName)}"));
 
         builder.Services.AddSingleton<IUserSettingsService, UserSettingsService>();
+        builder.Services.AddSingleton<ILocalizationService, LocalizationService>();
         builder.Services.AddSingleton<IRemoteConnectionService, RemoteConnectionService>();
         builder.Services.AddSingleton<IGitHubTokenStore, GitHubTokenStore>();
         builder.Services.AddSingleton<IGitHubService, GitHubService>();

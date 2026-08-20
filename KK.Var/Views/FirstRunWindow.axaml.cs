@@ -1,6 +1,10 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using KK.Var.Enums;
+using KK.Var.Services;
+using KK.Var.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace KK.Var.Views;
 
@@ -8,10 +12,13 @@ public partial class FirstRunWindow : Window
 {
     private const int LastSlideIndex = 2;
     private int _currentSlideIndex;
+    private readonly ILocalizationService _localizationService =
+        Program.Services.GetRequiredService<ILocalizationService>();
 
     public FirstRunWindow()
     {
         InitializeComponent();
+        UpdateLanguageButton();
         UpdateSlide();
     }
 
@@ -49,6 +56,28 @@ public partial class FirstRunWindow : Window
         Close(false);
     }
 
+    private async void LanguageButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (Owner?.DataContext is not MainViewModel viewModel)
+        {
+            return;
+        }
+
+        await viewModel.SwitchLanguageAsync();
+        UpdateLanguageButton();
+        UpdateSlide();
+    }
+
+    private void UpdateLanguageButton()
+    {
+        var isEnglish = _localizationService.CurrentLanguage == ApplicationLanguage.English;
+        LanguageButton.Content = isEnglish ? "EN" : "RU";
+        ToolTip.SetTip(
+            LanguageButton,
+            _localizationService.Get(
+                isEnglish ? "Переключить на русский" : "Переключить на английский"));
+    }
+
     private void UpdateSlide()
     {
         WelcomeSlide.IsVisible = _currentSlideIndex == 0;
@@ -61,7 +90,7 @@ public partial class FirstRunWindow : Window
 
         BackButton.IsEnabled = _currentSlideIndex > 0;
         NextButton.Content = _currentSlideIndex == LastSlideIndex
-            ? "Открыть настройки"
-            : "Далее";
+            ? _localizationService.Get("Открыть настройки")
+            : _localizationService.Get("Далее");
     }
 }

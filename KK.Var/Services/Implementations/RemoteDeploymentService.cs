@@ -10,7 +10,8 @@ using Renci.SshNet;
 
 namespace KK.Var.Services.Implementations;
 
-public sealed class RemoteDeploymentService : IRemoteDeploymentService
+public sealed class RemoteDeploymentService(ILocalizationService localizationService)
+    : IRemoteDeploymentService
 {
     private const string PasswordAuthentication = "Пароль";
 
@@ -24,7 +25,7 @@ public sealed class RemoteDeploymentService : IRemoteDeploymentService
         () => Deploy(project, artifactPath, settings, log, progress, cancellationToken),
         cancellationToken);
 
-    private static void Deploy(
+    private void Deploy(
         KKProject project,
         string artifactPath,
         RemoteMachineSettings settings,
@@ -55,7 +56,9 @@ public sealed class RemoteDeploymentService : IRemoteDeploymentService
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
-            progress?.Report(new DeploymentProgress(55, "Проверка удалённой машины"));
+            progress?.Report(new DeploymentProgress(
+                55,
+                localizationService.Get("Проверка удалённой машины")));
             RunChecked(ssh, "sudo -n true", log);
             RunChecked(ssh, "command -v systemctl >/dev/null && command -v tar >/dev/null", log);
             var actualArchitecture = RunCheckedWithOutput(ssh, "uname -m", log);
@@ -64,8 +67,10 @@ public sealed class RemoteDeploymentService : IRemoteDeploymentService
                     settings.Architecture,
                     StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException(
-                    $"Архитектура удалённой машины изменилась: ожидалась {settings.Architecture}, получена {actualArchitecture}. Выполните проверку подключения ещё раз.");
+                throw new InvalidOperationException(localizationService.Format(
+                    "Архитектура удалённой машины изменилась: ожидалась {0}, получена {1}. Выполните проверку подключения ещё раз.",
+                    settings.Architecture,
+                    actualArchitecture));
             }
             var requiredKilobytes = Math.Max(1024, new FileInfo(artifactPath).Length / 1024 * 3);
             RunChecked(
@@ -73,9 +78,13 @@ public sealed class RemoteDeploymentService : IRemoteDeploymentService
                 $"available=$(df -Pk -- \"$(dirname -- {Q(target)})\" | awk 'NR==2 {{print $4}}'); " +
                 $"test -n \"$available\" && test \"$available\" -ge {requiredKilobytes}",
                 log);
-            progress?.Report(new DeploymentProgress(58, "Удалённая машина готова к Deploy"));
+            progress?.Report(new DeploymentProgress(
+                58,
+                localizationService.Get("Удалённая машина готова к Deploy")));
 
-            progress?.Report(new DeploymentProgress(60, "Загрузка архива на удалённую машину"));
+            progress?.Report(new DeploymentProgress(
+                60,
+                localizationService.Get("Загрузка архива на удалённую машину")));
             using (var archive = File.OpenRead(artifactPath))
             {
                 sftp.UploadFile(archive, remoteArchive);
@@ -85,7 +94,9 @@ public sealed class RemoteDeploymentService : IRemoteDeploymentService
                 sftp.UploadFile(unit, remoteUnit);
             }
 
-            progress?.Report(new DeploymentProgress(65, "Распаковка новой версии"));
+            progress?.Report(new DeploymentProgress(
+                65,
+                localizationService.Get("Распаковка новой версии")));
             RunChecked(
                 ssh,
                 $"sudo rm -rf -- {Q(staging)} && sudo mkdir -p -- {Q(staging)} && " +
@@ -117,20 +128,28 @@ public sealed class RemoteDeploymentService : IRemoteDeploymentService
             if (!unitExists)
             {
                 unitState = UnitState.Created;
-                progress?.Report(new DeploymentProgress(70, "Systemd unit будет создан"));
+                progress?.Report(new DeploymentProgress(
+                    70,
+                    localizationService.Get("Systemd unit будет создан")));
             }
             else if (Run(ssh, $"sudo cmp -s -- {Q(remoteUnit)} {Q(unitPath)}", log).ExitStatus != 0)
             {
                 unitState = UnitState.Changed;
                 RunChecked(ssh, $"sudo cp -- {Q(unitPath)} {Q(unitBackup)}", log);
-                progress?.Report(new DeploymentProgress(70, "Systemd unit будет обновлён"));
+                progress?.Report(new DeploymentProgress(
+                    70,
+                    localizationService.Get("Systemd unit будет обновлён")));
             }
             else
             {
-                progress?.Report(new DeploymentProgress(70, "Systemd unit не изменился"));
+                progress?.Report(new DeploymentProgress(
+                    70,
+                    localizationService.Get("Systemd unit не изменился")));
             }
 
-            progress?.Report(new DeploymentProgress(75, "Переключение версии"));
+            progress?.Report(new DeploymentProgress(
+                75,
+                localizationService.Get("Переключение версии")));
             Run(ssh, $"sudo systemctl stop {Q(project.RemoteServiceName)}", log);
             RunChecked(
                 ssh,
@@ -146,7 +165,9 @@ public sealed class RemoteDeploymentService : IRemoteDeploymentService
                     ssh,
                     $"sudo install -o root -g root -m 0644 {Q(remoteUnit)} {Q(unitPath)} && sudo systemctl daemon-reload",
                     log);
-                progress?.Report(new DeploymentProgress(82, "Systemd перечитал изменённый unit"));
+                progress?.Report(new DeploymentProgress(
+                    82,
+                    localizationService.Get("Systemd перечитал изменённый unit")));
             }
 
             if (Run(ssh, $"sudo systemctl is-enabled {Q(project.RemoteServiceName)}", log).ExitStatus != 0)
@@ -154,16 +175,25 @@ public sealed class RemoteDeploymentService : IRemoteDeploymentService
                 RunChecked(ssh, $"sudo systemctl enable {Q(project.RemoteServiceName)}", log);
             }
 
-            progress?.Report(new DeploymentProgress(88, "Запуск systemd-сервиса"));
+            progress?.Report(new DeploymentProgress(
+                88,
+                localizationService.Get("Запуск systemd-сервиса")));
             RunChecked(ssh, $"sudo systemctl restart {Q(project.RemoteServiceName)}", log);
             RunChecked(ssh, $"sudo systemctl is-active --quiet {Q(project.RemoteServiceName)}", log);
-            progress?.Report(new DeploymentProgress(96, "Systemd-сервис успешно запущен"));
+            progress?.Report(new DeploymentProgress(
+                96,
+                localizationService.Get("Systemd-сервис успешно запущен")));
             RunChecked(ssh, $"sudo rm -rf -- {Q(backup)} {Q(remoteArchive)} {Q(remoteUnit)} {Q(unitBackup)}", log);
-            progress?.Report(new DeploymentProgress(100, "Deploy завершён"));
+            progress?.Report(new DeploymentProgress(
+                100,
+                localizationService.Get("Deploy завершён")));
         }
         catch
         {
-            progress?.Report(new DeploymentProgress(0, "Ошибка Deploy, восстановление предыдущей версии"));
+            progress?.Report(new DeploymentProgress(
+                0,
+                localizationService.Get(
+                    "Ошибка Deploy, восстановление предыдущей версии")));
             try
             {
                 if (targetMoved)
@@ -191,7 +221,9 @@ public sealed class RemoteDeploymentService : IRemoteDeploymentService
                 if (targetMoved && Run(ssh, $"sudo test -e {Q(target)}", log).ExitStatus == 0)
                 {
                     Run(ssh, $"sudo systemctl restart {Q(project.RemoteServiceName)}", log);
-                    progress?.Report(new DeploymentProgress(0, "Предыдущая версия восстановлена"));
+                    progress?.Report(new DeploymentProgress(
+                        0,
+                        localizationService.Get("Предыдущая версия восстановлена")));
                 }
             }
             finally
@@ -231,19 +263,21 @@ public sealed class RemoteDeploymentService : IRemoteDeploymentService
         return result;
     }
 
-    private static void RunChecked(SshClient client, string command, TextWriter log)
+    private void RunChecked(SshClient client, string command, TextWriter log)
     {
         using var result = Run(client, command, log);
         if (result.ExitStatus != 0)
         {
             var message = string.IsNullOrWhiteSpace(result.Error)
-                ? $"Удалённая команда завершилась с кодом {result.ExitStatus}."
+                ? localizationService.Format(
+                    "Удалённая команда завершилась с кодом {0}.",
+                    result.ExitStatus)
                 : result.Error.Trim();
             throw new InvalidOperationException(message);
         }
     }
 
-    private static string RunCheckedWithOutput(
+    private string RunCheckedWithOutput(
         SshClient client,
         string command,
         TextWriter log)
@@ -253,13 +287,15 @@ public sealed class RemoteDeploymentService : IRemoteDeploymentService
         {
             throw new InvalidOperationException(
                 string.IsNullOrWhiteSpace(result.Error)
-                    ? $"Удалённая команда завершилась с кодом {result.ExitStatus}."
+                    ? localizationService.Format(
+                        "Удалённая команда завершилась с кодом {0}.",
+                        result.ExitStatus)
                     : result.Error.Trim());
         }
         return result.Result.Trim();
     }
 
-    private static string CreateUnit(KKProject project, string userName)
+    private string CreateUnit(KKProject project, string userName)
     {
         RejectControlCharacters(userName);
         var directory = project.RemoteDeploymentDirectory.TrimEnd('/');
@@ -287,30 +323,34 @@ public sealed class RemoteDeploymentService : IRemoteDeploymentService
         ]);
     }
 
-    private static void Validate(
+    private void Validate(
         RemoteMachineSettings settings,
         KKProject project,
         string artifactPath)
     {
         if (!File.Exists(artifactPath))
         {
-            throw new FileNotFoundException("Локальный архив версии не найден.", artifactPath);
+            throw new FileNotFoundException(
+                localizationService.Get("Локальный архив версии не найден."),
+                artifactPath);
         }
         if (string.IsNullOrWhiteSpace(settings.Host) ||
             string.IsNullOrWhiteSpace(settings.UserName))
         {
-            throw new InvalidOperationException("Удалённая машина не настроена.");
+            throw new InvalidOperationException(localizationService.Get(
+                "Удалённая машина не настроена."));
         }
         RejectControlCharacters(project.RemoteServiceName);
         RejectControlCharacters(project.RemoteDeploymentDirectory);
         RejectControlCharacters(project.RemoteExecutableFileName);
     }
 
-    private static void RejectControlCharacters(string value)
+    private void RejectControlCharacters(string value)
     {
         if (value.IndexOfAny(['\r', '\n', '\0']) >= 0)
         {
-            throw new InvalidOperationException("Параметр содержит недопустимые символы.");
+            throw new InvalidOperationException(localizationService.Get(
+                "Параметр содержит недопустимые символы."));
         }
     }
 

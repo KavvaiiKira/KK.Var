@@ -96,7 +96,8 @@ public partial class MainWindow : Window
         }
 
         viewModel.ShowNotification(
-            "Дождитесь завершения Deploy. Закрытие приложения во время переключения версии заблокировано.",
+            viewModel.Localize(
+                "Дождитесь завершения Deploy. Закрытие приложения во время переключения версии заблокировано."),
             isError: true);
         return false;
     }
@@ -409,7 +410,11 @@ public partial class MainWindow : Window
     private void ShowDeleteProjectConfirmation(KKProject project)
     {
         _projectPendingDelete = project;
-        DeleteProjectMessage.Text = $"Проект «{project.Name}» будет удалён без возможности отмены.";
+        DeleteProjectMessage.Text = DataContext is MainViewModel viewModel
+            ? viewModel.LocalizeFormat(
+                "Проект «{0}» будет удалён без возможности отмены.",
+                project.Name)
+            : $"Проект «{project.Name}» будет удалён без возможности отмены.";
         DeleteProjectConfirmation.IsVisible = true;
     }
 
@@ -444,6 +449,14 @@ public partial class MainWindow : Window
         }
 
         ShowSettingsPage(showSettings: true);
+    }
+
+    private async void LanguageButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel)
+        {
+            await viewModel.SwitchLanguageAsync();
+        }
     }
 
     private void ToggleMaximizedState()

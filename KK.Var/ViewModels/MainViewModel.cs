@@ -34,6 +34,7 @@ public partial class MainViewModel : ViewModelBase
     private readonly IKKProjectEnvironmentService? _projectEnvironmentService;
     private readonly IKKProjectVersionService? _projectVersionService;
     private readonly IKKProjectDeploymentService? _projectDeploymentService;
+    private readonly ILocalizationService? _localizationService;
     private CancellationTokenSource? _gitHubAuthorizationCancellation;
     private CancellationTokenSource? _historySearchCancellation;
     private CancellationTokenSource? _environmentAutoSaveCancellation;
@@ -45,6 +46,7 @@ public partial class MainViewModel : ViewModelBase
     public MainViewModel()
     {
         ProjectEditor = new CreateProjectViewModel();
+        RefreshAuthenticationMethods();
     }
 
     public MainViewModel(
@@ -56,6 +58,7 @@ public partial class MainViewModel : ViewModelBase
         IKKProjectEnvironmentService projectEnvironmentService,
         IKKProjectVersionService projectVersionService,
         IKKProjectDeploymentService projectDeploymentService,
+        ILocalizationService localizationService,
         CreateProjectViewModel projectEditor)
     {
         _userSettingsService = userSettingsService;
@@ -66,10 +69,13 @@ public partial class MainViewModel : ViewModelBase
         _projectEnvironmentService = projectEnvironmentService;
         _projectVersionService = projectVersionService;
         _projectDeploymentService = projectDeploymentService;
+        _localizationService = localizationService;
         ProjectEditor = projectEditor;
         ProjectEditor.ProjectCreated += ProjectEditor_OnProjectCreated;
         ProjectEditor.ProjectUpdated += ProjectEditor_OnProjectUpdated;
         ProjectEditor.PropertyChanged += ProjectEditor_OnPropertyChanged;
+        RefreshAuthenticationMethods();
+        RefreshLocalizedState();
     }
 
     public ObservableCollection<KKProject> Projects { get; } = [];
@@ -85,7 +91,7 @@ public partial class MainViewModel : ViewModelBase
 
     public ObservableCollection<DeploymentHistoryItemViewModel> HistoryItems { get; } = [];
 
-    public ObservableCollection<string> HistoryProjectFilters { get; } = ["Все проекты"];
+    public ObservableCollection<string> HistoryProjectFilters { get; } = [];
 
     public IReadOnlyList<string> EnvironmentFileFormats { get; } =
         [JsonEnvironmentFormat, DotEnvEnvironmentFormat, ShellEnvironmentFormat, YamlEnvironmentFormat];
@@ -141,7 +147,7 @@ public partial class MainViewModel : ViewModelBase
     public partial string HistorySearchText { get; set; } = string.Empty;
 
     [ObservableProperty]
-    public partial string SelectedHistoryProject { get; set; } = "Все проекты";
+    public partial string SelectedHistoryProject { get; set; } = string.Empty;
 
     [ObservableProperty]
     public partial string SelectedEnvironmentFileFormat { get; set; } =
@@ -188,18 +194,27 @@ public partial class MainViewModel : ViewModelBase
     public partial string GitHubVerificationUrl { get; set; } =
         "https://github.com/login/device";
 
-    public IReadOnlyList<string> AuthenticationMethods { get; } =
-        [PrivateKeyAuthentication, PasswordAuthentication];
+    public ObservableCollection<string> AuthenticationMethods { get; } = [];
+
+    public string LanguageButtonText =>
+        _localizationService?.CurrentLanguage == ApplicationLanguage.English
+            ? "EN"
+            : "RU";
+
+    public string LanguageButtonToolTip =>
+        _localizationService?.CurrentLanguage == ApplicationLanguage.English
+            ? Localize("Переключить на русский")
+            : Localize("Переключить на английский");
 
     [ObservableProperty]
     public partial string AuthenticationMethod { get; set; } =
         PrivateKeyAuthentication;
 
     public bool IsPrivateKeyAuthentication =>
-        AuthenticationMethod == PrivateKeyAuthentication;
+        Canonicalize(AuthenticationMethod) == PrivateKeyAuthentication;
 
     public bool IsPasswordAuthentication =>
-        AuthenticationMethod == PasswordAuthentication;
+        Canonicalize(AuthenticationMethod) == PasswordAuthentication;
 
     public bool IsRemoteMachineConfigured =>
         Settings.IsFirstRunCompleted &&
@@ -217,6 +232,27 @@ public partial class MainViewModel : ViewModelBase
 
     public bool HasNoProjectHistory => ProjectHistory.Count == 0;
 
+    public string SelectedProjectSourceDisplay => SelectedProject is null
+        ? string.Empty
+        : SelectedProject.SourceType == ProjectSourceType.GitHubRepository
+            ? $"GitHub · {SelectedProject.GitHubRepositoryFullName}"
+            : $"{Localize("Локальная папка")} · {SelectedProject.LocalDirectoryPath}";
+
+    public string SelectedProjectLastDeploymentDisplay
+    {
+        get
+        {
+            var deployment = SelectedProject?.Deployments.MaxBy(item => item.StartedAtUtc);
+            return deployment is null
+                ? Localize("Не выполнялся")
+                : deployment.StartedAtUtc.ToLocalTime().ToString("g");
+        }
+    }
+
+    public string SelectedProjectLatestVersionTag =>
+        SelectedProject?.Versions.MaxBy(version => version.CreatedAtUtc)?.Tag
+        ?? Localize("Нет версий");
+
     public bool IsOperationRunning =>
         IsConnectionCheckRunning ||
         IsGitHubAuthorizationPending ||
@@ -233,44 +269,44 @@ public partial class MainViewModel : ViewModelBase
         {
             if (IsConnectionCheckRunning)
             {
-                return "Проверка SSH-подключения";
+                return Localize("Проверка SSH-подключения");
             }
 
             if (IsGitHubAuthorizationPending)
             {
-                return "Подключение GitHub";
+                return Localize("Подключение GitHub");
             }
 
             if (ProjectEditor.IsLoadingRepositories)
             {
-                return "Загрузка репозиториев GitHub";
+                return Localize("Загрузка репозиториев GitHub");
             }
 
             if (IsProjectOperationRunning)
             {
-                return "Удаление проекта";
+                return Localize("Удаление проекта");
             }
 
             if (IsProjectDetailsLoading)
             {
-                return "Загрузка проекта";
+                return Localize("Загрузка проекта");
             }
 
             if (IsEnvironmentSaving)
             {
-                return "Сохранение переменных окружения";
+                return Localize("Сохранение переменных окружения");
             }
 
             if (IsDeploymentRunning)
             {
                 return string.IsNullOrWhiteSpace(DeploymentProgressMessage)
-                    ? "Выполнение deploy"
+                    ? Localize("Выполнение deploy")
                     : DeploymentProgressMessage;
             }
 
             return ProjectEditor.IsSaving
-                ? "Сохранение проекта"
-                : "Нет активных операций";
+                ? Localize("Сохранение проекта")
+                : Localize("Нет активных операций");
         }
     }
 
@@ -285,11 +321,11 @@ public partial class MainViewModel : ViewModelBase
         RemoteMachineArchitecture = FormatArchitecture(
             Settings.RemoteMachine.Architecture);
         AuthenticationMethod = Settings.RemoteMachine.AuthenticationMethod == PasswordAuthentication
-            ? PasswordAuthentication
-            : PrivateKeyAuthentication;
+            ? Localize(PasswordAuthentication)
+            : Localize(PrivateKeyAuthentication);
 
         GitHubAccountDisplay = string.IsNullOrWhiteSpace(Settings.GitHub.AccountLogin)
-            ? "Не подключён"
+            ? Localize("Не подключён")
             : Settings.GitHub.AccountLogin;
 
         if (_gitHubTokenStore is not null)
@@ -378,13 +414,15 @@ public partial class MainViewModel : ViewModelBase
 
             HasUnsavedEnvironmentChanges = false;
             _environmentChangeVersion = 0;
-            EnvironmentSaveStatus = "Все изменения сохранены";
+            EnvironmentSaveStatus = Localize("Все изменения сохранены");
             _isLoadingEnvironment = false;
 
             ProjectVersions.Clear();
             foreach (var version in versionsTask.Result)
             {
-                ProjectVersions.Add(new ProjectVersionItemViewModel(version));
+                ProjectVersions.Add(new ProjectVersionItemViewModel(
+                    version,
+                    _localizationService));
             }
 
             ProjectHistory.Clear();
@@ -392,7 +430,9 @@ public partial class MainViewModel : ViewModelBase
             foreach (var deployment in historyTask.Result.Take(HistoryPageSize))
             {
                 deployment.Project = project;
-                ProjectHistory.Add(new DeploymentHistoryItemViewModel(deployment));
+                ProjectHistory.Add(new DeploymentHistoryItemViewModel(
+                    deployment,
+                    _localizationService));
             }
 
             OnPropertyChanged(nameof(HasNoProjectVersions));
@@ -435,7 +475,9 @@ public partial class MainViewModel : ViewModelBase
             HasMoreProjectHistoryItems = deployments.Count > HistoryPageSize;
             foreach (var deployment in deployments.Take(HistoryPageSize))
             {
-                ProjectHistory.Add(new DeploymentHistoryItemViewModel(deployment));
+                ProjectHistory.Add(new DeploymentHistoryItemViewModel(
+                    deployment,
+                    _localizationService));
             }
 
             OnPropertyChanged(nameof(HasNoProjectHistory));
@@ -457,7 +499,7 @@ public partial class MainViewModel : ViewModelBase
 
         if (string.IsNullOrWhiteSpace(DeploymentVersionTag))
         {
-            PublishNotification("Укажите тег новой версии.", isError: true);
+            PublishNotification(Localize("Укажите тег новой версии."), isError: true);
             return false;
         }
 
@@ -476,14 +518,14 @@ public partial class MainViewModel : ViewModelBase
                     DeploymentDescription),
                 progress);
             PublishNotification(
-                $"Версия «{deployedTag}» успешно развёрнута",
+                LocalizeFormat("Версия «{0}» успешно развёрнута", deployedTag),
                 isError: false);
             await ReloadSelectedProjectAsync(SelectedProject.Id);
             return true;
         }
         catch (Exception exception)
         {
-            AppendDeploymentLog($"ОШИБКА: {exception.Message}");
+            AppendDeploymentLog(LocalizeFormat("ОШИБКА: {0}", exception.Message));
             PublishNotification(exception.Message, isError: true);
             return false;
         }
@@ -516,14 +558,14 @@ public partial class MainViewModel : ViewModelBase
                 item.Version.Id,
                 progress);
             PublishNotification(
-                $"Выполнен rollback на версию «{item.Tag}»",
+                LocalizeFormat("Выполнен rollback на версию «{0}»", item.Tag),
                 isError: false);
             await ReloadSelectedProjectAsync(SelectedProject.Id);
             return true;
         }
         catch (Exception exception)
         {
-            AppendDeploymentLog($"ОШИБКА: {exception.Message}");
+            AppendDeploymentLog(LocalizeFormat("ОШИБКА: {0}", exception.Message));
             PublishNotification(exception.Message, isError: true);
             return false;
         }
@@ -584,7 +626,7 @@ public partial class MainViewModel : ViewModelBase
         {
             if (EnvironmentVariables.Any(item => string.IsNullOrWhiteSpace(item.Name)))
             {
-                EnvironmentSaveStatus = "Заполните имя каждой переменной";
+                EnvironmentSaveStatus = Localize("Заполните имя каждой переменной");
                 return false;
             }
 
@@ -604,12 +646,14 @@ public partial class MainViewModel : ViewModelBase
             if (changeVersion == _environmentChangeVersion)
             {
                 HasUnsavedEnvironmentChanges = false;
-                EnvironmentSaveStatus = "Все изменения сохранены";
+                EnvironmentSaveStatus = Localize("Все изменения сохранены");
             }
 
             if (showNotification)
             {
-                PublishNotification("Формат и переменные окружения сохранены", isError: false);
+                PublishNotification(
+                    Localize("Формат и переменные окружения сохранены"),
+                    isError: false);
             }
 
             return true;
@@ -651,7 +695,7 @@ public partial class MainViewModel : ViewModelBase
 
         HasUnsavedEnvironmentChanges = true;
         _environmentChangeVersion++;
-        EnvironmentSaveStatus = "Есть несохранённые изменения";
+        EnvironmentSaveStatus = Localize("Есть несохранённые изменения");
         _environmentAutoSaveCancellation?.Cancel();
         _environmentAutoSaveCancellation?.Dispose();
         _environmentAutoSaveCancellation = new CancellationTokenSource();
@@ -666,7 +710,7 @@ public partial class MainViewModel : ViewModelBase
 
             if (EnvironmentVariables.Any(item => string.IsNullOrWhiteSpace(item.Name)))
             {
-                EnvironmentSaveStatus = "Заполните имя каждой переменной";
+                EnvironmentSaveStatus = Localize("Заполните имя каждой переменной");
                 return;
             }
 
@@ -675,7 +719,7 @@ public partial class MainViewModel : ViewModelBase
                 await Task.Delay(100, cancellationToken);
             }
 
-            EnvironmentSaveStatus = "Сохранение...";
+            EnvironmentSaveStatus = Localize("Сохранение...");
             await SaveEnvironmentVariablesCoreAsync(
                 showNotification: false,
                 cancellationToken);
@@ -712,7 +756,7 @@ public partial class MainViewModel : ViewModelBase
         try
         {
             HistoryProjectFilters.Clear();
-            HistoryProjectFilters.Add("Все проекты");
+            HistoryProjectFilters.Add(Localize("Все проекты"));
             foreach (var projectName in Projects
                          .Select(project => project.Name)
                          .OrderBy(name => name, StringComparer.OrdinalIgnoreCase))
@@ -722,7 +766,7 @@ public partial class MainViewModel : ViewModelBase
 
             if (!HistoryProjectFilters.Contains(SelectedHistoryProject))
             {
-                SelectedHistoryProject = "Все проекты";
+                SelectedHistoryProject = Localize("Все проекты");
             }
 
             await LoadHistoryPageAsync(reset: true, CancellationToken.None);
@@ -775,7 +819,9 @@ public partial class MainViewModel : ViewModelBase
         }
 
         var deployments = await _projectDeploymentService.SearchAsync(
-            SelectedHistoryProject == "Все проекты" ? null : SelectedHistoryProject,
+            SelectedHistoryProject == Localize("Все проекты")
+                ? null
+                : SelectedHistoryProject,
             search,
             startedFromUtc,
             startedBeforeUtc,
@@ -793,7 +839,9 @@ public partial class MainViewModel : ViewModelBase
         HasMoreHistoryItems = deployments.Count > HistoryPageSize;
         foreach (var deployment in deployments.Take(HistoryPageSize))
         {
-            HistoryItems.Add(new DeploymentHistoryItemViewModel(deployment));
+            HistoryItems.Add(new DeploymentHistoryItemViewModel(
+                deployment,
+                _localizationService));
         }
 
         OnPropertyChanged(nameof(HasNoHistoryItems));
@@ -821,7 +869,9 @@ public partial class MainViewModel : ViewModelBase
         SelectedProject = project;
         _createdProjectForNavigation = project;
         RebuildProjectTiles();
-        PublishNotification($"Проект «{project.Name}» добавлен", isError: false);
+        PublishNotification(
+            LocalizeFormat("Проект «{0}» добавлен", project.Name),
+            isError: false);
     }
 
     public KKProject? TakeCreatedProjectForNavigation()
@@ -845,7 +895,9 @@ public partial class MainViewModel : ViewModelBase
 
         SelectedProject = project;
         RebuildProjectTiles();
-        PublishNotification($"Проект «{project.Name}» изменён", isError: false);
+        PublishNotification(
+            LocalizeFormat("Проект «{0}» изменён", project.Name),
+            isError: false);
     }
 
     public async Task<bool> DeleteProjectAsync(KKProject project)
@@ -868,7 +920,9 @@ public partial class MainViewModel : ViewModelBase
             }
 
             RebuildProjectTiles();
-            PublishNotification($"Проект «{project.Name}» удалён", isError: false);
+            PublishNotification(
+                LocalizeFormat("Проект «{0}» удалён", project.Name),
+                isError: false);
             return true;
         }
         catch (Exception exception)
@@ -888,7 +942,7 @@ public partial class MainViewModel : ViewModelBase
 
         foreach (var project in Projects.OrderBy(project => project.Name))
         {
-            ProjectTiles.Add(new ProjectTileViewModel(project));
+            ProjectTiles.Add(new ProjectTileViewModel(project, _localizationService));
         }
 
         ProjectTiles.Add(ProjectTileViewModel.AddTile);
@@ -935,7 +989,7 @@ public partial class MainViewModel : ViewModelBase
         _gitHubAuthorizationCancellation = new CancellationTokenSource();
         var cancellationToken = _gitHubAuthorizationCancellation.Token;
         IsGitHubAuthorizationPending = true;
-        GitHubConnectionStatus = "Получаем код авторизации...";
+        GitHubConnectionStatus = Localize("Получаем код авторизации...");
 
         try
         {
@@ -943,8 +997,8 @@ public partial class MainViewModel : ViewModelBase
                 cancellationToken);
             GitHubUserCode = authorization.UserCode;
             GitHubVerificationUrl = authorization.VerificationUri.ToString();
-            GitHubConnectionStatus =
-                "Введите этот код на открывшейся странице GitHub";
+            GitHubConnectionStatus = Localize(
+                "Введите этот код на открывшейся странице GitHub");
             OpenBrowser(authorization.VerificationUri);
 
             var token = await _gitHubService.WaitForAccessTokenAsync(
@@ -971,13 +1025,13 @@ public partial class MainViewModel : ViewModelBase
             Settings.GitHub.AccountLogin = user.Login;
             Settings.GitHub.ConnectedAtUtc = DateTimeOffset.UtcNow;
             GitHubAccountDisplay = user.Login;
-            GitHubConnectionStatus = "GitHub успешно подключён";
+            GitHubConnectionStatus = Localize("GitHub успешно подключён");
             IsGitHubConnected = true;
-            PublishNotification("GitHub успешно подключён", isError: false);
+            PublishNotification(Localize("GitHub успешно подключён"), isError: false);
         }
         catch (OperationCanceledException)
         {
-            GitHubConnectionStatus = "Подключение GitHub отменено";
+            GitHubConnectionStatus = Localize("Подключение GitHub отменено");
         }
         catch (Exception exception)
         {
@@ -1018,10 +1072,10 @@ public partial class MainViewModel : ViewModelBase
         await _userSettingsService.ClearGitHubConnectionAsync();
 
         Settings.GitHub = new GitHubSettings();
-        GitHubAccountDisplay = "Не подключён";
-        GitHubConnectionStatus = "GitHub отключён";
+        GitHubAccountDisplay = Localize("Не подключён");
+        GitHubConnectionStatus = Localize("GitHub отключён");
         IsGitHubConnected = false;
-        PublishNotification("GitHub отключён", isError: false);
+        PublishNotification(Localize("GitHub отключён"), isError: false);
     }
 
     [RelayCommand]
@@ -1043,7 +1097,7 @@ public partial class MainViewModel : ViewModelBase
         Settings.IsFirstRunCompleted = true;
         await _userSettingsService.SaveAsync(Settings);
         IsFirstRunSetupRequired = false;
-        SettingsStatus = "Настройки сохранены";
+        SettingsStatus = Localize("Настройки сохранены");
     }
 
     public void RequireFirstRunSetup()
@@ -1072,7 +1126,8 @@ public partial class MainViewModel : ViewModelBase
         }
 
         IsConnectionCheckRunning = true;
-        RemoteMachineArchitecture = "Подключение и определение архитектуры...";
+        RemoteMachineArchitecture = Localize(
+            "Подключение и определение архитектуры...");
 
         try
         {
@@ -1090,7 +1145,7 @@ public partial class MainViewModel : ViewModelBase
             await _userSettingsService.SaveRemoteMachineArchitectureAsync(
                 result.Architecture);
             SettingsError = string.Empty;
-            SettingsStatus = "Подключение успешно";
+            SettingsStatus = Localize("Подключение успешно");
             RemoteMachineArchitecture = FormatArchitecture(result.Architecture);
         }
         finally
@@ -1116,6 +1171,63 @@ public partial class MainViewModel : ViewModelBase
     {
         PublishNotification(message, isError);
     }
+
+    public async Task SwitchLanguageAsync()
+    {
+        if (_localizationService is null || _userSettingsService is null)
+        {
+            return;
+        }
+
+        var authenticationKey = _localizationService.GetKey(AuthenticationMethod);
+        var wasAllProjects = SelectedHistoryProject == Localize("Все проекты");
+        var nextLanguage = _localizationService.CurrentLanguage == ApplicationLanguage.Russian
+            ? ApplicationLanguage.English
+            : ApplicationLanguage.Russian;
+
+        _localizationService.SetLanguage(nextLanguage);
+        Settings.Language = nextLanguage;
+        RefreshAuthenticationMethods();
+        AuthenticationMethod = Localize(authenticationKey);
+        ProjectEditor.RefreshLocalization();
+        RefreshLocalizedState();
+        SettingsStatus = string.Empty;
+        SettingsError = string.Empty;
+        GitHubConnectionStatus = string.Empty;
+        ClearStatusNotification();
+
+        if (HistoryProjectFilters.Count > 0)
+        {
+            HistoryProjectFilters[0] = Localize("Все проекты");
+        }
+
+        if (wasAllProjects)
+        {
+            SelectedHistoryProject = Localize("Все проекты");
+        }
+
+        RebuildProjectTiles();
+        foreach (var item in HistoryItems)
+        {
+            item.RefreshLocalization();
+        }
+        foreach (var item in ProjectHistory)
+        {
+            item.RefreshLocalization();
+        }
+        foreach (var item in ProjectVersions)
+        {
+            item.RefreshLocalization();
+        }
+
+        OnPropertyChanged(string.Empty);
+        await _userSettingsService.SaveAsync(Settings);
+    }
+
+    public string Localize(string key) => _localizationService?.Get(key) ?? key;
+
+    public string LocalizeFormat(string key, params object?[] arguments) =>
+        _localizationService?.Format(key, arguments) ?? string.Format(key, arguments);
 
     partial void OnSettingsStatusChanged(string value)
     {
@@ -1216,7 +1328,8 @@ public partial class MainViewModel : ViewModelBase
     {
         await LoadProjectsAsync();
         var project = Projects.FirstOrDefault(item => item.Id == projectId)
-            ?? throw new KeyNotFoundException("Проект не найден после обновления.");
+            ?? throw new KeyNotFoundException(
+                Localize("Проект не найден после обновления."));
         SelectedProject = project;
         await LoadProjectDetailsAsync(project);
     }
@@ -1269,47 +1382,83 @@ public partial class MainViewModel : ViewModelBase
 
     partial void OnAuthenticationMethodChanged(string value)
     {
-        Settings.RemoteMachine.AuthenticationMethod = value;
+        Settings.RemoteMachine.AuthenticationMethod =
+            Canonicalize(value) == PasswordAuthentication
+                ? PasswordAuthentication
+                : PrivateKeyAuthentication;
         OnPropertyChanged(nameof(IsPrivateKeyAuthentication));
         OnPropertyChanged(nameof(IsPasswordAuthentication));
     }
+
+    private void RefreshAuthenticationMethods()
+    {
+        AuthenticationMethods.Clear();
+        AuthenticationMethods.Add(Localize(PrivateKeyAuthentication));
+        AuthenticationMethods.Add(Localize(PasswordAuthentication));
+    }
+
+    private void RefreshLocalizedState()
+    {
+        EnvironmentSaveStatus = HasUnsavedEnvironmentChanges
+            ? Localize("Есть несохранённые изменения")
+            : Localize("Все изменения сохранены");
+        RemoteMachineArchitecture = FormatArchitecture(
+            Settings.RemoteMachine.Architecture);
+        GitHubAccountDisplay = string.IsNullOrWhiteSpace(Settings.GitHub.AccountLogin)
+            ? Localize("Не подключён")
+            : Settings.GitHub.AccountLogin;
+        if (string.IsNullOrWhiteSpace(SelectedHistoryProject))
+        {
+            SelectedHistoryProject = Localize("Все проекты");
+        }
+    }
+
+    partial void OnSelectedProjectChanged(KKProject? value)
+    {
+        OnPropertyChanged(nameof(SelectedProjectSourceDisplay));
+        OnPropertyChanged(nameof(SelectedProjectLastDeploymentDisplay));
+        OnPropertyChanged(nameof(SelectedProjectLatestVersionTag));
+    }
+
+    private string Canonicalize(string value) =>
+        _localizationService?.GetKey(value) ?? value;
 
     private string ValidateRemoteMachineSettings()
     {
         if (string.IsNullOrWhiteSpace(Settings.RemoteMachine.Host))
         {
-            return "Укажите адрес удалённой машины.";
+            return Localize("Укажите адрес удалённой машины.");
         }
 
         if (Settings.RemoteMachine.Port is < 1 or > 65535)
         {
-            return "SSH-порт должен находиться в диапазоне от 1 до 65535.";
+            return Localize("SSH-порт должен находиться в диапазоне от 1 до 65535.");
         }
 
         if (string.IsNullOrWhiteSpace(Settings.RemoteMachine.UserName))
         {
-            return "Укажите пользователя SSH.";
+            return Localize("Укажите пользователя SSH.");
         }
 
         if (IsPrivateKeyAuthentication &&
             string.IsNullOrWhiteSpace(Settings.RemoteMachine.PrivateKeyPath))
         {
-            return "Укажите путь к приватному SSH-ключу.";
+            return Localize("Укажите путь к приватному SSH-ключу.");
         }
 
         if (IsPasswordAuthentication &&
             string.IsNullOrWhiteSpace(Settings.RemoteMachine.Password))
         {
-            return "Укажите пароль SSH.";
+            return Localize("Укажите пароль SSH.");
         }
 
         return string.Empty;
     }
 
-    private static string FormatArchitecture(string? architecture) =>
+    private string FormatArchitecture(string? architecture) =>
         string.IsNullOrWhiteSpace(architecture)
-            ? "Будет определена автоматически при проверке подключения"
-            : $"Определена автоматически: {architecture}";
+            ? Localize("Будет определена автоматически при проверке подключения")
+            : LocalizeFormat("Определена автоматически: {0}", architecture);
 
     private static string MapEnvironmentFileFormat(EnvironmentFileFormat format) =>
         format switch
