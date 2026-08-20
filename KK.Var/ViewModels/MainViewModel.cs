@@ -40,6 +40,7 @@ public partial class MainViewModel : ViewModelBase
     private bool _isLoadingEnvironment;
     private int _environmentChangeVersion;
     private KKProject? _createdProjectForNavigation;
+    private Guid? _deploymentEditorProjectId;
 
     public MainViewModel()
     {
@@ -396,8 +397,12 @@ public partial class MainViewModel : ViewModelBase
 
             OnPropertyChanged(nameof(HasNoProjectVersions));
             OnPropertyChanged(nameof(HasNoProjectHistory));
-            DeploymentVersionTag = $"release-{DateTime.Now:yyyyMMdd-HHmmss}";
-            DeploymentDescription = string.Empty;
+            if (_deploymentEditorProjectId != project.Id)
+            {
+                DeploymentVersionTag = $"release-{DateTime.Now:yyyyMMdd-HHmmss}";
+                DeploymentDescription = string.Empty;
+                _deploymentEditorProjectId = project.Id;
+            }
         }
         catch (Exception exception)
         {
@@ -473,7 +478,7 @@ public partial class MainViewModel : ViewModelBase
             PublishNotification(
                 $"Версия «{deployedTag}» успешно развёрнута",
                 isError: false);
-            await LoadProjectDetailsAsync(SelectedProject);
+            await ReloadSelectedProjectAsync(SelectedProject.Id);
             return true;
         }
         catch (Exception exception)
@@ -513,7 +518,7 @@ public partial class MainViewModel : ViewModelBase
             PublishNotification(
                 $"Выполнен rollback на версию «{item.Tag}»",
                 isError: false);
-            await LoadProjectDetailsAsync(SelectedProject);
+            await ReloadSelectedProjectAsync(SelectedProject.Id);
             return true;
         }
         catch (Exception exception)
@@ -1107,6 +1112,11 @@ public partial class MainViewModel : ViewModelBase
         IsNotificationError = false;
     }
 
+    public void ShowNotification(string message, bool isError)
+    {
+        PublishNotification(message, isError);
+    }
+
     partial void OnSettingsStatusChanged(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -1181,15 +1191,6 @@ public partial class MainViewModel : ViewModelBase
             AppendDeploymentLog(progress.Message);
         }
 
-        if (!string.IsNullOrWhiteSpace(progress.LogLine))
-        {
-            foreach (var line in progress.LogLine.Split(
-                         ['\r', '\n'],
-                         StringSplitOptions.RemoveEmptyEntries))
-            {
-                AppendDeploymentLog(line);
-            }
-        }
     }
 
     private void AppendDeploymentLog(string message)
@@ -1209,6 +1210,15 @@ public partial class MainViewModel : ViewModelBase
             lines.RemoveRange(0, lines.Count - 250);
         }
         DeploymentLogText = string.Join(Environment.NewLine, lines);
+    }
+
+    private async Task ReloadSelectedProjectAsync(Guid projectId)
+    {
+        await LoadProjectsAsync();
+        var project = Projects.FirstOrDefault(item => item.Id == projectId)
+            ?? throw new KeyNotFoundException("Проект не найден после обновления.");
+        SelectedProject = project;
+        await LoadProjectDetailsAsync(project);
     }
 
     partial void OnHistorySearchTextChanged(string value)

@@ -63,6 +63,11 @@ public partial class MainWindow : Window
 
     private void CloseButton_OnClick(object? sender, RoutedEventArgs e)
     {
+        if (!CanCloseApplication())
+        {
+            return;
+        }
+
         if (ProjectDetailsPage.IsVisible &&
             !ProjectDetailsPage.CanNavigateAway(Close))
         {
@@ -70,6 +75,30 @@ public partial class MainWindow : Window
         }
 
         Close();
+    }
+
+    protected override void OnClosing(WindowClosingEventArgs e)
+    {
+        if (!CanCloseApplication())
+        {
+            e.Cancel = true;
+            return;
+        }
+
+        base.OnClosing(e);
+    }
+
+    private bool CanCloseApplication()
+    {
+        if (DataContext is not MainViewModel { IsDeploymentRunning: true } viewModel)
+        {
+            return true;
+        }
+
+        viewModel.ShowNotification(
+            "Дождитесь завершения Deploy. Закрытие приложения во время переключения версии заблокировано.",
+            isError: true);
+        return false;
     }
 
     protected override async void OnOpened(EventArgs e)

@@ -73,7 +73,9 @@ public sealed class RemoteDeploymentService : IRemoteDeploymentService
                 $"available=$(df -Pk -- \"$(dirname -- {Q(target)})\" | awk 'NR==2 {{print $4}}'); " +
                 $"test -n \"$available\" && test \"$available\" -ge {requiredKilobytes}",
                 log);
+            progress?.Report(new DeploymentProgress(58, "Удалённая машина готова к Deploy"));
 
+            progress?.Report(new DeploymentProgress(60, "Загрузка архива на удалённую машину"));
             using (var archive = File.OpenRead(artifactPath))
             {
                 sftp.UploadFile(archive, remoteArchive);
@@ -115,11 +117,17 @@ public sealed class RemoteDeploymentService : IRemoteDeploymentService
             if (!unitExists)
             {
                 unitState = UnitState.Created;
+                progress?.Report(new DeploymentProgress(70, "Systemd unit будет создан"));
             }
             else if (Run(ssh, $"sudo cmp -s -- {Q(remoteUnit)} {Q(unitPath)}", log).ExitStatus != 0)
             {
                 unitState = UnitState.Changed;
                 RunChecked(ssh, $"sudo cp -- {Q(unitPath)} {Q(unitBackup)}", log);
+                progress?.Report(new DeploymentProgress(70, "Systemd unit будет обновлён"));
+            }
+            else
+            {
+                progress?.Report(new DeploymentProgress(70, "Systemd unit не изменился"));
             }
 
             progress?.Report(new DeploymentProgress(75, "Переключение версии"));
@@ -138,6 +146,7 @@ public sealed class RemoteDeploymentService : IRemoteDeploymentService
                     ssh,
                     $"sudo install -o root -g root -m 0644 {Q(remoteUnit)} {Q(unitPath)} && sudo systemctl daemon-reload",
                     log);
+                progress?.Report(new DeploymentProgress(82, "Systemd перечитал изменённый unit"));
             }
 
             if (Run(ssh, $"sudo systemctl is-enabled {Q(project.RemoteServiceName)}", log).ExitStatus != 0)
@@ -148,11 +157,13 @@ public sealed class RemoteDeploymentService : IRemoteDeploymentService
             progress?.Report(new DeploymentProgress(88, "Запуск systemd-сервиса"));
             RunChecked(ssh, $"sudo systemctl restart {Q(project.RemoteServiceName)}", log);
             RunChecked(ssh, $"sudo systemctl is-active --quiet {Q(project.RemoteServiceName)}", log);
+            progress?.Report(new DeploymentProgress(96, "Systemd-сервис успешно запущен"));
             RunChecked(ssh, $"sudo rm -rf -- {Q(backup)} {Q(remoteArchive)} {Q(remoteUnit)} {Q(unitBackup)}", log);
             progress?.Report(new DeploymentProgress(100, "Deploy завершён"));
         }
         catch
         {
+            progress?.Report(new DeploymentProgress(0, "Ошибка Deploy, восстановление предыдущей версии"));
             try
             {
                 if (targetMoved)
@@ -180,6 +191,7 @@ public sealed class RemoteDeploymentService : IRemoteDeploymentService
                 if (targetMoved && Run(ssh, $"sudo test -e {Q(target)}", log).ExitStatus == 0)
                 {
                     Run(ssh, $"sudo systemctl restart {Q(project.RemoteServiceName)}", log);
+                    progress?.Report(new DeploymentProgress(0, "Предыдущая версия восстановлена"));
                 }
             }
             finally

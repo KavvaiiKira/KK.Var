@@ -238,12 +238,11 @@ public sealed class KKProjectDeploymentService(
                 logPath,
                 false,
                 new System.Text.UTF8Encoding(false));
-            var visibleLog = new DeploymentProgressTextWriter(log, progress);
             await remoteDeploymentService.DeployAsync(
                 project,
                 artifactPath,
                 settings.RemoteMachine,
-                visibleLog,
+                log,
                 progress,
                 cancellationToken);
             await CompleteAsync(
