@@ -114,7 +114,7 @@
                                 <TextBlock Classes="field-label" Text="{DynamicResource 'Описание'}" />
                                 <TextBox Classes="project-field"
                                          Text="{Binding Description, Mode=TwoWay}"
-                                         PlaceholderText="{DynamicResource 'Необязательно — иначе используется название'}" />
+                                         PlaceholderText="{DynamicResource 'Необязательно - иначе используется название'}" />
                             </StackPanel>
 
                             <StackPanel Grid.Row="1"

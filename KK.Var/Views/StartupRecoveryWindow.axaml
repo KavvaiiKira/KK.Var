@@ -9,7 +9,7 @@
         CanResize="False"
         Background="Transparent"
         TransparencyLevelHint="Transparent"
-        Title="KK.Var — восстановление">
+        Title="KK.Var - восстановление">
 
     <Window.Styles>
         <Style Selector="Button.recovery-button">

@@ -187,7 +187,7 @@ On first launch, the application opens a setup wizard. To get started, provide:
 
 1. the Linux machine address and SSH port;
 2. the SSH user name;
-3. an authentication method — private SSH key or password;
+3. an authentication method - private SSH key or password;
 4. compare and confirm the SSH server fingerprint;
 5. verify the connection and save the settings.
 
@@ -205,13 +205,13 @@ After the wizard, the same options remain available on the Settings page, where 
 
 Application data is stored in `%LOCALAPPDATA%\KK.Var`:
 
-- `settings.json` — application and connection settings without the SSH password;
-- `kk-var.db` — projects, versions, variables, and operation history;
-- `artifacts` — local version archives;
-- `logs` — diagnostic logs;
-- `github-token.dat` — GitHub token protected by Windows DPAPI;
-- `ssh-password.dat` — SSH password protected by Windows DPAPI;
-- `recovery` — backups of damaged settings or SQLite files created through the recovery screen.
+- `settings.json` - application and connection settings without the SSH password;
+- `kk-var.db` - projects, versions, variables, and operation history;
+- `artifacts` - local version archives;
+- `logs` - diagnostic logs;
+- `github-token.dat` - GitHub token protected by Windows DPAPI;
+- `ssh-password.dat` - SSH password protected by Windows DPAPI;
+- `recovery` - backups of damaged settings or SQLite files created through the recovery screen.
 
 If `settings.json` is damaged or SQLite cannot be opened, the application shows a recovery screen instead of terminating. Reset happens only after confirmation, and the original files are preserved under `recovery`.
 

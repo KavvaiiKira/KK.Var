@@ -60,7 +60,7 @@ public sealed class LocalizationService : ILocalizationService
             ["Не подключён"] = "Not connected",
             ["Не сохранять"] = "Discard",
             ["Не сохранять изменения?"] = "Discard changes?",
-            ["Необязательно — иначе используется название"] = "Optional — the project name is used by default",
+            ["Необязательно - иначе используется название"] = "Optional - the project name is used by default",
             ["Обзор"] = "Overview",
             ["Обзор..."] = "Browse...",
             ["Обновить"] = "Refresh",
