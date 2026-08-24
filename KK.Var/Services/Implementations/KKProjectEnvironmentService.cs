@@ -15,7 +15,8 @@ namespace KK.Var.Services.Implementations;
 
 public sealed class KKProjectEnvironmentService(
     IKKProjectRepository projectRepository,
-    IKKProjectEnvironmentVariableRepository variableRepository)
+    IKKProjectEnvironmentVariableRepository variableRepository,
+    ILocalizationService localizationService)
     : IKKProjectEnvironmentService
 {
     private static readonly Regex VariableNamePattern = new Regex(
@@ -79,7 +80,7 @@ public sealed class KKProjectEnvironmentService(
                 Id = Guid.NewGuid(),
                 KKProjectId = projectId,
                 Name = name,
-                Value = pair.Value ?? string.Empty,
+                Value = NormalizeValue(pair.Value, name),
                 SortOrder = index,
             });
         }
@@ -130,9 +131,9 @@ public sealed class KKProjectEnvironmentService(
             {
                 writer.WritePropertyName(variable.Name);
 
-                if (JsonNumberPattern.IsMatch(variable.Value))
+                if (TryNormalizeRawJsonValue(variable.Value, out var normalized))
                 {
-                    writer.WriteRawValue(variable.Value, skipInputValidation: false);
+                    writer.WriteRawValue(normalized, skipInputValidation: false);
                 }
                 else
                 {
@@ -151,26 +152,130 @@ public sealed class KKProjectEnvironmentService(
         string.Join(
             '\n',
             variables.Select(variable =>
-                    $"{variable.Name}={FormatJsonLikeScalar(variable.Value)}"));
+                    $"{variable.Name}={FormatJsonLikeValue(variable.Value)}"));
 
     private static string GenerateShell(
         IReadOnlyList<KKProjectEnvironmentVariable> variables) =>
         string.Join(
             '\n',
             variables.Select(variable =>
-                    $"export {variable.Name}='{variable.Value.Replace("'", "'\"'\"'")}'"));
+                    $"export {variable.Name}={FormatShellValue(variable.Value)}"));
 
     private static string GenerateYaml(
         IReadOnlyList<KKProjectEnvironmentVariable> variables) =>
         string.Join(
             '\n',
             variables.Select(variable =>
-                    $"{variable.Name}: {FormatJsonLikeScalar(variable.Value)}"));
+                    $"{variable.Name}: {FormatJsonLikeValue(variable.Value)}"));
 
-    private static string FormatJsonLikeScalar(string value) =>
-        JsonNumberPattern.IsMatch(value) ?
-            value :
-        JsonSerializer.Serialize(value);
+    private static string FormatJsonLikeValue(string value) =>
+        TryNormalizeRawJsonValue(value, out var normalized) ?
+            normalized :
+            JsonSerializer.Serialize(value);
+
+    private static string FormatShellValue(string value)
+    {
+        if (TryNormalizeScalar(value, out var scalar))
+        {
+            return scalar;
+        }
+
+        var normalized = TryNormalizeArray(value, out var array) ?
+            array :
+            value;
+
+        return $"'{normalized.Replace("'", "'\"'\"'")}'";
+    }
+
+    private string NormalizeValue(string? value, string variableName)
+    {
+        value ??= string.Empty;
+        var trimmed = value.Trim();
+
+        if (TryNormalizeScalar(trimmed, out var scalar))
+        {
+            return scalar;
+        }
+
+        if (LooksLikeArray(trimmed))
+        {
+            if (!TryNormalizeArray(trimmed, out var normalized))
+            {
+                throw new ArgumentException(localizationService.Format(
+                    "Значение переменной «{0}» должно быть JSON-массивом только строк или только чисел.",
+                    variableName));
+            }
+
+            return normalized;
+        }
+
+        return value;
+    }
+
+    private static bool TryNormalizeRawJsonValue(string value, out string normalized) =>
+        TryNormalizeScalar(value, out normalized) ||
+        TryNormalizeArray(value, out normalized);
+
+    private static bool TryNormalizeScalar(string value, out string normalized)
+    {
+        var trimmed = value.Trim();
+
+        if (bool.TryParse(trimmed, out var boolean))
+        {
+            normalized = boolean.ToString().ToLowerInvariant();
+            return true;
+        }
+
+        if (JsonNumberPattern.IsMatch(trimmed))
+        {
+            normalized = trimmed;
+            return true;
+        }
+
+        normalized = string.Empty;
+        return false;
+    }
+
+    private static bool LooksLikeArray(string value) =>
+        value.StartsWith("[", StringComparison.Ordinal) &&
+        value.EndsWith("]", StringComparison.Ordinal);
+
+    private static bool TryNormalizeArray(string value, out string normalized)
+    {
+        normalized = string.Empty;
+
+        if (!LooksLikeArray(value))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(value);
+
+            if (document.RootElement.ValueKind != JsonValueKind.Array)
+            {
+                return false;
+            }
+
+            var items = document.RootElement.EnumerateArray().ToArray();
+            var isSupported = items.Length == 0 ||
+                              items.All(item => item.ValueKind == JsonValueKind.String) ||
+                              items.All(item => item.ValueKind == JsonValueKind.Number);
+
+            if (!isSupported)
+            {
+                return false;
+            }
+
+            normalized = JsonSerializer.Serialize(document.RootElement);
+            return true;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
 
     public async Task<string> WriteFileAsync(
         Guid projectId,

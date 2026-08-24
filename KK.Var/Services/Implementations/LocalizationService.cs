@@ -40,6 +40,7 @@ public sealed class LocalizationService : ILocalizationService
             ["Закрыть"] = "Close",
             ["Заполните отмеченные поля подключения к удалённой машине и сохраните настройки."] = "Complete the required remote connection fields and save the settings.",
             ["Значение"] = "Value",
+            ["Значение переменной «{0}» должно быть JSON-массивом только строк или только чисел."] = "Variable \"{0}\" must be a JSON array containing only strings or only numbers.",
             ["ИМЯ_ПЕРЕМЕННОЙ"] = "VARIABLE_NAME",
             ["Исполняемый файл или точка входа"] = "Executable file or entry point",
             ["История"] = "History",
