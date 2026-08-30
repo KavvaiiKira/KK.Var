@@ -140,6 +140,14 @@ public partial class ProjectDetailsView : UserControl
         }
     }
 
+    private void CancelDeploymentButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel)
+        {
+            viewModel.CancelSelectedDeployment();
+        }
+    }
+
     private async void RollbackButton_OnClick(object? sender, RoutedEventArgs e)
     {
         if (DataContext is MainViewModel viewModel &&

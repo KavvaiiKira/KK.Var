@@ -262,12 +262,27 @@
                         <Grid Margin="0,12,0,0" ColumnDefinitions="220,*" RowDefinitions="Auto,Auto" RowSpacing="12">
                             <TextBlock Text="{DynamicResource 'Следующая версия'}" Foreground="{DynamicResource AppTextMutedBrush}" />
                             <TextBox Grid.Column="1" PlaceholderText="{DynamicResource 'Например, release-1'}"
-                                     IsReadOnly="{Binding IsDeploymentRunning}"
+                                     IsReadOnly="{Binding IsSelectedProjectDeploymentActive}"
                                      Text="{Binding DeploymentVersionTag}" />
                             <TextBlock Grid.Row="1" Text="{DynamicResource 'Описание'}" Foreground="{DynamicResource AppTextMutedBrush}" />
                             <TextBox Grid.Row="1" Grid.Column="1" PlaceholderText="{DynamicResource 'Что изменилось в этой версии'}"
-                                     IsReadOnly="{Binding IsDeploymentRunning}"
+                                     IsReadOnly="{Binding IsSelectedProjectDeploymentActive}"
                                      Text="{Binding DeploymentDescription}" />
+                        </Grid>
+                        <Grid IsVisible="{Binding IsSelectedProjectDeploymentActive}"
+                              ColumnDefinitions="*,Auto"
+                              ColumnSpacing="12">
+                            <TextBlock VerticalAlignment="Center"
+                                       Text="{Binding SelectedProjectQueueStatusText}"
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource AppPrimaryHoverBrush}" />
+                            <Button Grid.Column="1"
+                                    Classes="details-secondary"
+                                    Padding="12,7"
+                                    IsVisible="{Binding IsSelectedProjectDeploymentWaiting}"
+                                    Content="{DynamicResource 'Отменить операцию'}"
+                                    Click="CancelDeploymentButton_OnClick" />
                         </Grid>
                         <ProgressBar Height="4" Minimum="0" Maximum="100"
                                      IsVisible="{Binding IsSelectedProjectDeploymentRunning}"
@@ -291,7 +306,7 @@
                                      ScrollViewer.VerticalScrollBarVisibility="Auto" />
                         </Border>
                         <Button Classes="deploy" Margin="0,12,0,0" HorizontalAlignment="Left"
-                                IsEnabled="{Binding !IsDeploymentRunning}"
+                                IsEnabled="{Binding !IsSelectedProjectDeploymentActive}"
                                 Content="{DynamicResource 'Собрать и выполнить deploy'}"
                                 Click="RunDeployButton_OnClick" />
                     </StackPanel>

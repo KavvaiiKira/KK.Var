@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using KK.Var.Configuration;
@@ -35,6 +36,7 @@ public partial class MainViewModel : ViewModelBase
     private readonly IKKProjectEnvironmentService? _projectEnvironmentService;
     private readonly IKKProjectVersionService? _projectVersionService;
     private readonly IKKProjectDeploymentService? _projectDeploymentService;
+    private readonly IDeploymentOperationQueue? _deploymentOperationQueue;
     private readonly ILocalizationService? _localizationService;
     private CancellationTokenSource? _gitHubAuthorizationCancellation;
     private CancellationTokenSource? _historySearchCancellation;
@@ -43,6 +45,8 @@ public partial class MainViewModel : ViewModelBase
     private int _environmentChangeVersion;
     private KKProject? _createdProjectForNavigation;
     private Guid? _deploymentEditorProjectId;
+    private readonly Dictionary<Guid, DeploymentUiState> _deploymentStates =
+        new Dictionary<Guid, DeploymentUiState>();
 
     public MainViewModel()
     {
@@ -60,6 +64,7 @@ public partial class MainViewModel : ViewModelBase
         IKKProjectEnvironmentService projectEnvironmentService,
         IKKProjectVersionService projectVersionService,
         IKKProjectDeploymentService projectDeploymentService,
+        IDeploymentOperationQueue deploymentOperationQueue,
         ILocalizationService localizationService,
         CreateProjectViewModel projectEditor)
     {
@@ -72,11 +77,13 @@ public partial class MainViewModel : ViewModelBase
         _projectEnvironmentService = projectEnvironmentService;
         _projectVersionService = projectVersionService;
         _projectDeploymentService = projectDeploymentService;
+        _deploymentOperationQueue = deploymentOperationQueue;
         _localizationService = localizationService;
         ProjectEditor = projectEditor;
         ProjectEditor.ProjectCreated += ProjectEditor_OnProjectCreated;
         ProjectEditor.ProjectUpdated += ProjectEditor_OnProjectUpdated;
         ProjectEditor.PropertyChanged += ProjectEditor_OnPropertyChanged;
+        _deploymentOperationQueue.QueueChanged += DeploymentOperationQueue_OnQueueChanged;
         RefreshAuthenticationMethods();
         RefreshLocalizedState();
     }
@@ -133,22 +140,10 @@ public partial class MainViewModel : ViewModelBase
     public partial bool IsDeploymentRunning { get; set; }
 
     [ObservableProperty]
-    public partial Guid? ActiveDeploymentProjectId { get; set; }
-
-    [ObservableProperty]
-    public partial int DeploymentProgressPercentage { get; set; }
-
-    [ObservableProperty]
-    public partial string DeploymentProgressMessage { get; set; } = string.Empty;
-
-    [ObservableProperty]
     public partial string DeploymentVersionTag { get; set; } = string.Empty;
 
     [ObservableProperty]
     public partial string DeploymentDescription { get; set; } = string.Empty;
-
-    [ObservableProperty]
-    public partial string DeploymentLogText { get; set; } = string.Empty;
 
     [ObservableProperty]
     public partial string HistorySearchText { get; set; } = string.Empty;
@@ -239,18 +234,54 @@ public partial class MainViewModel : ViewModelBase
 
     public bool HasSuccessNotification => HasNotification && !IsNotificationError;
 
-    private Guid? _deploymentLogProjectId;
-
     public bool IsSelectedProjectDeploymentRunning =>
-        IsDeploymentRunning &&
-        ActiveDeploymentProjectId == SelectedProject?.Id;
+        SelectedDeploymentState?.QueueStatus == DeploymentQueueStatus.Running;
+
+    public bool IsSelectedProjectDeploymentWaiting =>
+        SelectedDeploymentState?.QueueStatus == DeploymentQueueStatus.Waiting;
+
+    public bool IsSelectedProjectDeploymentActive =>
+        SelectedDeploymentState?.IsActive == true;
+
+    public int DeploymentProgressPercentage =>
+        SelectedDeploymentState?.ProgressPercentage ?? 0;
+
+    public string DeploymentProgressMessage =>
+        SelectedDeploymentState?.ProgressMessage ?? string.Empty;
 
     public string VisibleDeploymentLogText =>
-        _deploymentLogProjectId == SelectedProject?.Id ?
-            DeploymentLogText :
-            string.Empty;
+        SelectedDeploymentState?.LogText ?? string.Empty;
 
     public bool HasVisibleDeploymentLog => !string.IsNullOrWhiteSpace(VisibleDeploymentLogText);
+
+    public string SelectedProjectQueueStatusText
+    {
+        get
+        {
+            var state = SelectedDeploymentState;
+            if (state?.QueueStatus == DeploymentQueueStatus.Waiting)
+            {
+                return LocalizeFormat(
+                    "В очереди · позиция {0}",
+                    GetWaitingPosition(state));
+            }
+
+            if (state?.QueueStatus == DeploymentQueueStatus.Running)
+            {
+                return string.IsNullOrWhiteSpace(state.ProgressMessage) ?
+                    Localize("Выполняется") :
+                    state.ProgressMessage;
+            }
+
+            return string.Empty;
+        }
+    }
+
+    private DeploymentUiState? SelectedDeploymentState =>
+        SelectedProject is not null &&
+        _deploymentStates.TryGetValue(SelectedProject.Id, out var state) ?
+            state :
+            null;
 
     public bool HasNoHistoryItems => HistoryItems.Count == 0;
 
@@ -496,7 +527,14 @@ public partial class MainViewModel : ViewModelBase
             OnPropertyChanged(nameof(HasNoProjectVersions));
             OnPropertyChanged(nameof(HasNoProjectHistory));
 
-            if (_deploymentEditorProjectId != project.Id)
+            if (_deploymentStates.TryGetValue(project.Id, out var deploymentState) &&
+                deploymentState.IsActive)
+            {
+                DeploymentVersionTag = deploymentState.VersionTag;
+                DeploymentDescription = deploymentState.Description;
+                _deploymentEditorProjectId = project.Id;
+            }
+            else if (_deploymentEditorProjectId != project.Id)
             {
                 DeploymentVersionTag = $"release-{DateTime.Now:yyyyMMdd-HHmmss}";
                 DeploymentDescription = string.Empty;
@@ -553,7 +591,7 @@ public partial class MainViewModel : ViewModelBase
     {
         if (_projectDeploymentService is null ||
             SelectedProject is null ||
-            IsDeploymentRunning)
+            IsSelectedProjectDeploymentActive)
         {
             return false;
         }
@@ -565,20 +603,23 @@ public partial class MainViewModel : ViewModelBase
         }
 
         var projectId = SelectedProject.Id;
+        var deployedTag = DeploymentVersionTag.Trim();
+        var state = new DeploymentUiState
+        {
+            ProjectId = projectId,
+            VersionTag = deployedTag,
+            Description = DeploymentDescription,
+            OperationType = DeploymentOperationType.Deploy,
+        };
 
-        ActiveDeploymentProjectId = projectId;
-        _deploymentLogProjectId = projectId;
-        IsDeploymentRunning = true;
-        DeploymentProgressPercentage = 0;
-        DeploymentLogText = string.Empty;
+        _deploymentStates[projectId] = state;
         NotifySelectedDeploymentStateChanged();
 
-        var progress = new UiThreadProgress<DeploymentProgress>(HandleDeploymentProgress);
+        var progress = new UiThreadProgress<DeploymentProgress>(value =>
+            HandleDeploymentProgress(projectId, state.OperationId, value));
 
         try
         {
-            var deployedTag = DeploymentVersionTag.Trim();
-
             await _projectDeploymentService.DeployAsync(
                 new DeploymentRequest(
                     projectId,
@@ -586,41 +627,53 @@ public partial class MainViewModel : ViewModelBase
                     DeploymentDescription),
                 progress);
 
-            PublishNotification(
-                LocalizeFormat("Версия «{0}» успешно развёрнута", deployedTag),
-                isError: false);
+            if (SelectedProject?.Id == projectId)
+            {
+                PublishNotification(
+                    LocalizeFormat("Версия «{0}» успешно развёрнута", deployedTag),
+                    isError: false);
+            }
 
             await ReloadSelectedProjectAsync(projectId);
 
             return true;
         }
+        catch (OperationCanceledException)
+        {
+            AppendDeploymentLog(state, Localize("Операция отменена."));
+
+            if (SelectedProject?.Id == projectId)
+            {
+                PublishNotification(Localize("Операция отменена."), isError: false);
+            }
+
+            return false;
+        }
         catch (Exception exception)
         {
-            AppendDeploymentLog(LocalizeFormat("ОШИБКА: {0}", exception.Message));
-            PublishNotification(exception.Message, isError: true);
+            AppendDeploymentLog(state, LocalizeFormat("ОШИБКА: {0}", exception.Message));
+
+            if (SelectedProject?.Id == projectId)
+            {
+                PublishNotification(exception.Message, isError: true);
+            }
 
             return false;
         }
         finally
         {
-            IsDeploymentRunning = false;
-            ActiveDeploymentProjectId = null;
-            DeploymentProgressPercentage = 0;
-            DeploymentProgressMessage = string.Empty;
+            CompleteUiStateIfDetached(state);
         }
     }
 
     public void PrepareDeploymentView()
     {
-        if (IsDeploymentRunning)
+        if (SelectedProject is null || IsSelectedProjectDeploymentActive)
         {
             return;
         }
 
-        DeploymentProgressPercentage = 0;
-        DeploymentProgressMessage = string.Empty;
-        _deploymentLogProjectId = SelectedProject?.Id;
-        DeploymentLogText = string.Empty;
+        _deploymentStates.Remove(SelectedProject.Id);
         NotifySelectedDeploymentStateChanged();
     }
 
@@ -628,21 +681,24 @@ public partial class MainViewModel : ViewModelBase
     {
         if (_projectDeploymentService is null ||
             SelectedProject is null ||
-            IsDeploymentRunning)
+            IsSelectedProjectDeploymentActive)
         {
             return false;
         }
 
         var projectId = SelectedProject.Id;
+        var state = new DeploymentUiState
+        {
+            ProjectId = projectId,
+            VersionTag = item.Tag,
+            OperationType = DeploymentOperationType.Rollback,
+        };
 
-        ActiveDeploymentProjectId = projectId;
-        _deploymentLogProjectId = projectId;
-        IsDeploymentRunning = true;
-        DeploymentProgressPercentage = 0;
-        DeploymentLogText = string.Empty;
+        _deploymentStates[projectId] = state;
         NotifySelectedDeploymentStateChanged();
 
-        var progress = new UiThreadProgress<DeploymentProgress>(HandleDeploymentProgress);
+        var progress = new UiThreadProgress<DeploymentProgress>(value =>
+            HandleDeploymentProgress(projectId, state.OperationId, value));
 
         try
         {
@@ -651,27 +707,63 @@ public partial class MainViewModel : ViewModelBase
                 item.Version.Id,
                 progress);
 
-            PublishNotification(
-                LocalizeFormat("Выполнен rollback на версию «{0}»", item.Tag),
-                isError: false);
+            if (SelectedProject?.Id == projectId)
+            {
+                PublishNotification(
+                    LocalizeFormat("Выполнен rollback на версию «{0}»", item.Tag),
+                    isError: false);
+            }
 
             await ReloadSelectedProjectAsync(projectId);
 
             return true;
         }
+        catch (OperationCanceledException)
+        {
+            AppendDeploymentLog(state, Localize("Операция отменена."));
+
+            if (SelectedProject?.Id == projectId)
+            {
+                PublishNotification(Localize("Операция отменена."), isError: false);
+            }
+
+            return false;
+        }
         catch (Exception exception)
         {
-            AppendDeploymentLog(LocalizeFormat("ОШИБКА: {0}", exception.Message));
-            PublishNotification(exception.Message, isError: true);
+            AppendDeploymentLog(state, LocalizeFormat("ОШИБКА: {0}", exception.Message));
+
+            if (SelectedProject?.Id == projectId)
+            {
+                PublishNotification(exception.Message, isError: true);
+            }
 
             return false;
         }
         finally
         {
-            IsDeploymentRunning = false;
-            ActiveDeploymentProjectId = null;
-            DeploymentProgressPercentage = 0;
-            DeploymentProgressMessage = string.Empty;
+            CompleteUiStateIfDetached(state);
+        }
+    }
+
+    public void CancelSelectedDeployment()
+    {
+        if (_deploymentOperationQueue is null ||
+            SelectedDeploymentState is not { QueueStatus: DeploymentQueueStatus.Waiting } state)
+        {
+            return;
+        }
+
+        var itemId = state.QueueItemId ?? _deploymentOperationQueue
+            .GetItems()
+            .LastOrDefault(item =>
+                item.ProjectId == state.ProjectId &&
+                item.Status == DeploymentQueueStatus.Waiting)
+            ?.Id;
+
+        if (itemId.HasValue)
+        {
+            _deploymentOperationQueue.Cancel(itemId.Value);
         }
     }
 
@@ -1464,18 +1556,6 @@ public partial class MainViewModel : ViewModelBase
         NotifySelectedDeploymentStateChanged();
     }
 
-    partial void OnActiveDeploymentProjectIdChanged(Guid? value) =>
-        NotifySelectedDeploymentStateChanged();
-
-    partial void OnDeploymentProgressMessageChanged(string value) =>
-        OnPropertyChanged(nameof(OperationStatusText));
-
-    partial void OnDeploymentLogTextChanged(string value)
-    {
-        OnPropertyChanged(nameof(VisibleDeploymentLogText));
-        OnPropertyChanged(nameof(HasVisibleDeploymentLog));
-    }
-
     partial void OnDeploymentVersionTagChanged(string value)
     {
         if (!IsNotificationError)
@@ -1494,18 +1574,22 @@ public partial class MainViewModel : ViewModelBase
         }
     }
 
-    private void HandleDeploymentProgress(DeploymentProgress progress)
+    private void HandleDeploymentProgress(
+        Guid projectId,
+        Guid operationId,
+        DeploymentProgress progress)
     {
-        if (progress.Percentage >= 0)
+        if (progress.Percentage >= 0 &&
+            TryGetDeploymentState(projectId, operationId, out var state))
         {
-            DeploymentProgressPercentage = progress.Percentage;
-            DeploymentProgressMessage = progress.Message;
+            state.ProgressPercentage = progress.Percentage;
+            state.ProgressMessage = progress.Message;
 
-            AppendDeploymentLog(progress.Message);
+            AppendDeploymentLog(state, progress.Message);
         }
     }
 
-    private void AppendDeploymentLog(string message)
+    private void AppendDeploymentLog(DeploymentUiState state, string message)
     {
         if (string.IsNullOrWhiteSpace(message))
         {
@@ -1514,9 +1598,9 @@ public partial class MainViewModel : ViewModelBase
 
         var line = $"[{DateTime.Now:HH:mm:ss}] {message.Trim()}";
 
-        var lines = string.IsNullOrEmpty(DeploymentLogText) ?
+        var lines = string.IsNullOrEmpty(state.LogText) ?
             new List<string>() :
-            DeploymentLogText.Split(Environment.NewLine).ToList();
+            state.LogText.Split(Environment.NewLine).ToList();
 
         lines.Add(line);
 
@@ -1525,7 +1609,8 @@ public partial class MainViewModel : ViewModelBase
             lines.RemoveRange(0, lines.Count - 250);
         }
 
-        DeploymentLogText = string.Join(Environment.NewLine, lines);
+        state.LogText = string.Join(Environment.NewLine, lines);
+        NotifySelectedDeploymentStateChanged();
     }
 
     private async Task ReloadSelectedProjectAsync(Guid projectId)
@@ -1558,9 +1643,105 @@ public partial class MainViewModel : ViewModelBase
 
     private void NotifySelectedDeploymentStateChanged()
     {
+        OnPropertyChanged(nameof(IsSelectedProjectDeploymentActive));
+        OnPropertyChanged(nameof(IsSelectedProjectDeploymentWaiting));
         OnPropertyChanged(nameof(IsSelectedProjectDeploymentRunning));
+        OnPropertyChanged(nameof(DeploymentProgressPercentage));
+        OnPropertyChanged(nameof(DeploymentProgressMessage));
+        OnPropertyChanged(nameof(SelectedProjectQueueStatusText));
         OnPropertyChanged(nameof(VisibleDeploymentLogText));
         OnPropertyChanged(nameof(HasVisibleDeploymentLog));
+        OnPropertyChanged(nameof(OperationStatusText));
+    }
+
+    private void DeploymentOperationQueue_OnQueueChanged(object? sender, EventArgs e)
+    {
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            RefreshDeploymentQueueState();
+            return;
+        }
+
+        Dispatcher.UIThread.Post(RefreshDeploymentQueueState);
+    }
+
+    private void RefreshDeploymentQueueState()
+    {
+        if (_deploymentOperationQueue is null)
+        {
+            return;
+        }
+
+        var items = _deploymentOperationQueue.GetItems();
+
+        foreach (var state in _deploymentStates.Values)
+        {
+            var item = state.QueueItemId.HasValue ?
+                items.SingleOrDefault(candidate => candidate.Id == state.QueueItemId.Value) :
+                items.LastOrDefault(candidate =>
+                    candidate.ProjectId == state.ProjectId &&
+                    candidate.Version == state.VersionTag &&
+                    candidate.Status is DeploymentQueueStatus.Waiting or
+                        DeploymentQueueStatus.Running);
+
+            if (item is null)
+            {
+                continue;
+            }
+
+            state.QueueItemId = item.Id;
+            state.QueueStatus = item.Status;
+        }
+
+        IsDeploymentRunning = items.Any(item =>
+            item.Status is DeploymentQueueStatus.Waiting or DeploymentQueueStatus.Running);
+        NotifySelectedDeploymentStateChanged();
+    }
+
+    private int GetWaitingPosition(DeploymentUiState state)
+    {
+        if (_deploymentOperationQueue is null)
+        {
+            return 1;
+        }
+
+        var waitingItems = _deploymentOperationQueue
+            .GetItems()
+            .Where(item => item.Status == DeploymentQueueStatus.Waiting)
+            .OrderBy(item => item.AddedAtUtc)
+            .ToList();
+        var index = waitingItems.FindIndex(item => item.Id == state.QueueItemId);
+
+        return index < 0 ? 1 : index + 1;
+    }
+
+    private bool TryGetDeploymentState(
+        Guid projectId,
+        Guid operationId,
+        out DeploymentUiState state)
+    {
+        if (_deploymentStates.TryGetValue(projectId, out var candidate) &&
+            candidate.OperationId == operationId)
+        {
+            state = candidate;
+            return true;
+        }
+
+        state = null!;
+        return false;
+    }
+
+    private void CompleteUiStateIfDetached(DeploymentUiState state)
+    {
+        if (TryGetDeploymentState(state.ProjectId, state.OperationId, out var currentState) &&
+            currentState.IsActive &&
+            (_deploymentOperationQueue is null ||
+                !_deploymentOperationQueue.HasActiveOperation(state.ProjectId)))
+        {
+            currentState.QueueStatus = DeploymentQueueStatus.Completed;
+        }
+
+        RefreshDeploymentQueueState();
     }
 
     private static bool IsValidVersionTag(string value)

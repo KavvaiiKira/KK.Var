@@ -5,11 +5,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using KK.Var.Enums;
 using KK.Var.Models;
+using Microsoft.Extensions.Logging;
 
 namespace KK.Var.Services.Implementations;
 
 public sealed class DeploymentOperationQueue(
-    ILocalizationService localizationService) : IDeploymentOperationQueue
+    ILocalizationService localizationService,
+    ILogger<DeploymentOperationQueue> logger) : IDeploymentOperationQueue
 {
     private readonly object _syncRoot = new object();
     private readonly Queue<IQueueWorkItem> _pendingItems = new Queue<IQueueWorkItem>();
@@ -204,8 +206,11 @@ public sealed class DeploymentOperationQueue(
             {
                 handler(this, EventArgs.Empty);
             }
-            catch
+            catch (Exception exception)
             {
+                logger.LogError(
+                    exception,
+                    "Deployment queue change subscriber failed.");
             }
         }
     }
