@@ -121,6 +121,9 @@ sealed class Program
         builder.Services.AddSingleton<IProjectArtifactService, ProjectArtifactService>();
         builder.Services.AddSingleton<IRemoteDeploymentService, RemoteDeploymentService>();
         builder.Services.AddSingleton<
+            IDeploymentOperationQueue,
+            DeploymentOperationQueue>();
+        builder.Services.AddSingleton<
             IKKProjectDeploymentService,
             KKProjectDeploymentService>();
         builder.Services.AddSingleton<CreateProjectViewModel>();

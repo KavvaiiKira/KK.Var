@@ -177,6 +177,7 @@ public sealed class LocalizationService : ILocalizationService
             ["Нет активных операций"] = "No active operations",
             ["Все изменения сохранены"] = "All changes saved",
             ["Укажите тег новой версии."] = "Enter a tag for the new version.",
+            ["Для этого проекта уже есть активная операция."] = "This project already has an active operation.",
             ["Версия «{0}» успешно развёрнута"] = "Version “{0}” was deployed successfully",
             ["ОШИБКА: {0}"] = "ERROR: {0}",
             ["Укажите абсолютный Linux-путь к отдельной директории приложения."] = "Enter an absolute Linux path to a dedicated application directory.",
