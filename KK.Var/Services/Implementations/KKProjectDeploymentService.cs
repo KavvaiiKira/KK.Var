@@ -160,6 +160,17 @@ public sealed class KKProjectDeploymentService(
                 request.ProjectId,
                 cancellationToken) ??
                 throw new KeyNotFoundException(localizationService.Get("Проект не найден."));
+        var versionTag = request.VersionTag.Trim();
+
+        if (await versionRepository.TagExistsAsync(
+                project.Id,
+                versionTag,
+                cancellationToken))
+        {
+            throw new InvalidOperationException(localizationService.Format(
+                "Версия «{0}» уже существует.",
+                versionTag));
+        }
 
         var settings = await userSettingsService.LoadAsync(cancellationToken);
         var architecture = settings.RemoteMachine.Architecture;
@@ -172,7 +183,7 @@ public sealed class KKProjectDeploymentService(
 
         var artifact = await artifactService.CreateAsync(
             project,
-            request.VersionTag,
+            versionTag,
             architecture,
             progress,
             cancellationToken);
@@ -181,7 +192,7 @@ public sealed class KKProjectDeploymentService(
             new KKProjectVersion
             {
                 KKProjectId = project.Id,
-                Tag = request.VersionTag,
+                Tag = versionTag,
                 Description = request.Description,
                 ArtifactRelativePath = artifact.RelativePath,
                 ArtifactSha256 = artifact.Sha256,

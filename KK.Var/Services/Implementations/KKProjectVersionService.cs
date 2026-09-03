@@ -11,7 +11,8 @@ namespace KK.Var.Services.Implementations;
 
 public sealed class KKProjectVersionService(
     IKKProjectRepository projectRepository,
-    IKKProjectVersionRepository versionRepository) : IKKProjectVersionService
+    IKKProjectVersionRepository versionRepository,
+    ILocalizationService localizationService) : IKKProjectVersionService
 {
     private static readonly Regex Sha256Pattern = new Regex(
         "^[0-9a-fA-F]{64}$",
@@ -76,8 +77,9 @@ public sealed class KKProjectVersionService(
                 version.Tag,
                 cancellationToken))
         {
-            throw new InvalidOperationException(
-                $"Version tag '{version.Tag}' already exists for this project.");
+            throw new InvalidOperationException(localizationService.Format(
+                "Версия «{0}» уже существует.",
+                version.Tag));
         }
 
         version.Id = version.Id == Guid.Empty ? Guid.NewGuid() : version.Id;

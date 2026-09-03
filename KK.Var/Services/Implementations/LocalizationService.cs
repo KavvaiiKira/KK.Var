@@ -288,6 +288,7 @@ public sealed class LocalizationService : ILocalizationService
             ["GitHub Client ID не настроен в appsettings.json."] = "GitHub Client ID is not configured in appsettings.json.",
             ["Тег версии может содержать только латинские буквы, цифры, точку, дефис и подчёркивание."] = "A version tag may contain only Latin letters, digits, periods, hyphens, and underscores.",
             ["После сборки не найден исполняемый файл «{0}»."] = "The executable file “{0}” was not found after the build.",
+            ["Версия «{0}» уже существует."] = "Version “{0}” already exists.",
             ["Артефакт версии «{0}» уже существует."] = "An artifact for version “{0}” already exists.",
             ["Не указана локальная папка проекта."] = "The local project folder is not configured.",
             ["Локальная папка проекта не найдена: {0}"] = "The local project folder was not found: {0}",

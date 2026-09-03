@@ -604,6 +604,9 @@ public partial class MainViewModel : ViewModelBase
 
         var projectId = SelectedProject.Id;
         var deployedTag = DeploymentVersionTag.Trim();
+
+        ClearStatusNotification();
+
         var state = new DeploymentUiState
         {
             ProjectId = projectId,
@@ -1566,9 +1569,23 @@ public partial class MainViewModel : ViewModelBase
         var isRequiredError = NotificationMessage == Localize("Укажите тег новой версии.");
         var isFormatError =
             NotificationMessage == Localize("Тег версии может содержать только латинские буквы, цифры, точку, дефис и подчёркивание.");
+        var failedVersionTag = SelectedDeploymentState?.VersionTag;
+        var isExistingVersionError =
+            failedVersionTag is not null &&
+            (NotificationMessage == LocalizeFormat(
+                    "Версия «{0}» уже существует.",
+                    failedVersionTag) ||
+                NotificationMessage == LocalizeFormat(
+                    "Артефакт версии «{0}» уже существует.",
+                    failedVersionTag));
 
         if ((isRequiredError && !string.IsNullOrWhiteSpace(value)) ||
-            (isFormatError && IsValidVersionTag(value)))
+            (isFormatError && IsValidVersionTag(value)) ||
+            (isExistingVersionError &&
+                !string.Equals(
+                    value.Trim(),
+                    failedVersionTag,
+                    StringComparison.OrdinalIgnoreCase)))
         {
             ClearStatusNotification();
         }
