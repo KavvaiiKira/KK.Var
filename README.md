@@ -230,3 +230,8 @@ GitHub можно подключить сразу или позже. Автор�
 ## Лицензия
 
 Исходный код распространяется по лицензии [MIT](LICENSE).
+
+### Лицензии сторонних компонентов
+
+- шрифт [Exo 2](https://github.com/googlefonts/Exo-2.0) распространяется по лицензии SIL Open Font License 1.1; полный текст находится в [`KK.Var/Assets/Fonts/Exo2-OFL.txt`](KK.Var/Assets/Fonts/Exo2-OFL.txt);
+- шрифт [Inter](https://github.com/rsms/inter) распространяется по лицензии [SIL Open Font License 1.1](https://github.com/rsms/inter/blob/master/LICENSE.txt) и подключается через пакет `Avalonia.Fonts.Inter`.

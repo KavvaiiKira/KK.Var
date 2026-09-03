@@ -231,3 +231,8 @@ Review diagnostic logs before publishing them. Do not commit or share `github-to
 
 The source code is distributed under the [MIT License](LICENSE).
 
+### Third-party licenses
+
+- the [Exo 2](https://github.com/googlefonts/Exo-2.0) font is distributed under the SIL Open Font License 1.1; the full text is available in [`KK.Var/Assets/Fonts/Exo2-OFL.txt`](KK.Var/Assets/Fonts/Exo2-OFL.txt);
+- the [Inter](https://github.com/rsms/inter) font is distributed under the [SIL Open Font License 1.1](https://github.com/rsms/inter/blob/master/LICENSE.txt) and is provided through the `Avalonia.Fonts.Inter` package.
+
