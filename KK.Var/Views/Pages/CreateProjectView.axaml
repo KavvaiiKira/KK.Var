@@ -29,6 +29,15 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
         </Style>
+        <Style Selector="NumericUpDown.project-field">
+            <Setter Property="MinHeight" Value="42" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Background" Value="{DynamicResource AppSurfaceRaisedBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
         <Style Selector="Button.project-primary">
             <Setter Property="Padding" Value="20,11" />
             <Setter Property="Background" Value="{DynamicResource AppPrimaryBrush}" />
@@ -273,6 +282,106 @@
                                      Classes="project-field"
                                      Text="{Binding ProjectEnvironmentFilePath, Mode=TwoWay}"
                                      PlaceholderText="config/production.env.json" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Padding="24"
+                            Background="{DynamicResource AppSurfaceBrush}"
+                            BorderBrush="{DynamicResource AppBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="14">
+                        <StackPanel Spacing="14">
+                            <StackPanel Spacing="5">
+                                <TextBlock Text="{DynamicResource 'Проверка работоспособности'}"
+                                           FontSize="19"
+                                           FontWeight="Bold" />
+                                <TextBlock Text="{DynamicResource 'Необязательная проверка выполняется после запуска systemd-сервиса.'}"
+                                           FontSize="12"
+                                           TextWrapping="Wrap"
+                                           Foreground="{DynamicResource AppTextMutedBrush}" />
+                            </StackPanel>
+
+                            <StackPanel Spacing="7">
+                                <TextBlock Classes="field-label"
+                                           Text="{DynamicResource 'Тип health-check'}" />
+                                <ComboBox Classes="project-field"
+                                          ItemsSource="{Binding HealthCheckTypes}"
+                                          SelectedItem="{Binding SelectedHealthCheckType, Mode=TwoWay}" />
+                            </StackPanel>
+
+                            <StackPanel IsVisible="{Binding IsStabilityDelayHealthCheck}"
+                                        Spacing="7">
+                                <TextBlock Classes="field-label"
+                                           Text="{DynamicResource 'Время стабильной работы, секунд'}" />
+                                <NumericUpDown Classes="project-field"
+                                               Minimum="1"
+                                               Maximum="3600"
+                                               Increment="1"
+                                               Value="{Binding HealthCheckStabilityDelaySeconds, Mode=TwoWay}" />
+                            </StackPanel>
+
+                            <Grid IsVisible="{Binding HasHealthCheckRetrySettings}"
+                                  ColumnDefinitions="*,*,*"
+                                  ColumnSpacing="18">
+                                <StackPanel Spacing="7">
+                                    <TextBlock Classes="field-label"
+                                               Text="{DynamicResource 'Timeout, секунд'}" />
+                                    <NumericUpDown Classes="project-field"
+                                                   Minimum="1"
+                                                   Maximum="3600"
+                                                   Increment="1"
+                                                   Value="{Binding HealthCheckTimeoutSeconds, Mode=TwoWay}" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Spacing="7">
+                                    <TextBlock Classes="field-label"
+                                               Text="{DynamicResource 'Интервал, секунд'}" />
+                                    <NumericUpDown Classes="project-field"
+                                                   Minimum="1"
+                                                   Maximum="3600"
+                                                   Increment="1"
+                                                   Value="{Binding HealthCheckIntervalSeconds, Mode=TwoWay}" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2" Spacing="7">
+                                    <TextBlock Classes="field-label"
+                                               Text="{DynamicResource 'Количество попыток'}" />
+                                    <NumericUpDown Classes="project-field"
+                                                   Minimum="1"
+                                                   Maximum="100"
+                                                   Increment="1"
+                                                   Value="{Binding HealthCheckAttempts, Mode=TwoWay}" />
+                                </StackPanel>
+                            </Grid>
+
+                            <StackPanel IsVisible="{Binding IsHttpHealthCheck}"
+                                        Spacing="7">
+                                <TextBlock Classes="field-label"
+                                           Text="{DynamicResource 'HTTP-адрес'}" />
+                                <TextBox Classes="project-field"
+                                         Text="{Binding HealthCheckHttpUrl, Mode=TwoWay}"
+                                         PlaceholderText="http://127.0.0.1:8080/health" />
+                            </StackPanel>
+
+                            <StackPanel IsVisible="{Binding IsTcpHealthCheck}"
+                                        Spacing="7">
+                                <TextBlock Classes="field-label"
+                                           Text="{DynamicResource 'TCP-порт'}" />
+                                <NumericUpDown Classes="project-field"
+                                               Minimum="1"
+                                               Maximum="65535"
+                                               Increment="1"
+                                               Value="{Binding HealthCheckTcpPort, Mode=TwoWay}" />
+                            </StackPanel>
+
+                            <StackPanel IsVisible="{Binding IsCommandHealthCheck}"
+                                        Spacing="7">
+                                <TextBlock Classes="field-label"
+                                           Text="{DynamicResource 'Команда на удалённой машине'}" />
+                                <TextBox Classes="project-field"
+                                         Text="{Binding HealthCheckCommand, Mode=TwoWay}"
+                                         PlaceholderText="curl --fail http://127.0.0.1:8080/health" />
+                            </StackPanel>
                         </StackPanel>
                     </Border>
                 </StackPanel>

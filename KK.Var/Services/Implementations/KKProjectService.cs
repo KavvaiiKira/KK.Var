@@ -163,6 +163,8 @@ public sealed class KKProjectService(
                 "Unsupported environment file format.");
         }
 
+        NormalizeAndValidateHealthCheck(project);
+
         project.BuildConfigurationJson =
             string.IsNullOrWhiteSpace(project.BuildConfigurationJson) ?
                 "{}" :
@@ -235,6 +237,130 @@ public sealed class KKProjectService(
                     nameof(project.SourceType),
                     project.SourceType,
                     "Unsupported project source type.");
+        }
+    }
+
+    private void NormalizeAndValidateHealthCheck(KKProject project)
+    {
+        if (!Enum.IsDefined(project.HealthCheckType))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(project.HealthCheckType),
+                project.HealthCheckType,
+                localizationService.Get("Выбран неподдерживаемый тип health-check."));
+        }
+
+        project.HealthCheckHttpUrl = Optional(project.HealthCheckHttpUrl, 2048);
+        project.HealthCheckCommand = Optional(project.HealthCheckCommand, 4000);
+
+        switch (project.HealthCheckType)
+        {
+            case ProjectHealthCheckType.None:
+                ClearHealthCheckSettings(project);
+                break;
+
+            case ProjectHealthCheckType.StabilityDelay:
+                ValidateRange(
+                    project.HealthCheckStabilityDelaySeconds,
+                    1,
+                    3600,
+                    localizationService.Get(
+                        "Задержка стабильности должна быть от 1 до 3600 секунд."));
+                project.HealthCheckTimeoutSeconds = null;
+                project.HealthCheckIntervalSeconds = null;
+                project.HealthCheckAttempts = null;
+                project.HealthCheckHttpUrl = null;
+                project.HealthCheckTcpPort = null;
+                project.HealthCheckCommand = null;
+                break;
+
+            case ProjectHealthCheckType.Http:
+                ValidateRetrySettings(project);
+
+                if (project.HealthCheckHttpUrl is null ||
+                    !Uri.TryCreate(project.HealthCheckHttpUrl, UriKind.Absolute, out var uri) ||
+                    (!string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) &&
+                        !string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)))
+                {
+                    throw new ArgumentException(localizationService.Get(
+                        "Укажите абсолютный HTTP- или HTTPS-адрес health-check."));
+                }
+
+                project.HealthCheckStabilityDelaySeconds = null;
+                project.HealthCheckTcpPort = null;
+                project.HealthCheckCommand = null;
+                break;
+
+            case ProjectHealthCheckType.Tcp:
+                ValidateRetrySettings(project);
+                ValidateRange(
+                    project.HealthCheckTcpPort,
+                    1,
+                    65535,
+                    localizationService.Get("TCP-порт должен быть от 1 до 65535."));
+                project.HealthCheckStabilityDelaySeconds = null;
+                project.HealthCheckHttpUrl = null;
+                project.HealthCheckCommand = null;
+                break;
+
+            case ProjectHealthCheckType.Command:
+                ValidateRetrySettings(project);
+
+                if (project.HealthCheckCommand is null)
+                {
+                    throw new ArgumentException(localizationService.Get(
+                        "Укажите команду health-check."));
+                }
+
+                project.HealthCheckStabilityDelaySeconds = null;
+                project.HealthCheckHttpUrl = null;
+                project.HealthCheckTcpPort = null;
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(project.HealthCheckType));
+        }
+    }
+
+    private void ValidateRetrySettings(KKProject project)
+    {
+        ValidateRange(
+            project.HealthCheckTimeoutSeconds,
+            1,
+            3600,
+            localizationService.Get("Timeout health-check должен быть от 1 до 3600 секунд."));
+        ValidateRange(
+            project.HealthCheckIntervalSeconds,
+            1,
+            3600,
+            localizationService.Get("Интервал health-check должен быть от 1 до 3600 секунд."));
+        ValidateRange(
+            project.HealthCheckAttempts,
+            1,
+            100,
+            localizationService.Get("Количество попыток health-check должно быть от 1 до 100."));
+    }
+
+    private static void ClearHealthCheckSettings(KKProject project)
+    {
+        project.HealthCheckTimeoutSeconds = null;
+        project.HealthCheckIntervalSeconds = null;
+        project.HealthCheckAttempts = null;
+        project.HealthCheckStabilityDelaySeconds = null;
+        project.HealthCheckHttpUrl = null;
+        project.HealthCheckTcpPort = null;
+        project.HealthCheckCommand = null;
+    }
+
+    private static void ValidateRange(
+        int? value,
+        int minimum,
+        int maximum,
+        string errorMessage)
+    {
+        if (value is null || value < minimum || value > maximum)
+        {
+            throw new ArgumentOutOfRangeException(nameof(value), errorMessage);
         }
     }
 

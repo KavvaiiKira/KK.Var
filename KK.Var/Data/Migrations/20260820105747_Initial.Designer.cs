@@ -54,6 +54,32 @@ namespace KK.Var.Data.Migrations
                     b.Property<long?>("GitHubRepositoryId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("HealthCheckAttempts")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("HealthCheckCommand")
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("HealthCheckHttpUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("HealthCheckIntervalSeconds")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("HealthCheckStabilityDelaySeconds")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("HealthCheckTcpPort")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("HealthCheckTimeoutSeconds")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("HealthCheckType")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("LocalDirectoryPath")
                         .HasMaxLength(1024)
                         .HasColumnType("TEXT");

@@ -16,6 +16,11 @@ public partial class CreateProjectViewModel : ViewModelBase
     public const string LocalSource = "Локальная папка";
     public const string GitHubSource = "Репозиторий GitHub";
     public const string AutomaticBuild = "Определить автоматически";
+    public const string NoHealthCheck = "Без проверки";
+    public const string StabilityDelayHealthCheck = "Задержка стабильности";
+    public const string HttpHealthCheck = "HTTP-запрос";
+    public const string TcpHealthCheck = "TCP-порт";
+    public const string CommandHealthCheck = "Команда";
 
     private readonly IKKProjectService? _projectService;
     private readonly IGitHubService? _gitHubService;
@@ -50,6 +55,8 @@ public partial class CreateProjectViewModel : ViewModelBase
     public ObservableCollection<string> SourceTypes { get; } = [];
 
     public ObservableCollection<string> BuildProviders { get; } = [];
+
+    public ObservableCollection<string> HealthCheckTypes { get; } = [];
 
     public ObservableCollection<GitHubRepository> GitHubRepositories { get; } = [];
 
@@ -87,6 +94,30 @@ public partial class CreateProjectViewModel : ViewModelBase
     public partial string BuildConfigurationJson { get; set; } = "{}";
 
     [ObservableProperty]
+    public partial string SelectedHealthCheckType { get; set; } = NoHealthCheck;
+
+    [ObservableProperty]
+    public partial int HealthCheckTimeoutSeconds { get; set; } = 30;
+
+    [ObservableProperty]
+    public partial int HealthCheckIntervalSeconds { get; set; } = 5;
+
+    [ObservableProperty]
+    public partial int HealthCheckAttempts { get; set; } = 3;
+
+    [ObservableProperty]
+    public partial int HealthCheckStabilityDelaySeconds { get; set; } = 10;
+
+    [ObservableProperty]
+    public partial string HealthCheckHttpUrl { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial int HealthCheckTcpPort { get; set; } = 8080;
+
+    [ObservableProperty]
+    public partial string HealthCheckCommand { get; set; } = string.Empty;
+
+    [ObservableProperty]
     public partial bool HasUnsavedChanges { get; set; }
 
     [ObservableProperty]
@@ -101,6 +132,26 @@ public partial class CreateProjectViewModel : ViewModelBase
     public bool IsLocalSource => Canonicalize(SelectedSourceType) == LocalSource;
 
     public bool IsGitHubSource => Canonicalize(SelectedSourceType) == GitHubSource;
+
+    public bool IsHealthCheckEnabled =>
+        MapHealthCheckType() != ProjectHealthCheckType.None;
+
+    public bool IsStabilityDelayHealthCheck =>
+        MapHealthCheckType() == ProjectHealthCheckType.StabilityDelay;
+
+    public bool IsHttpHealthCheck =>
+        MapHealthCheckType() == ProjectHealthCheckType.Http;
+
+    public bool IsTcpHealthCheck =>
+        MapHealthCheckType() == ProjectHealthCheckType.Tcp;
+
+    public bool IsCommandHealthCheck =>
+        MapHealthCheckType() == ProjectHealthCheckType.Command;
+
+    public bool HasHealthCheckRetrySettings =>
+        MapHealthCheckType() is ProjectHealthCheckType.Http or
+            ProjectHealthCheckType.Tcp or
+            ProjectHealthCheckType.Command;
 
     public bool IsEditing => _editingProjectId.HasValue;
 
@@ -129,6 +180,14 @@ public partial class CreateProjectViewModel : ViewModelBase
         RemoteDeploymentDirectory = string.Empty;
         ProjectEnvironmentFilePath = string.Empty;
         BuildConfigurationJson = "{}";
+        SelectedHealthCheckType = Localize(NoHealthCheck);
+        HealthCheckTimeoutSeconds = 30;
+        HealthCheckIntervalSeconds = 5;
+        HealthCheckAttempts = 3;
+        HealthCheckStabilityDelaySeconds = 10;
+        HealthCheckHttpUrl = string.Empty;
+        HealthCheckTcpPort = 8080;
+        HealthCheckCommand = string.Empty;
         ErrorMessage = string.Empty;
         HasUnsavedChanges = false;
 
@@ -176,6 +235,15 @@ public partial class CreateProjectViewModel : ViewModelBase
         RemoteDeploymentDirectory = project.RemoteDeploymentDirectory;
         ProjectEnvironmentFilePath = project.ProjectEnvironmentFilePath;
         BuildConfigurationJson = project.BuildConfigurationJson;
+        SelectedHealthCheckType = MapHealthCheckType(project.HealthCheckType);
+        HealthCheckTimeoutSeconds = project.HealthCheckTimeoutSeconds ?? 30;
+        HealthCheckIntervalSeconds = project.HealthCheckIntervalSeconds ?? 5;
+        HealthCheckAttempts = project.HealthCheckAttempts ?? 3;
+        HealthCheckStabilityDelaySeconds =
+            project.HealthCheckStabilityDelaySeconds ?? 10;
+        HealthCheckHttpUrl = project.HealthCheckHttpUrl ?? string.Empty;
+        HealthCheckTcpPort = project.HealthCheckTcpPort ?? 8080;
+        HealthCheckCommand = project.HealthCheckCommand ?? string.Empty;
         ErrorMessage = string.Empty;
         HasUnsavedChanges = false;
 
@@ -225,6 +293,22 @@ public partial class CreateProjectViewModel : ViewModelBase
             RemoteDeploymentDirectory = RemoteDeploymentDirectory,
             ProjectEnvironmentFilePath = ProjectEnvironmentFilePath,
             EnvironmentFileFormat = _editingProject?.EnvironmentFileFormat ?? EnvironmentFileFormat.Json,
+            HealthCheckType = MapHealthCheckType(),
+            HealthCheckTimeoutSeconds = HasHealthCheckRetrySettings ?
+                HealthCheckTimeoutSeconds :
+                null,
+            HealthCheckIntervalSeconds = HasHealthCheckRetrySettings ?
+                HealthCheckIntervalSeconds :
+                null,
+            HealthCheckAttempts = HasHealthCheckRetrySettings ?
+                HealthCheckAttempts :
+                null,
+            HealthCheckStabilityDelaySeconds = IsStabilityDelayHealthCheck ?
+                HealthCheckStabilityDelaySeconds :
+                null,
+            HealthCheckHttpUrl = IsHttpHealthCheck ? HealthCheckHttpUrl : null,
+            HealthCheckTcpPort = IsTcpHealthCheck ? HealthCheckTcpPort : null,
+            HealthCheckCommand = IsCommandHealthCheck ? HealthCheckCommand : null,
             EnvironmentVariables = _editingProject?.EnvironmentVariables ?? [],
             Versions = _editingProject?.Versions ?? [],
             Deployments = _editingProject?.Deployments ?? [],
@@ -369,6 +453,31 @@ public partial class CreateProjectViewModel : ViewModelBase
 
     partial void OnProjectEnvironmentFilePathChanged(string value) => MarkDirty();
 
+    partial void OnSelectedHealthCheckTypeChanged(string value)
+    {
+        MarkDirty();
+        OnPropertyChanged(nameof(IsHealthCheckEnabled));
+        OnPropertyChanged(nameof(IsStabilityDelayHealthCheck));
+        OnPropertyChanged(nameof(IsHttpHealthCheck));
+        OnPropertyChanged(nameof(IsTcpHealthCheck));
+        OnPropertyChanged(nameof(IsCommandHealthCheck));
+        OnPropertyChanged(nameof(HasHealthCheckRetrySettings));
+    }
+
+    partial void OnHealthCheckTimeoutSecondsChanged(int value) => MarkDirty();
+
+    partial void OnHealthCheckIntervalSecondsChanged(int value) => MarkDirty();
+
+    partial void OnHealthCheckAttemptsChanged(int value) => MarkDirty();
+
+    partial void OnHealthCheckStabilityDelaySecondsChanged(int value) => MarkDirty();
+
+    partial void OnHealthCheckHttpUrlChanged(string value) => MarkDirty();
+
+    partial void OnHealthCheckTcpPortChanged(int value) => MarkDirty();
+
+    partial void OnHealthCheckCommandChanged(string value) => MarkDirty();
+
     private void MarkDirty()
     {
         if (!_isResetting)
@@ -417,6 +526,12 @@ public partial class CreateProjectViewModel : ViewModelBase
                 "Укажите путь к файлу переменных окружения внутри проекта.");
         }
 
+        var healthCheckError = ValidateHealthCheck();
+        if (!string.IsNullOrEmpty(healthCheckError))
+        {
+            return healthCheckError;
+        }
+
         try
         {
             var configurationJson =
@@ -460,6 +575,60 @@ public partial class CreateProjectViewModel : ViewModelBase
         return string.Empty;
     }
 
+    private string ValidateHealthCheck()
+    {
+        if (IsStabilityDelayHealthCheck &&
+            HealthCheckStabilityDelaySeconds is < 1 or > 3600)
+        {
+            return Localize(
+                "Задержка стабильности должна быть от 1 до 3600 секунд.");
+        }
+
+        if (!HasHealthCheckRetrySettings)
+        {
+            return string.Empty;
+        }
+
+        if (HealthCheckTimeoutSeconds is < 1 or > 3600)
+        {
+            return Localize(
+                "Timeout health-check должен быть от 1 до 3600 секунд.");
+        }
+
+        if (HealthCheckIntervalSeconds is < 1 or > 3600)
+        {
+            return Localize(
+                "Интервал health-check должен быть от 1 до 3600 секунд.");
+        }
+
+        if (HealthCheckAttempts is < 1 or > 100)
+        {
+            return Localize(
+                "Количество попыток health-check должно быть от 1 до 100.");
+        }
+
+        if (IsHttpHealthCheck &&
+            (!Uri.TryCreate(HealthCheckHttpUrl.Trim(), UriKind.Absolute, out var uri) ||
+                (!string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) &&
+                    !string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))))
+        {
+            return Localize(
+                "Укажите абсолютный HTTP- или HTTPS-адрес health-check.");
+        }
+
+        if (IsTcpHealthCheck && HealthCheckTcpPort is < 1 or > 65535)
+        {
+            return Localize("TCP-порт должен быть от 1 до 65535.");
+        }
+
+        if (IsCommandHealthCheck && string.IsNullOrWhiteSpace(HealthCheckCommand))
+        {
+            return Localize("Укажите команду health-check.");
+        }
+
+        return string.Empty;
+    }
+
     private ProjectBuildProvider MapBuildProvider() => SelectedBuildProvider switch
     {
         var value when Canonicalize(value) == ".NET" => ProjectBuildProvider.DotNet,
@@ -480,10 +649,30 @@ public partial class CreateProjectViewModel : ViewModelBase
         _ => Localize(AutomaticBuild),
     };
 
+    private ProjectHealthCheckType MapHealthCheckType() =>
+        Canonicalize(SelectedHealthCheckType) switch
+        {
+            StabilityDelayHealthCheck => ProjectHealthCheckType.StabilityDelay,
+            HttpHealthCheck => ProjectHealthCheckType.Http,
+            TcpHealthCheck => ProjectHealthCheckType.Tcp,
+            CommandHealthCheck => ProjectHealthCheckType.Command,
+            _ => ProjectHealthCheckType.None,
+        };
+
+    private string MapHealthCheckType(ProjectHealthCheckType type) => type switch
+    {
+        ProjectHealthCheckType.StabilityDelay => Localize(StabilityDelayHealthCheck),
+        ProjectHealthCheckType.Http => Localize(HttpHealthCheck),
+        ProjectHealthCheckType.Tcp => Localize(TcpHealthCheck),
+        ProjectHealthCheckType.Command => Localize(CommandHealthCheck),
+        _ => Localize(NoHealthCheck),
+    };
+
     public void RefreshLocalization()
     {
         var sourceKey = Canonicalize(SelectedSourceType);
         var providerKey = Canonicalize(SelectedBuildProvider);
+        var healthCheckKey = Canonicalize(SelectedHealthCheckType);
 
         if (string.IsNullOrWhiteSpace(sourceKey))
         {
@@ -493,6 +682,11 @@ public partial class CreateProjectViewModel : ViewModelBase
         if (string.IsNullOrWhiteSpace(providerKey))
         {
             providerKey = AutomaticBuild;
+        }
+
+        if (string.IsNullOrWhiteSpace(healthCheckKey))
+        {
+            healthCheckKey = NoHealthCheck;
         }
 
         _isResetting = true;
@@ -507,13 +701,26 @@ public partial class CreateProjectViewModel : ViewModelBase
         BuildProviders.Add("Go");
         BuildProviders.Add("C++");
         BuildProviders.Add(Localize("Свой сценарий"));
+        HealthCheckTypes.Clear();
+        HealthCheckTypes.Add(Localize(NoHealthCheck));
+        HealthCheckTypes.Add(Localize(StabilityDelayHealthCheck));
+        HealthCheckTypes.Add(Localize(HttpHealthCheck));
+        HealthCheckTypes.Add(Localize(TcpHealthCheck));
+        HealthCheckTypes.Add(Localize(CommandHealthCheck));
         SelectedSourceType = Localize(sourceKey);
         SelectedBuildProvider = Localize(providerKey);
+        SelectedHealthCheckType = Localize(healthCheckKey);
 
         _isResetting = false;
 
         OnPropertyChanged(nameof(IsLocalSource));
         OnPropertyChanged(nameof(IsGitHubSource));
+        OnPropertyChanged(nameof(IsHealthCheckEnabled));
+        OnPropertyChanged(nameof(IsStabilityDelayHealthCheck));
+        OnPropertyChanged(nameof(IsHttpHealthCheck));
+        OnPropertyChanged(nameof(IsTcpHealthCheck));
+        OnPropertyChanged(nameof(IsCommandHealthCheck));
+        OnPropertyChanged(nameof(HasHealthCheckRetrySettings));
         OnPropertyChanged(nameof(EditorTitle));
         OnPropertyChanged(nameof(SaveButtonText));
     }

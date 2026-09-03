@@ -74,6 +74,15 @@ public sealed class KKProjectConfiguration : IEntityTypeConfiguration<KKProject>
         builder.Property(project => project.EnvironmentFileFormat)
             .HasConversion<int>();
 
+        builder.Property(project => project.HealthCheckType)
+            .HasConversion<int>();
+
+        builder.Property(project => project.HealthCheckHttpUrl)
+            .HasMaxLength(2048);
+
+        builder.Property(project => project.HealthCheckCommand)
+            .HasMaxLength(4000);
+
         builder.HasMany(project => project.EnvironmentVariables)
             .WithOne(variable => variable.Project)
             .HasForeignKey(variable => variable.KKProjectId)

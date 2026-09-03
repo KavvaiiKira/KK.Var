@@ -71,6 +71,22 @@ public sealed class KKProject
 
     public EnvironmentFileFormat EnvironmentFileFormat { get; set; } = EnvironmentFileFormat.Json;
 
+    public ProjectHealthCheckType HealthCheckType { get; set; } = ProjectHealthCheckType.None;
+
+    public int? HealthCheckTimeoutSeconds { get; set; }
+
+    public int? HealthCheckIntervalSeconds { get; set; }
+
+    public int? HealthCheckAttempts { get; set; }
+
+    public int? HealthCheckStabilityDelaySeconds { get; set; }
+
+    public string? HealthCheckHttpUrl { get; set; }
+
+    public int? HealthCheckTcpPort { get; set; }
+
+    public string? HealthCheckCommand { get; set; }
+
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
