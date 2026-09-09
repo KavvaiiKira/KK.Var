@@ -303,7 +303,10 @@ public sealed class KKProjectDeploymentService(
             await using var log = new StreamWriter(
                 logPath,
                 false,
-                new System.Text.UTF8Encoding(false));
+                new System.Text.UTF8Encoding(false))
+            {
+                AutoFlush = true,
+            };
 
             await remoteDeploymentService.DeployAsync(
                 project,
@@ -395,7 +398,10 @@ public sealed class KKProjectDeploymentService(
         await using var log = new StreamWriter(
             logPath,
             true,
-            new System.Text.UTF8Encoding(false));
+            new System.Text.UTF8Encoding(false))
+        {
+            AutoFlush = true,
+        };
 
         var result = await remoteDeploymentService.RecoverAsync(
             deployment.Project,

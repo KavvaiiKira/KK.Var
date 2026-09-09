@@ -11,4 +11,5 @@ public enum DeploymentStage
     StartingService = 7,
     ServiceStarted = 8,
     Committed = 9,
+    HealthChecking = 10,
 }
