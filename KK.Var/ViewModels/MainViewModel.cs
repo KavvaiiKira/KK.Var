@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,6 +12,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using KK.Var.Configuration;
+using KK.Var.Data;
 using KK.Var.Enums;
 using KK.Var.Models;
 using KK.Var.Services;
@@ -126,6 +128,9 @@ public partial class MainViewModel : ViewModelBase
 
     [ObservableProperty]
     public partial KKProject? SelectedProject { get; set; }
+
+    [ObservableProperty]
+    public partial DeploymentDetailsViewModel? SelectedDeploymentDetails { get; set; }
 
     [ObservableProperty]
     public partial bool IsProjectOperationRunning { get; set; }
@@ -585,6 +590,32 @@ public partial class MainViewModel : ViewModelBase
         {
             PublishNotification(exception.Message, isError: true);
         }
+    }
+
+    public async Task LoadDeploymentDetailsAsync(DeploymentHistoryItemViewModel item)
+    {
+        var logText = await ReadDeploymentLogAsync(item.Deployment.LogPath);
+        SelectedDeploymentDetails = new DeploymentDetailsViewModel(
+            item.Deployment,
+            logText,
+            _localizationService);
+    }
+
+    public void ClearDeploymentDetails()
+    {
+        SelectedDeploymentDetails = null;
+    }
+
+    public void PrepareRepeatDeployment(KKProjectDeployment deployment)
+    {
+        if (SelectedProject is null || IsSelectedProjectDeploymentActive)
+        {
+            return;
+        }
+
+        DeploymentVersionTag = deployment.Version?.Tag ?? string.Empty;
+        DeploymentDescription = deployment.Version?.Description ?? string.Empty;
+        _deploymentEditorProjectId = SelectedProject.Id;
     }
 
     public async Task<bool> DeploySelectedProjectAsync()
@@ -1488,6 +1519,8 @@ public partial class MainViewModel : ViewModelBase
             item.RefreshLocalization();
         }
 
+        SelectedDeploymentDetails?.RefreshLocalization();
+
         OnPropertyChanged(string.Empty);
 
         await _userSettingsService.SaveAsync(Settings);
@@ -1507,6 +1540,39 @@ public partial class MainViewModel : ViewModelBase
 
     public string LocalizeFormat(string key, params object?[] arguments) =>
         _localizationService?.Format(key, arguments) ?? string.Format(key, arguments);
+
+    private static async Task<string?> ReadDeploymentLogAsync(string? logPath)
+    {
+        if (string.IsNullOrWhiteSpace(logPath))
+        {
+            return null;
+        }
+
+        try
+        {
+            var logsDirectory = Path.GetFullPath(DatabasePaths.LogsDirectory)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) +
+                Path.DirectorySeparatorChar;
+            var resolvedLogPath = Path.GetFullPath(logPath);
+
+            if (!resolvedLogPath.StartsWith(logsDirectory, StringComparison.OrdinalIgnoreCase) ||
+                !File.Exists(resolvedLogPath))
+            {
+                return null;
+            }
+
+            return await File.ReadAllTextAsync(resolvedLogPath);
+        }
+        catch (Exception exception) when (
+            exception is IOException or
+            UnauthorizedAccessException or
+            ArgumentException or
+            NotSupportedException or
+            System.Security.SecurityException)
+        {
+            return null;
+        }
+    }
 
     partial void OnSettingsStatusChanged(string value)
     {

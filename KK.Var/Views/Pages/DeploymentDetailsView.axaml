@@ -1,0 +1,155 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:KK.Var.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignWidth="1100"
+             d:DesignHeight="800"
+             x:Class="KK.Var.Views.Pages.DeploymentDetailsView"
+             x:DataType="vm:DeploymentDetailsViewModel">
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                  VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="30,26,30,28" Spacing="18">
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
+                <Button Padding="14,8"
+                        VerticalAlignment="Center"
+                        Background="{DynamicResource AppSurfaceRaisedBrush}"
+                        BorderBrush="{DynamicResource AppBorderBrush}"
+                        BorderThickness="1"
+                        Click="BackButton_OnClick">
+                    <StackPanel Orientation="Horizontal" Spacing="7">
+                        <TextBlock Text="←" />
+                        <TextBlock Text="{DynamicResource 'Назад'}" />
+                    </StackPanel>
+                </Button>
+
+                <StackPanel Grid.Column="1" Spacing="4">
+                    <TextBlock Text="{DynamicResource 'Детали операции'}"
+                               FontSize="30"
+                               FontWeight="Bold" />
+                    <TextBlock Foreground="{DynamicResource AppTextMutedBrush}">
+                        <Run Text="{Binding ProjectName}" />
+                        <Run Text="  ·  " />
+                        <Run Text="{Binding VersionTag}" />
+                    </TextBlock>
+                </StackPanel>
+
+                <Button Grid.Column="2"
+                        Classes="primary"
+                        Padding="18,10"
+                        VerticalAlignment="Center"
+                        Content="{DynamicResource 'Повторить Deploy'}"
+                        Click="RepeatDeployButton_OnClick" />
+            </Grid>
+
+            <Border Padding="22"
+                    Background="{DynamicResource AppSurfaceBrush}"
+                    BorderBrush="{DynamicResource AppBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="12">
+                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="34" RowSpacing="17">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="{DynamicResource 'Тип операции'}" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
+                        <TextBlock Text="{Binding OperationDisplay}" FontSize="16" FontWeight="SemiBold" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="4">
+                        <TextBlock Text="{DynamicResource 'Итоговый статус'}" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
+                        <TextBlock Text="{Binding StatusDisplay}" FontSize="16" FontWeight="SemiBold" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="1" Spacing="4">
+                        <TextBlock Text="{DynamicResource 'Начало'}" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
+                        <TextBlock Text="{Binding StartedAtDisplay}" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="1" Grid.Column="1" Spacing="4">
+                        <TextBlock Text="{DynamicResource 'Завершение'}" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
+                        <TextBlock Text="{Binding CompletedAtDisplay}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="2" Spacing="4">
+                        <TextBlock Text="{DynamicResource 'Длительность'}" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
+                        <TextBlock Text="{Binding DurationDisplay}" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="2" Grid.Column="1" Spacing="4">
+                        <TextBlock Text="{DynamicResource 'Последний этап'}" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
+                        <TextBlock Text="{Binding StageDisplay}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="3" Spacing="4">
+                        <TextBlock Text="{DynamicResource 'Изменение unit-файла'}" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
+                        <TextBlock Text="{Binding UnitChangeDisplay}" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="3" Grid.Column="1" Spacing="4">
+                        <TextBlock Text="{DynamicResource 'Выполнен daemon-reload'}" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
+                        <TextBlock Text="{Binding DaemonReloadDisplay}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border IsVisible="{Binding HasCommitSha}"
+                    Padding="22,17"
+                    Background="{DynamicResource AppSurfaceBrush}"
+                    BorderBrush="{DynamicResource AppBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="12">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="{DynamicResource 'Commit GitHub'}" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding CommitSha}" FontFamily="Cascadia Mono, Consolas" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <Border IsVisible="{Binding HasError}"
+                    Padding="22,17"
+                    Background="{DynamicResource AppSurfaceBrush}"
+                    BorderBrush="{DynamicResource AppDangerBrush}"
+                    BorderThickness="1"
+                    CornerRadius="12">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="{DynamicResource 'Ошибка операции'}" FontWeight="SemiBold" Foreground="{DynamicResource AppDangerBrush}" />
+                    <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <Border Padding="22,17"
+                    Background="{DynamicResource AppSurfaceBrush}"
+                    BorderBrush="{DynamicResource AppBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="12">
+                <StackPanel Spacing="9">
+                    <TextBlock Text="{DynamicResource 'Снимок переменных окружения'}" FontWeight="SemiBold" />
+                    <TextBlock Text="{DynamicResource 'Сохранённые значения не предназначены для секретов.'}"
+                               FontSize="12"
+                               Foreground="{DynamicResource AppTextMutedBrush}" />
+                    <TextBox Height="180"
+                             Padding="12"
+                             IsReadOnly="True"
+                             AcceptsReturn="True"
+                             Text="{Binding VariablesSnapshotDisplay}"
+                             FontFamily="Cascadia Mono, Consolas"
+                             ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto" />
+                </StackPanel>
+            </Border>
+
+            <Border Padding="22,17"
+                    Background="{DynamicResource AppSurfaceBrush}"
+                    BorderBrush="{DynamicResource AppBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="12">
+                <StackPanel Spacing="9">
+                    <TextBlock Text="{DynamicResource 'Лог операции'}" FontWeight="SemiBold" />
+                    <TextBox Height="280"
+                             Padding="12"
+                             IsReadOnly="True"
+                             AcceptsReturn="True"
+                             Text="{Binding LogDisplay}"
+                             FontFamily="Cascadia Mono, Consolas"
+                             ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

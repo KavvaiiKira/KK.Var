@@ -86,10 +86,12 @@
                         <DataTemplate x:DataType="vm:DeploymentHistoryItemViewModel">
                             <Border Margin="0,0,0,10"
                                     Padding="18,15"
+                                    Cursor="Hand"
                                     Background="{DynamicResource AppSurfaceBrush}"
                                     BorderBrush="{DynamicResource AppBorderBrush}"
                                     BorderThickness="1"
-                                    CornerRadius="10">
+                                    CornerRadius="10"
+                                    PointerPressed="DeploymentItem_OnPointerPressed">
                                 <Grid ColumnDefinitions="150,*,170,150,120" ColumnSpacing="16">
                                     <StackPanel Spacing="3">
                                         <TextBlock Text="{DynamicResource 'Дата'}" FontSize="10" Foreground="{DynamicResource AppTextMutedBrush}" />

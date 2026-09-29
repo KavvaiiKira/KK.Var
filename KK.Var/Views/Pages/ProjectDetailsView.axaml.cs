@@ -1,5 +1,6 @@
 using System;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using KK.Var.ViewModels;
 
@@ -21,6 +22,17 @@ public partial class ProjectDetailsView : UserControl
     public event EventHandler? DeleteRequested;
 
     public event EventHandler? DeployRequested;
+
+    public event Action<DeploymentHistoryItemViewModel>? DeploymentSelected;
+
+    private void DeploymentItem_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed &&
+            (sender as Control)?.DataContext is DeploymentHistoryItemViewModel item)
+        {
+            DeploymentSelected?.Invoke(item);
+        }
+    }
 
     private void BackButton_OnClick(object? sender, RoutedEventArgs e)
     {
@@ -175,6 +187,11 @@ public partial class ProjectDetailsView : UserControl
         }
 
         ShowSection(DeployPanel);
+    }
+
+    public void ShowHistorySection()
+    {
+        ShowSection(HistoryPanel, ProjectHistoryTab);
     }
 
     public bool CanNavigateAway(Action pendingNavigation)

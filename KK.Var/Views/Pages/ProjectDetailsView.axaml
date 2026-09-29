@@ -196,7 +196,8 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:ProjectVersionItemViewModel">
                                 <Border Margin="0,0,0,10" Padding="18" Background="{DynamicResource AppSurfaceBrush}"
-                                        BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="10">
+                                        BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="10"
+                                        Cursor="Hand" PointerPressed="DeploymentItem_OnPointerPressed">
                                     <Grid ColumnDefinitions="180,170,120,*,Auto" ColumnSpacing="18">
                                         <StackPanel Spacing="3">
                                             <TextBlock Text="{Binding Tag}" FontWeight="Bold"

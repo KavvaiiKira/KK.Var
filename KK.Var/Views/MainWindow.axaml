@@ -439,6 +439,11 @@
                                    Grid.Column="1"
                                    IsVisible="False" />
 
+                <pages:DeploymentDetailsView x:Name="DeploymentDetailsPage"
+                                             Grid.Column="1"
+                                             IsVisible="False"
+                                             DataContext="{Binding SelectedDeploymentDetails}" />
+
                 <pages:SettingsView x:Name="SettingsPage"
                                     Grid.Column="1"
                                     IsVisible="False" />

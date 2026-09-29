@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -16,6 +18,7 @@ public partial class MainWindow : Window
     private bool _firstRunHandled;
     private bool _showSettingsAfterProjectEditorClose;
     private bool _showHistoryAfterProjectEditorClose;
+    private bool _deploymentDetailsReturnToProject;
     private KKProject? _projectPendingDelete;
 
     public MainWindow()
@@ -26,6 +29,10 @@ public partial class MainWindow : Window
         ProjectDetailsPage.EditRequested += ProjectDetailsPage_OnEditRequested;
         ProjectDetailsPage.DeleteRequested += ProjectDetailsPage_OnDeleteRequested;
         ProjectDetailsPage.DeployRequested += ProjectDetailsPage_OnDeployRequested;
+        ProjectDetailsPage.DeploymentSelected += ProjectDetailsPage_OnDeploymentSelected;
+        HistoryPage.DeploymentSelected += HistoryPage_OnDeploymentSelected;
+        DeploymentDetailsPage.BackRequested += DeploymentDetailsPage_OnBackRequested;
+        DeploymentDetailsPage.RepeatDeployRequested += DeploymentDetailsPage_OnRepeatDeployRequested;
 
         PropertyChanged += (_, args) =>
         {
@@ -394,6 +401,72 @@ public partial class MainWindow : Window
         ProjectDetailsPage.ShowDeploySection();
     }
 
+    private async void ProjectDetailsPage_OnDeploymentSelected(
+        DeploymentHistoryItemViewModel item)
+    {
+        await OpenDeploymentDetailsAsync(item, returnToProject: true);
+    }
+
+    private async void HistoryPage_OnDeploymentSelected(DeploymentHistoryItemViewModel item)
+    {
+        await OpenDeploymentDetailsAsync(item, returnToProject: false);
+    }
+
+    private async Task OpenDeploymentDetailsAsync(
+        DeploymentHistoryItemViewModel item,
+        bool returnToProject)
+    {
+        if (DataContext is not MainViewModel viewModel)
+        {
+            return;
+        }
+
+        viewModel.ClearStatusNotification();
+        await viewModel.LoadDeploymentDetailsAsync(item);
+        _deploymentDetailsReturnToProject = returnToProject;
+        ShowDeploymentDetailsPage();
+    }
+
+    private void DeploymentDetailsPage_OnBackRequested(object? sender, EventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel)
+        {
+            viewModel.ClearStatusNotification();
+            viewModel.ClearDeploymentDetails();
+        }
+
+        if (_deploymentDetailsReturnToProject)
+        {
+            ProjectDetailsPage.ShowHistorySection();
+            ShowProjectDetailsPage();
+            return;
+        }
+
+        ShowHistoryPage();
+    }
+
+    private async void DeploymentDetailsPage_OnRepeatDeployRequested(
+        object? sender,
+        EventArgs e)
+    {
+        if (DataContext is not MainViewModel { SelectedDeploymentDetails: { } details } viewModel)
+        {
+            return;
+        }
+
+        var deployment = details.Deployment;
+        var project = viewModel.Projects.FirstOrDefault(
+            item => item.Id == deployment.KKProjectId) ?? deployment.Project;
+
+        viewModel.ClearStatusNotification();
+        viewModel.SelectedProject = project;
+        await viewModel.LoadProjectDetailsAsync(project);
+        viewModel.PrepareRepeatDeployment(deployment);
+        viewModel.ClearDeploymentDetails();
+        ProjectDetailsPage.ShowDeploySection();
+        ShowProjectDetailsPage();
+    }
+
     private void BeginProjectEditing(KKProject project)
     {
         if (DataContext is MainViewModel viewModel)
@@ -413,6 +486,7 @@ public partial class MainWindow : Window
         SettingsPage.IsVisible = false;
         ProjectDetailsPage.IsVisible = false;
         HistoryPage.IsVisible = false;
+        DeploymentDetailsPage.IsVisible = false;
         CreateProjectPage.IsVisible = true;
         SetNavigationState(ProjectsNavigationButton, isActive: true);
         SetNavigationState(HistoryNavigationButton, isActive: false);
@@ -425,6 +499,7 @@ public partial class MainWindow : Window
         SettingsPage.IsVisible = false;
         CreateProjectPage.IsVisible = false;
         HistoryPage.IsVisible = false;
+        DeploymentDetailsPage.IsVisible = false;
         ProjectDetailsPage.IsVisible = true;
         SetNavigationState(ProjectsNavigationButton, isActive: true);
         SetNavigationState(HistoryNavigationButton, isActive: false);
@@ -437,9 +512,23 @@ public partial class MainWindow : Window
         SettingsPage.IsVisible = false;
         CreateProjectPage.IsVisible = false;
         ProjectDetailsPage.IsVisible = false;
+        DeploymentDetailsPage.IsVisible = false;
         HistoryPage.IsVisible = true;
         SetNavigationState(ProjectsNavigationButton, isActive: false);
         SetNavigationState(HistoryNavigationButton, isActive: true);
+        SetNavigationState(SettingsNavigationButton, isActive: false);
+    }
+
+    private void ShowDeploymentDetailsPage()
+    {
+        ProjectsPage.IsVisible = false;
+        SettingsPage.IsVisible = false;
+        CreateProjectPage.IsVisible = false;
+        ProjectDetailsPage.IsVisible = false;
+        HistoryPage.IsVisible = false;
+        DeploymentDetailsPage.IsVisible = true;
+        SetNavigationState(ProjectsNavigationButton, isActive: _deploymentDetailsReturnToProject);
+        SetNavigationState(HistoryNavigationButton, isActive: !_deploymentDetailsReturnToProject);
         SetNavigationState(SettingsNavigationButton, isActive: false);
     }
 
@@ -548,6 +637,7 @@ public partial class MainWindow : Window
         CreateProjectPage.IsVisible = false;
         ProjectDetailsPage.IsVisible = false;
         HistoryPage.IsVisible = false;
+        DeploymentDetailsPage.IsVisible = false;
         SetNavigationState(ProjectsNavigationButton, !showSettings);
         SetNavigationState(HistoryNavigationButton, false);
         SetNavigationState(SettingsNavigationButton, showSettings);
