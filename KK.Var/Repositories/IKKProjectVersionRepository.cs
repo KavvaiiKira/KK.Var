@@ -8,6 +8,9 @@ namespace KK.Var.Repositories;
 
 public interface IKKProjectVersionRepository
 {
+    Task<IReadOnlyList<KKProjectVersion>> GetAllAsync(
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<KKProjectVersion>> GetByProjectIdAsync(
         Guid projectId,
         CancellationToken cancellationToken = default);
@@ -23,5 +26,13 @@ public interface IKKProjectVersionRepository
 
     Task AddAsync(
         KKProjectVersion version,
+        CancellationToken cancellationToken = default);
+
+    Task UpdateAsync(
+        KKProjectVersion version,
+        CancellationToken cancellationToken = default);
+
+    Task DeleteAsync(
+        Guid id,
         CancellationToken cancellationToken = default);
 }

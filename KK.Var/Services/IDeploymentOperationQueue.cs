@@ -15,6 +15,8 @@ public interface IDeploymentOperationQueue
 
     bool HasActiveOperation(Guid projectId);
 
+    bool HasActiveOperations();
+
     Task<TResult> EnqueueAsync<TResult>(
         Guid projectId,
         string version,

@@ -205,7 +205,7 @@ public partial class MainWindow : Window
         ShowSettingsPage(showSettings: false);
     }
 
-    private void SettingsNavigationButton_OnClick(object? sender, RoutedEventArgs e)
+    private async void SettingsNavigationButton_OnClick(object? sender, RoutedEventArgs e)
     {
         if (ProjectDetailsPage.IsVisible &&
             !ProjectDetailsPage.CanNavigateAway(
@@ -225,6 +225,7 @@ public partial class MainWindow : Window
         if (DataContext is MainViewModel viewModel)
         {
             viewModel.ClearStatusNotification();
+            await viewModel.RefreshArtifactStorageSummaryAsync();
         }
 
         ShowSettingsPage(showSettings: true);
@@ -566,11 +567,12 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OpenRequiredSettingsButton_OnClick(object? sender, RoutedEventArgs e)
+    private async void OpenRequiredSettingsButton_OnClick(object? sender, RoutedEventArgs e)
     {
         if (DataContext is MainViewModel viewModel)
         {
             viewModel.ClearStatusNotification();
+            await viewModel.RefreshArtifactStorageSummaryAsync();
         }
 
         ShowSettingsPage(showSettings: true);

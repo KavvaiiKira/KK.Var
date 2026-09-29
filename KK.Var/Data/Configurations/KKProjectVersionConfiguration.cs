@@ -43,6 +43,6 @@ public sealed class KKProjectVersionConfiguration
         builder.HasMany(version => version.Deployments)
             .WithOne(deployment => deployment.Version)
             .HasForeignKey(deployment => deployment.KKProjectVersionId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

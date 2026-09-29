@@ -17,6 +17,8 @@ public sealed class KKProjectVersion
 
     public long ArtifactSize { get; set; }
 
+    public bool IsPinned { get; set; }
+
     public string? SourceCommitSha { get; set; }
 
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;

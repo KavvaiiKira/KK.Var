@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace KK.Var.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260820105747_Initial")]
-    partial class Initial
+    [Migration("20260929120600_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -84,6 +84,14 @@ namespace KK.Var.Data.Migrations
                         .HasMaxLength(1024)
                         .HasColumnType("TEXT");
 
+                    b.Property<long?>("MaxStoredVersionBytes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MaxStoredVersions")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(10);
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -127,6 +135,10 @@ namespace KK.Var.Data.Migrations
 
                     b.ToTable("KKProjects", null, t =>
                         {
+                            t.HasCheckConstraint("CK_KKProjects_MaxStoredVersionBytes", "MaxStoredVersionBytes IS NULL OR MaxStoredVersionBytes > 0");
+
+                            t.HasCheckConstraint("CK_KKProjects_MaxStoredVersions", "MaxStoredVersions > 0");
+
                             t.HasCheckConstraint("CK_KKProjects_Source", "(SourceType = 1 AND LocalDirectoryPath IS NOT NULL AND GitHubRepositoryId IS NULL AND GitHubRepositoryFullName IS NULL AND GitHubCloneUrl IS NULL) OR (SourceType = 2 AND LocalDirectoryPath IS NULL AND GitHubRepositoryId IS NOT NULL AND GitHubRepositoryFullName IS NOT NULL AND GitHubCloneUrl IS NOT NULL)");
                         });
                 });
@@ -147,7 +159,7 @@ namespace KK.Var.Data.Migrations
                     b.Property<Guid>("KKProjectId")
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("KKProjectVersionId")
+                    b.Property<Guid?>("KKProjectVersionId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("LogPath")
@@ -160,6 +172,10 @@ namespace KK.Var.Data.Migrations
                     b.Property<string>("RemoteOperationId")
                         .IsRequired()
                         .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceCommitSha")
+                        .HasMaxLength(64)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Stage")
@@ -176,6 +192,15 @@ namespace KK.Var.Data.Migrations
 
                     b.Property<string>("VariablesSnapshotJson")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("VersionDescription")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("VersionTag")
+                        .IsRequired()
+                        .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -247,6 +272,9 @@ namespace KK.Var.Data.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsPinned")
+                        .HasColumnType("INTEGER");
+
                     b.Property<Guid>("KKProjectId")
                         .HasColumnType("TEXT");
 
@@ -282,8 +310,7 @@ namespace KK.Var.Data.Migrations
                     b.HasOne("KK.Var.Models.KKProjectVersion", "Version")
                         .WithMany("Deployments")
                         .HasForeignKey("KKProjectVersionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Project");
 

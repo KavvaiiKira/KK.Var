@@ -189,6 +189,16 @@
                     <TextBlock Text="{DynamicResource 'Версии'}" FontSize="20" FontWeight="Bold" />
                     <TextBlock Text="{DynamicResource 'Версия создаётся автоматически после успешной сборки. Архив и контрольная сумма неизменяемы.'}"
                                FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
+                    <StackPanel Orientation="Horizontal" Spacing="16">
+                        <TextBlock Foreground="{DynamicResource AppTextMutedBrush}">
+                            <Run Text="{DynamicResource 'Общий размер проекта'}" />
+                            <Run Text=": " />
+                            <Run Text="{Binding ProjectArtifactsSizeDisplay}" />
+                        </TextBlock>
+                        <TextBlock IsVisible="{Binding HasMissingProjectArtifacts}"
+                                   Text="{Binding MissingProjectArtifactsDisplay}"
+                                   Foreground="{DynamicResource AppDangerBrush}" />
+                    </StackPanel>
                     <TextBlock IsVisible="{Binding HasNoProjectVersions}" Margin="0,36,0,0"
                                HorizontalAlignment="Center" Text="{DynamicResource 'У проекта пока нет собранных версий'}"
                                Foreground="{DynamicResource AppTextMutedBrush}" />
@@ -196,9 +206,8 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:ProjectVersionItemViewModel">
                                 <Border Margin="0,0,0,10" Padding="18" Background="{DynamicResource AppSurfaceBrush}"
-                                        BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="10"
-                                        Cursor="Hand" PointerPressed="DeploymentItem_OnPointerPressed">
-                                    <Grid ColumnDefinitions="180,170,120,*,Auto" ColumnSpacing="18">
+                                        BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="10">
+                                    <Grid ColumnDefinitions="160,135,105,*,Auto,Auto,Auto" ColumnSpacing="12">
                                         <StackPanel Spacing="3">
                                             <TextBlock Text="{Binding Tag}" FontWeight="Bold"
                                                        Foreground="{DynamicResource AppPrimaryHoverBrush}" />
@@ -207,13 +216,35 @@
                                                        FontSize="11"
                                                        Foreground="{DynamicResource AppTextMutedBrush}"
                                                        ToolTip.Tip="{Binding Version.SourceCommitSha}" />
+                                            <TextBlock Text="{Binding AvailabilityDisplay}"
+                                                       FontSize="11"
+                                                       Foreground="{DynamicResource AppTextMutedBrush}" />
+                                            <TextBlock IsVisible="{Binding IsPinned}"
+                                                       Text="{Binding PinnedDisplay}"
+                                                       FontSize="11"
+                                                       Foreground="{DynamicResource AppPrimaryHoverBrush}" />
+                                            <TextBlock IsVisible="{Binding IsProtected}"
+                                                       Text="{Binding ProtectedDisplay}"
+                                                       FontSize="11"
+                                                       Foreground="{DynamicResource AppTextMutedBrush}" />
                                         </StackPanel>
                                         <TextBlock Grid.Column="1" Text="{Binding CreatedAtDisplay}" />
                                         <TextBlock Grid.Column="2" Text="{Binding ArtifactSizeDisplay}" />
                                         <TextBlock Grid.Column="3" Text="{Binding Description}" TextTrimming="CharacterEllipsis" />
                                         <Button Grid.Column="4" Classes="details-secondary"
-                                                Padding="14,8" Content="Rollback"
+                                                Padding="12,8"
+                                                Content="{Binding PinActionText}"
+                                                Click="PinVersionButton_OnClick" />
+                                        <Button Grid.Column="5" Classes="details-secondary"
+                                                Padding="12,8" Content="Rollback"
+                                                IsEnabled="{Binding ArtifactExists}"
                                                 Click="RollbackButton_OnClick" />
+                                        <Button Grid.Column="6" Classes="details-secondary"
+                                                Padding="12,8"
+                                                IsEnabled="{Binding CanDelete}"
+                                                Foreground="{DynamicResource AppDangerBrush}"
+                                                Content="{DynamicResource 'Удалить'}"
+                                                Click="DeleteVersionButton_OnClick" />
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -230,7 +261,8 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:DeploymentHistoryItemViewModel">
                                 <Border Margin="0,0,0,10" Padding="18" Background="{DynamicResource AppSurfaceBrush}"
-                                        BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="10">
+                                        BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="10"
+                                        Cursor="Hand" PointerPressed="DeploymentItem_OnPointerPressed">
                                     <Grid ColumnDefinitions="170,170,150,*" ColumnSpacing="18">
                                         <TextBlock Text="{Binding DateDisplay}" />
                                         <TextBlock Grid.Column="1" Text="{Binding VersionTag}"
@@ -350,6 +382,42 @@
                                 Padding="16,10"
                                 Content="{DynamicResource 'Сохранить и перейти'}"
                                 Click="SaveEnvironmentAndContinueButton_OnClick" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Border>
+
+        <Border x:Name="DeleteVersionConfirmation"
+                Grid.RowSpan="3"
+                IsVisible="False"
+                Background="#C9080510">
+            <Border Width="500"
+                    Padding="28"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource AppSurfaceBrush}"
+                    BorderBrush="{DynamicResource AppBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="14">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="{DynamicResource 'Удалить локальную версию?'}"
+                               FontSize="20"
+                               FontWeight="Bold" />
+                    <TextBlock x:Name="DeleteVersionMessage"
+                               TextWrapping="Wrap"
+                               FontSize="13"
+                               Foreground="{DynamicResource AppTextMutedBrush}" />
+                    <StackPanel Margin="0,10,0,0"
+                                HorizontalAlignment="Right"
+                                Orientation="Horizontal"
+                                Spacing="10">
+                        <Button Classes="details-secondary"
+                                Content="{DynamicResource 'Отмена'}"
+                                Click="CancelDeleteVersionButton_OnClick" />
+                        <Button Classes="details-secondary"
+                                Foreground="{DynamicResource AppDangerBrush}"
+                                Content="{DynamicResource 'Удалить'}"
+                                Click="ConfirmDeleteVersionButton_OnClick" />
                     </StackPanel>
                 </StackPanel>
             </Border>

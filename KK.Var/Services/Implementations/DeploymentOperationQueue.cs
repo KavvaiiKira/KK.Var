@@ -39,6 +39,16 @@ public sealed class DeploymentOperationQueue(
         }
     }
 
+    public bool HasActiveOperations()
+    {
+        lock (_syncRoot)
+        {
+            return _items.Any(item =>
+                item.Status is DeploymentQueueStatus.Waiting or
+                    DeploymentQueueStatus.Running);
+        }
+    }
+
     public Task<TResult> EnqueueAsync<TResult>(
         Guid projectId,
         string version,

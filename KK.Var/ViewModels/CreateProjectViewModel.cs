@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -118,6 +119,12 @@ public partial class CreateProjectViewModel : ViewModelBase
     public partial string HealthCheckCommand { get; set; } = string.Empty;
 
     [ObservableProperty]
+    public partial int MaxStoredVersions { get; set; } = 10;
+
+    [ObservableProperty]
+    public partial string MaxStoredVersionSizeMb { get; set; } = string.Empty;
+
+    [ObservableProperty]
     public partial bool HasUnsavedChanges { get; set; }
 
     [ObservableProperty]
@@ -188,6 +195,8 @@ public partial class CreateProjectViewModel : ViewModelBase
         HealthCheckHttpUrl = string.Empty;
         HealthCheckTcpPort = 8080;
         HealthCheckCommand = string.Empty;
+        MaxStoredVersions = 10;
+        MaxStoredVersionSizeMb = string.Empty;
         ErrorMessage = string.Empty;
         HasUnsavedChanges = false;
 
@@ -244,6 +253,12 @@ public partial class CreateProjectViewModel : ViewModelBase
         HealthCheckHttpUrl = project.HealthCheckHttpUrl ?? string.Empty;
         HealthCheckTcpPort = project.HealthCheckTcpPort ?? 8080;
         HealthCheckCommand = project.HealthCheckCommand ?? string.Empty;
+        MaxStoredVersions = project.MaxStoredVersions;
+        MaxStoredVersionSizeMb = project.MaxStoredVersionBytes.HasValue ?
+            (project.MaxStoredVersionBytes.Value / 1_048_576d).ToString(
+                "0.##",
+                CultureInfo.CurrentCulture) :
+            string.Empty;
         ErrorMessage = string.Empty;
         HasUnsavedChanges = false;
 
@@ -309,6 +324,8 @@ public partial class CreateProjectViewModel : ViewModelBase
             HealthCheckHttpUrl = IsHttpHealthCheck ? HealthCheckHttpUrl : null,
             HealthCheckTcpPort = IsTcpHealthCheck ? HealthCheckTcpPort : null,
             HealthCheckCommand = IsCommandHealthCheck ? HealthCheckCommand : null,
+            MaxStoredVersions = MaxStoredVersions,
+            MaxStoredVersionBytes = ParseStorageLimitBytes(),
             EnvironmentVariables = _editingProject?.EnvironmentVariables ?? [],
             Versions = _editingProject?.Versions ?? [],
             Deployments = _editingProject?.Deployments ?? [],
@@ -478,6 +495,10 @@ public partial class CreateProjectViewModel : ViewModelBase
 
     partial void OnHealthCheckCommandChanged(string value) => MarkDirty();
 
+    partial void OnMaxStoredVersionsChanged(int value) => MarkDirty();
+
+    partial void OnMaxStoredVersionSizeMbChanged(string value) => MarkDirty();
+
     private void MarkDirty()
     {
         if (!_isResetting)
@@ -524,6 +545,18 @@ public partial class CreateProjectViewModel : ViewModelBase
         {
             return Localize(
                 "Укажите путь к файлу переменных окружения внутри проекта.");
+        }
+
+        if (MaxStoredVersions is < 1 or > 10000)
+        {
+            return Localize(
+                "Максимальное количество версий должно быть от 1 до 10000.");
+        }
+
+        if (!TryParseStorageLimitBytes(out _))
+        {
+            return Localize(
+                "Лимит размера версий должен быть положительным числом в МБ.");
         }
 
         var healthCheckError = ValidateHealthCheck();
@@ -573,6 +606,36 @@ public partial class CreateProjectViewModel : ViewModelBase
         }
 
         return string.Empty;
+    }
+
+    private long? ParseStorageLimitBytes()
+    {
+        _ = TryParseStorageLimitBytes(out var bytes);
+        return bytes;
+    }
+
+    private bool TryParseStorageLimitBytes(out long? bytes)
+    {
+        bytes = null;
+
+        if (string.IsNullOrWhiteSpace(MaxStoredVersionSizeMb))
+        {
+            return true;
+        }
+
+        if (!decimal.TryParse(
+                MaxStoredVersionSizeMb,
+                NumberStyles.Number,
+                CultureInfo.CurrentCulture,
+                out var megabytes) ||
+            megabytes <= 0 ||
+            megabytes > long.MaxValue / 1_048_576m)
+        {
+            return false;
+        }
+
+        bytes = decimal.ToInt64(decimal.Ceiling(megabytes * 1_048_576m));
+        return true;
     }
 
     private string ValidateHealthCheck()

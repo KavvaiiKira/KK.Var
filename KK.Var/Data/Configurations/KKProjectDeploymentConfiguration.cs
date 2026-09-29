@@ -29,6 +29,16 @@ public sealed class KKProjectDeploymentConfiguration
             .IsRequired()
             .HasMaxLength(32);
 
+        builder.Property(deployment => deployment.VersionTag)
+            .IsRequired()
+            .HasMaxLength(200);
+
+        builder.Property(deployment => deployment.VersionDescription)
+            .HasMaxLength(2000);
+
+        builder.Property(deployment => deployment.SourceCommitSha)
+            .HasMaxLength(64);
+
         builder.Property(deployment => deployment.VariablesSnapshotJson)
             .IsRequired();
 

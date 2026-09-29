@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,6 +13,9 @@ namespace KK.Var.Services.Implementations;
 public sealed class KKProjectVersionService(
     IKKProjectRepository projectRepository,
     IKKProjectVersionRepository versionRepository,
+    IKKProjectDeploymentRepository deploymentRepository,
+    IArtifactStorageService artifactStorageService,
+    IDeploymentOperationQueue operationQueue,
     ILocalizationService localizationService) : IKKProjectVersionService
 {
     private static readonly Regex Sha256Pattern = new Regex(
@@ -88,6 +92,66 @@ public sealed class KKProjectVersionService(
         await versionRepository.AddAsync(version, cancellationToken);
 
         return version;
+    }
+
+    public async Task<IReadOnlySet<Guid>> GetProtectedVersionIdsAsync(
+        Guid projectId,
+        CancellationToken cancellationToken = default)
+    {
+        var deployments = await deploymentRepository.GetByProjectIdAsync(
+            projectId,
+            cancellationToken);
+
+        return deployments
+            .Where(deployment =>
+                deployment.Status == Enums.DeploymentStatus.Succeeded &&
+                deployment.KKProjectVersionId.HasValue)
+            .OrderByDescending(deployment => deployment.CompletedAtUtc)
+            .Select(deployment => deployment.KKProjectVersionId!.Value)
+            .Distinct()
+            .Take(2)
+            .ToHashSet();
+    }
+
+    public async Task SetPinnedAsync(
+        Guid versionId,
+        bool isPinned,
+        CancellationToken cancellationToken = default)
+    {
+        var version = await versionRepository.GetByIdAsync(versionId, cancellationToken) ??
+            throw new KeyNotFoundException(localizationService.Get("Версия не найдена."));
+
+        version.IsPinned = isPinned;
+        await versionRepository.UpdateAsync(version, cancellationToken);
+    }
+
+    public async Task DeleteAsync(
+        Guid versionId,
+        CancellationToken cancellationToken = default)
+    {
+        var version = await versionRepository.GetByIdAsync(versionId, cancellationToken) ??
+            throw new KeyNotFoundException(localizationService.Get("Версия не найдена."));
+
+        if (operationQueue.HasActiveOperation(version.KKProjectId) ||
+            artifactStorageService.IsMigrationRunning)
+        {
+            throw new InvalidOperationException(localizationService.Get(
+                "Нельзя удалить версию во время активной операции."));
+        }
+
+        var protectedIds = await GetProtectedVersionIdsAsync(
+            version.KKProjectId,
+            cancellationToken);
+        if (protectedIds.Contains(version.Id))
+        {
+            throw new InvalidOperationException(localizationService.Get(
+                "Текущую и предыдущую развёрнутые версии удалять нельзя."));
+        }
+
+        await artifactStorageService.DeleteArtifactAsync(
+            version.ArtifactRelativePath,
+            cancellationToken);
+        await versionRepository.DeleteAsync(version.Id, cancellationToken);
     }
 
     private static string Required(string? value, string parameterName, int maxLength)

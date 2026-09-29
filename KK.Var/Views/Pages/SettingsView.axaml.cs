@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
 using KK.Var.ViewModels;
 
 namespace KK.Var.Views.Pages;
@@ -28,6 +29,60 @@ public partial class SettingsView : UserControl
         if (clipboard is not null)
         {
             await clipboard.SetTextAsync(viewModel.GitHubUserCode);
+        }
+    }
+
+    private async void SelectArtifactsDirectoryButton_OnClick(
+        object? sender,
+        RoutedEventArgs e)
+    {
+        if (DataContext is not MainViewModel viewModel ||
+            TopLevel.GetTopLevel(this)?.StorageProvider is not { } storageProvider)
+        {
+            return;
+        }
+
+        var folders = await storageProvider.OpenFolderPickerAsync(
+            new FolderPickerOpenOptions
+            {
+                Title = viewModel.Localize("Выберите каталог локальных версий"),
+                AllowMultiple = false,
+            });
+
+        if (folders.Count > 0 && folders[0].Path.IsFile)
+        {
+            await viewModel.PrepareArtifactStorageMigrationAsync(
+                folders[0].Path.LocalPath);
+        }
+    }
+
+    private async void ResetArtifactsDirectoryButton_OnClick(
+        object? sender,
+        RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel)
+        {
+            await viewModel.PrepareArtifactStorageMigrationAsync(null);
+        }
+    }
+
+    private async void ApplyArtifactMigrationButton_OnClick(
+        object? sender,
+        RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel)
+        {
+            await viewModel.ApplyArtifactStorageMigrationAsync();
+        }
+    }
+
+    private void CancelArtifactMigrationButton_OnClick(
+        object? sender,
+        RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel)
+        {
+            viewModel.CancelArtifactStorageMigration();
         }
     }
 }

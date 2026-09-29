@@ -9,6 +9,7 @@ namespace KK.Var.Views.Pages;
 public partial class ProjectDetailsView : UserControl
 {
     private Action? _pendingNavigation;
+    private ProjectVersionItemViewModel? _versionPendingDelete;
 
     public ProjectDetailsView()
     {
@@ -167,6 +168,52 @@ public partial class ProjectDetailsView : UserControl
         {
             await viewModel.RollbackAsync(version);
         }
+    }
+
+    private async void PinVersionButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel &&
+            (sender as Control)?.DataContext is ProjectVersionItemViewModel version)
+        {
+            await viewModel.ToggleVersionPinnedAsync(version);
+        }
+    }
+
+    private void DeleteVersionButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainViewModel viewModel ||
+            (sender as Control)?.DataContext is not ProjectVersionItemViewModel version ||
+            !version.CanDelete)
+        {
+            return;
+        }
+
+        _versionPendingDelete = version;
+        DeleteVersionMessage.Text = viewModel.LocalizeFormat(
+            "Версия «{0}» и её локальный архив будут удалены. Отменить это действие нельзя.",
+            version.Tag);
+        DeleteVersionConfirmation.IsVisible = true;
+    }
+
+    private void CancelDeleteVersionButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        _versionPendingDelete = null;
+        DeleteVersionConfirmation.IsVisible = false;
+    }
+
+    private async void ConfirmDeleteVersionButton_OnClick(
+        object? sender,
+        RoutedEventArgs e)
+    {
+        if (_versionPendingDelete is null || DataContext is not MainViewModel viewModel)
+        {
+            return;
+        }
+
+        var version = _versionPendingDelete;
+        _versionPendingDelete = null;
+        DeleteVersionConfirmation.IsVisible = false;
+        await viewModel.DeleteVersionAsync(version);
     }
 
     private void DeploymentLog_OnTextChanged(object? sender, TextChangedEventArgs e)

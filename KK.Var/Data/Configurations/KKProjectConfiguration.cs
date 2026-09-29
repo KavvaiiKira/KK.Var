@@ -18,6 +18,12 @@ public sealed class KKProjectConfiguration : IEntityTypeConfiguration<KKProject>
                 "(SourceType = 2 AND LocalDirectoryPath IS NULL " +
                 "AND GitHubRepositoryId IS NOT NULL AND GitHubRepositoryFullName IS NOT NULL " +
                 "AND GitHubCloneUrl IS NOT NULL)");
+            table.HasCheckConstraint(
+                "CK_KKProjects_MaxStoredVersions",
+                "MaxStoredVersions > 0");
+            table.HasCheckConstraint(
+                "CK_KKProjects_MaxStoredVersionBytes",
+                "MaxStoredVersionBytes IS NULL OR MaxStoredVersionBytes > 0");
         });
 
         builder.HasKey(project => project.Id);
@@ -82,6 +88,9 @@ public sealed class KKProjectConfiguration : IEntityTypeConfiguration<KKProject>
 
         builder.Property(project => project.HealthCheckCommand)
             .HasMaxLength(4000);
+
+        builder.Property(project => project.MaxStoredVersions)
+            .HasDefaultValue(10);
 
         builder.HasMany(project => project.EnvironmentVariables)
             .WithOne(variable => variable.Project)

@@ -13,7 +13,6 @@ using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using KK.Var.Data;
 using KK.Var.Enums;
 using KK.Var.Models;
 
@@ -23,6 +22,7 @@ public sealed class ProjectArtifactService(
     IKKProjectEnvironmentService environmentService,
     IGitHubService gitHubService,
     IGitHubAuthenticationService gitHubAuthenticationService,
+    IArtifactStorageService artifactStorageService,
     ILocalizationService localizationService) : IProjectArtifactService
 {
     private static readonly Regex TagPattern = new Regex(
@@ -35,63 +35,8 @@ public sealed class ProjectArtifactService(
 
     public Task DeleteAllAsync(
         Guid projectId,
-        CancellationToken cancellationToken = default)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-
-        if (projectId == Guid.Empty)
-        {
-            throw new ArgumentException("Project id is required.", nameof(projectId));
-        }
-
-        var root = Path.GetFullPath(DatabasePaths.ArtifactsDirectory);
-        var projectDirectory = Path.GetFullPath(Path.Combine(
-            root,
-            projectId.ToString("N")));
-
-        var expectedParent = Directory.GetParent(projectDirectory)?.FullName;
-
-        if (!string.Equals(expectedParent, root, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException("Project artifact path is outside the artifact root.");
-        }
-
-        if (!Directory.Exists(projectDirectory))
-        {
-            return Task.CompletedTask;
-        }
-
-        var directory = new DirectoryInfo(projectDirectory);
-
-        EnsureNoReparsePoints(directory);
-
-        Directory.Delete(projectDirectory, recursive: true);
-
-        return Task.CompletedTask;
-    }
-
-    private static void EnsureNoReparsePoints(DirectoryInfo directory)
-    {
-        if ((directory.Attributes & FileAttributes.ReparsePoint) != 0)
-        {
-            throw new InvalidOperationException(
-                "Project artifact directory cannot contain reparse points.");
-        }
-
-        foreach (var entry in directory.EnumerateFileSystemInfos())
-        {
-            if ((entry.Attributes & FileAttributes.ReparsePoint) != 0)
-            {
-                throw new InvalidOperationException(
-                    "Project artifact directory cannot contain reparse points.");
-            }
-
-            if (entry is DirectoryInfo childDirectory)
-            {
-                EnsureNoReparsePoints(childDirectory);
-            }
-        }
-    }
+        CancellationToken cancellationToken = default) =>
+        artifactStorageService.DeleteProjectArtifactsAsync(projectId, cancellationToken);
 
     public async Task<ProjectArtifact> CreateAsync(
         KKProject project,
@@ -178,8 +123,10 @@ public sealed class ProjectArtifactService(
                 45,
                 localizationService.Get("Создание локального архива")));
 
+            var artifactRoot = await artifactStorageService.GetEffectiveRootAsync(
+                cancellationToken);
             var projectDirectory = Path.Combine(
-                DatabasePaths.ArtifactsDirectory,
+                artifactRoot,
                 project.Id.ToString("N"));
 
             Directory.CreateDirectory(projectDirectory);
@@ -188,7 +135,9 @@ public sealed class ProjectArtifactService(
                 project.Id.ToString("N"),
                 $"{tag}.tar.gz");
 
-            artifactPath = Path.Combine(DatabasePaths.ArtifactsDirectory, relativePath);
+            artifactPath = await artifactStorageService.ResolvePathAsync(
+                relativePath,
+                cancellationToken);
 
             if (File.Exists(artifactPath))
             {

@@ -62,7 +62,7 @@ public sealed class KKProjectDeploymentRepository(
             var normalizedSearch = searchText.Trim();
             query = query.Where(deployment =>
                 deployment.Project.Name.Contains(normalizedSearch) ||
-                deployment.Version.Tag.Contains(normalizedSearch));
+                deployment.VersionTag.Contains(normalizedSearch));
         }
 
         return await query

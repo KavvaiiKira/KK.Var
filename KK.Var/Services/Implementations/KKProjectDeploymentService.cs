@@ -20,6 +20,7 @@ public sealed class KKProjectDeploymentService(
     IKKProjectVersionService versionService,
     IKKProjectEnvironmentService environmentService,
     IProjectArtifactService artifactService,
+    IArtifactStorageService artifactStorageService,
     IRemoteDeploymentService remoteDeploymentService,
     IDeploymentOperationQueue operationQueue,
     IUserSettingsService userSettingsService,
@@ -84,6 +85,9 @@ public sealed class KKProjectDeploymentService(
             Id = Guid.NewGuid(),
             KKProjectId = projectId,
             KKProjectVersionId = versionId,
+            VersionTag = version.Tag,
+            VersionDescription = version.Description,
+            SourceCommitSha = version.SourceCommitSha,
             OperationType = operationType,
             Status = DeploymentStatus.Running,
             RemoteOperationId = remoteOperationId,
@@ -143,6 +147,12 @@ public sealed class KKProjectDeploymentService(
         IProgress<DeploymentProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
+        if (artifactStorageService.IsMigrationRunning)
+        {
+            throw new InvalidOperationException(localizationService.Get(
+                "Нельзя начать Deploy во время переноса локальных версий."));
+        }
+
         return operationQueue.EnqueueAsync(
             request.ProjectId,
             request.VersionTag,
@@ -217,6 +227,12 @@ public sealed class KKProjectDeploymentService(
         IProgress<DeploymentProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
+        if (artifactStorageService.IsMigrationRunning)
+        {
+            throw new InvalidOperationException(localizationService.Get(
+                "Нельзя начать rollback во время переноса локальных версий."));
+        }
+
         var queuedVersion = await versionRepository.GetByIdAsync(versionId, cancellationToken) ??
             throw new KeyNotFoundException(localizationService.Get("Версия не найдена."));
 
@@ -252,7 +268,9 @@ public sealed class KKProjectDeploymentService(
                 "Версия принадлежит другому проекту."));
         }
 
-        var artifactPath = ResolveArtifactPath(version.ArtifactRelativePath);
+        var artifactPath = await artifactStorageService.ResolvePathAsync(
+            version.ArtifactRelativePath,
+            cancellationToken);
 
         await VerifyArtifactAsync(artifactPath, version, cancellationToken);
 
@@ -373,7 +391,7 @@ public sealed class KKProjectDeploymentService(
         {
             recoveredCount += await operationQueue.EnqueueAsync(
                 deployment.KKProjectId,
-                deployment.Version.Tag,
+                deployment.VersionTag,
                 deployment.OperationType,
                 token => RecoverInterruptedCoreAsync(deployment, settings, token),
                 cancellationToken);
@@ -455,19 +473,6 @@ public sealed class KKProjectDeploymentService(
         deployment.UnitChange = checkpoint.UnitChange;
 
         await deploymentRepository.UpdateAsync(deployment, CancellationToken.None);
-    }
-
-    private string ResolveArtifactPath(string relativePath)
-    {
-        var root = Path.GetFullPath(DatabasePaths.ArtifactsDirectory) + Path.DirectorySeparatorChar;
-        var path = Path.GetFullPath(Path.Combine(root, relativePath.Replace('/', Path.DirectorySeparatorChar)));
-
-        if (!path.StartsWith(root, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException(localizationService.Get("Путь к архиву версии недопустим."));
-        }
-
-        return path;
     }
 
     private async Task VerifyArtifactAsync(

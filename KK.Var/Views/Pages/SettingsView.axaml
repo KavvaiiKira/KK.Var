@@ -55,7 +55,7 @@
                            FontSize="30"
                            FontWeight="Bold"
                            Foreground="{DynamicResource AppTextBrush}" />
-                <TextBlock Text="{DynamicResource 'GitHub и подключение к удалённой Linux-машине'}"
+                <TextBlock Text="{DynamicResource 'GitHub, локальные версии и подключение к Linux-машине'}"
                            FontSize="13"
                            Foreground="{DynamicResource AppTextMutedBrush}" />
             </StackPanel>
@@ -199,6 +199,98 @@
                                    FontSize="11"
                                    Foreground="{DynamicResource AppTextMutedBrush}" />
                     </Grid>
+                </Border>
+
+                <Border Padding="24"
+                        Background="{DynamicResource AppSurfaceBrush}"
+                        BorderBrush="{DynamicResource AppBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="14">
+                    <StackPanel Spacing="16">
+                        <StackPanel Spacing="5">
+                            <TextBlock Text="{DynamicResource 'Локальные версии'}"
+                                       FontSize="19"
+                                       FontWeight="Bold" />
+                            <TextBlock Text="{DynamicResource 'Каталог содержит архивы версий всех проектов.'}"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource AppTextMutedBrush}" />
+                        </StackPanel>
+
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
+                            <StackPanel Spacing="5">
+                                <TextBlock Text="{DynamicResource 'Эффективный путь'}"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource AppTextMutedBrush}" />
+                                <TextBlock Text="{Binding ArtifactStorageEffectivePath}"
+                                           FontFamily="Cascadia Mono, Consolas"
+                                           TextWrapping="Wrap" />
+                                <TextBlock FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}">
+                                    <Run Text="{DynamicResource 'Занято архивами'}" />
+                                    <Run Text=": " />
+                                    <Run Text="{Binding ArtifactStorageUsedDisplay}" />
+                                </TextBlock>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        Orientation="Horizontal"
+                                        Spacing="8">
+                                <Button Classes="settings-secondary"
+                                        IsEnabled="{Binding !IsArtifactStorageBusy}"
+                                        Content="{DynamicResource 'Выбрать папку'}"
+                                        Click="SelectArtifactsDirectoryButton_OnClick" />
+                                <Button Classes="settings-secondary"
+                                        IsEnabled="{Binding !IsArtifactStorageBusy}"
+                                        Content="{DynamicResource 'По умолчанию'}"
+                                        Click="ResetArtifactsDirectoryButton_OnClick" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Border IsVisible="{Binding HasPendingArtifactStorageMigration}"
+                                Padding="16"
+                                Background="{DynamicResource AppSurfaceRaisedBrush}"
+                                BorderBrush="{DynamicResource AppPrimaryBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="{DynamicResource 'План переноса архивов'}"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding PendingArtifactStorageMigration.SourceRoot, StringFormat='{}{0} →'}"
+                                               FontFamily="Cascadia Mono, Consolas"
+                                               FontSize="11"
+                                               TextWrapping="Wrap"
+                                               Foreground="{DynamicResource AppTextMutedBrush}" />
+                                    <TextBlock Text="{Binding PendingArtifactStorageMigration.TargetRoot}"
+                                               FontFamily="Cascadia Mono, Consolas"
+                                               FontSize="11"
+                                               TextWrapping="Wrap" />
+                                    <StackPanel Orientation="Horizontal" Spacing="14">
+                                        <TextBlock Text="{Binding ArtifactStorageMigrationFileCountDisplay}" />
+                                        <TextBlock Text="{Binding ArtifactStorageMigrationSizeDisplay}" />
+                                    </StackPanel>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1"
+                                            VerticalAlignment="Center"
+                                            Orientation="Horizontal"
+                                            Spacing="8">
+                                    <Button Classes="settings-secondary"
+                                            IsEnabled="{Binding !IsArtifactStorageBusy}"
+                                            Content="{DynamicResource 'Отмена'}"
+                                            Click="CancelArtifactMigrationButton_OnClick" />
+                                    <Button Classes="settings-primary"
+                                            IsEnabled="{Binding !IsArtifactStorageBusy}"
+                                            Content="{DynamicResource 'Перенести'}"
+                                            Click="ApplyArtifactMigrationButton_OnClick" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <TextBlock IsVisible="{Binding !!ArtifactStorageWarning}"
+                                   Text="{Binding ArtifactStorageWarning}"
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource AppDangerBrush}" />
+                    </StackPanel>
                 </Border>
 
                 <Border Padding="24"

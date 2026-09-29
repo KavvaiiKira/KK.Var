@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace KK.Var.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -38,12 +38,16 @@ namespace KK.Var.Data.Migrations
                     HealthCheckHttpUrl = table.Column<string>(type: "TEXT", maxLength: 2048, nullable: true),
                     HealthCheckTcpPort = table.Column<int>(type: "INTEGER", nullable: true),
                     HealthCheckCommand = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: true),
+                    MaxStoredVersions = table.Column<int>(type: "INTEGER", nullable: false, defaultValue: 10),
+                    MaxStoredVersionBytes = table.Column<long>(type: "INTEGER", nullable: true),
                     CreatedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UpdatedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_KKProjects", x => x.Id);
+                    table.CheckConstraint("CK_KKProjects_MaxStoredVersionBytes", "MaxStoredVersionBytes IS NULL OR MaxStoredVersionBytes > 0");
+                    table.CheckConstraint("CK_KKProjects_MaxStoredVersions", "MaxStoredVersions > 0");
                     table.CheckConstraint("CK_KKProjects_Source", "(SourceType = 1 AND LocalDirectoryPath IS NOT NULL AND GitHubRepositoryId IS NULL AND GitHubRepositoryFullName IS NULL AND GitHubCloneUrl IS NULL) OR (SourceType = 2 AND LocalDirectoryPath IS NULL AND GitHubRepositoryId IS NOT NULL AND GitHubRepositoryFullName IS NOT NULL AND GitHubCloneUrl IS NOT NULL)");
                 });
 
@@ -78,6 +82,7 @@ namespace KK.Var.Data.Migrations
                     ArtifactRelativePath = table.Column<string>(type: "TEXT", maxLength: 1024, nullable: false),
                     ArtifactSha256 = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
                     ArtifactSize = table.Column<long>(type: "INTEGER", nullable: false),
+                    IsPinned = table.Column<bool>(type: "INTEGER", nullable: false),
                     SourceCommitSha = table.Column<string>(type: "TEXT", maxLength: 64, nullable: true),
                     CreatedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: false),
                     Description = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true)
@@ -100,7 +105,10 @@ namespace KK.Var.Data.Migrations
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     KKProjectId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    KKProjectVersionId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    KKProjectVersionId = table.Column<Guid>(type: "TEXT", nullable: true),
+                    VersionTag = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    VersionDescription = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
+                    SourceCommitSha = table.Column<string>(type: "TEXT", maxLength: 64, nullable: true),
                     OperationType = table.Column<int>(type: "INTEGER", nullable: false),
                     Status = table.Column<int>(type: "INTEGER", nullable: false),
                     RemoteOperationId = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
@@ -120,7 +128,7 @@ namespace KK.Var.Data.Migrations
                         column: x => x.KKProjectVersionId,
                         principalTable: "KKProjectVersions",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
                         name: "FK_KKProjectDeployments_KKProjects_KKProjectId",
                         column: x => x.KKProjectId,

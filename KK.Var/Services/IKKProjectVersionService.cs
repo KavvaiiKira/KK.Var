@@ -15,4 +15,17 @@ public interface IKKProjectVersionService
     Task<KKProjectVersion> CreateAsync(
         KKProjectVersion version,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlySet<Guid>> GetProtectedVersionIdsAsync(
+        Guid projectId,
+        CancellationToken cancellationToken = default);
+
+    Task SetPinnedAsync(
+        Guid versionId,
+        bool isPinned,
+        CancellationToken cancellationToken = default);
+
+    Task DeleteAsync(
+        Guid versionId,
+        CancellationToken cancellationToken = default);
 }

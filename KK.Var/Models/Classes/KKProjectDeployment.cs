@@ -9,7 +9,13 @@ public sealed class KKProjectDeployment
 
     public Guid KKProjectId { get; set; }
 
-    public Guid KKProjectVersionId { get; set; }
+    public Guid? KKProjectVersionId { get; set; }
+
+    public string VersionTag { get; set; } = string.Empty;
+
+    public string? VersionDescription { get; set; }
+
+    public string? SourceCommitSha { get; set; }
 
     public DeploymentOperationType OperationType { get; set; }
 
@@ -33,5 +39,5 @@ public sealed class KKProjectDeployment
 
     public KKProject Project { get; set; } = null!;
 
-    public KKProjectVersion Version { get; set; } = null!;
+    public KKProjectVersion? Version { get; set; }
 }

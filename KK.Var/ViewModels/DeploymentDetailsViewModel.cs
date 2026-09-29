@@ -16,7 +16,7 @@ public sealed class DeploymentDetailsViewModel(
 
     public string ProjectName => Deployment.Project?.Name ?? string.Empty;
 
-    public string VersionTag => Deployment.Version?.Tag ?? string.Empty;
+    public string VersionTag => Deployment.Version?.Tag ?? Deployment.VersionTag;
 
     public string OperationDisplay => Deployment.OperationType switch
     {
@@ -62,7 +62,8 @@ public sealed class DeploymentDetailsViewModel(
         }
     }
 
-    public string CommitSha => Deployment.Version?.SourceCommitSha ?? string.Empty;
+    public string CommitSha =>
+        Deployment.Version?.SourceCommitSha ?? Deployment.SourceCommitSha ?? string.Empty;
 
     public bool HasCommitSha => !string.IsNullOrWhiteSpace(CommitSha);
 

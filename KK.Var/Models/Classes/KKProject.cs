@@ -87,6 +87,10 @@ public sealed class KKProject
 
     public string? HealthCheckCommand { get; set; }
 
+    public int MaxStoredVersions { get; set; } = 10;
+
+    public long? MaxStoredVersionBytes { get; set; }
+
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;

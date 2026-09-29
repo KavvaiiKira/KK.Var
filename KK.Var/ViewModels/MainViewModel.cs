@@ -38,6 +38,7 @@ public partial class MainViewModel : ViewModelBase
     private readonly IKKProjectEnvironmentService? _projectEnvironmentService;
     private readonly IKKProjectVersionService? _projectVersionService;
     private readonly IKKProjectDeploymentService? _projectDeploymentService;
+    private readonly IArtifactStorageService? _artifactStorageService;
     private readonly IDeploymentOperationQueue? _deploymentOperationQueue;
     private readonly ILocalizationService? _localizationService;
     private CancellationTokenSource? _gitHubAuthorizationCancellation;
@@ -66,6 +67,7 @@ public partial class MainViewModel : ViewModelBase
         IKKProjectEnvironmentService projectEnvironmentService,
         IKKProjectVersionService projectVersionService,
         IKKProjectDeploymentService projectDeploymentService,
+        IArtifactStorageService artifactStorageService,
         IDeploymentOperationQueue deploymentOperationQueue,
         ILocalizationService localizationService,
         CreateProjectViewModel projectEditor)
@@ -79,6 +81,7 @@ public partial class MainViewModel : ViewModelBase
         _projectEnvironmentService = projectEnvironmentService;
         _projectVersionService = projectVersionService;
         _projectDeploymentService = projectDeploymentService;
+        _artifactStorageService = artifactStorageService;
         _deploymentOperationQueue = deploymentOperationQueue;
         _localizationService = localizationService;
         ProjectEditor = projectEditor;
@@ -139,6 +142,12 @@ public partial class MainViewModel : ViewModelBase
     public partial bool IsProjectDetailsLoading { get; set; }
 
     [ObservableProperty]
+    public partial long ProjectArtifactsSizeBytes { get; set; }
+
+    [ObservableProperty]
+    public partial int MissingProjectArtifactCount { get; set; }
+
+    [ObservableProperty]
     public partial bool IsEnvironmentSaving { get; set; }
 
     [ObservableProperty]
@@ -181,6 +190,21 @@ public partial class MainViewModel : ViewModelBase
     public partial bool IsConnectionCheckRunning { get; set; }
 
     [ObservableProperty]
+    public partial string ArtifactStorageEffectivePath { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial long ArtifactStorageUsedBytes { get; set; }
+
+    [ObservableProperty]
+    public partial ArtifactStorageMigrationPlan? PendingArtifactStorageMigration { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsArtifactStorageBusy { get; set; }
+
+    [ObservableProperty]
+    public partial string ArtifactStorageWarning { get; set; } = string.Empty;
+
+    [ObservableProperty]
     public partial bool IsHostKeyConfirmationRequired { get; set; }
 
     [ObservableProperty]
@@ -209,6 +233,20 @@ public partial class MainViewModel : ViewModelBase
     public partial string GitHubVerificationUrl { get; set; } = "https://github.com/login/device";
 
     public ObservableCollection<string> AuthenticationMethods { get; } = [];
+
+    public string ArtifactStorageUsedDisplay => FormatByteSize(ArtifactStorageUsedBytes);
+
+    public bool HasPendingArtifactStorageMigration => PendingArtifactStorageMigration is not null;
+
+    public string ArtifactStorageMigrationFileCountDisplay =>
+        PendingArtifactStorageMigration is { } plan ?
+            LocalizeFormat("Файлов: {0}", plan.FileCount) :
+            string.Empty;
+
+    public string ArtifactStorageMigrationSizeDisplay =>
+        PendingArtifactStorageMigration is { } plan ?
+            FormatByteSize(plan.TotalBytes) :
+            string.Empty;
 
     public string LanguageButtonText =>
         _localizationService?.CurrentLanguage == ApplicationLanguage.English ?
@@ -291,6 +329,13 @@ public partial class MainViewModel : ViewModelBase
     public bool HasNoHistoryItems => HistoryItems.Count == 0;
 
     public bool HasNoProjectVersions => ProjectVersions.Count == 0;
+
+    public string ProjectArtifactsSizeDisplay => FormatByteSize(ProjectArtifactsSizeBytes);
+
+    public bool HasMissingProjectArtifacts => MissingProjectArtifactCount > 0;
+
+    public string MissingProjectArtifactsDisplay =>
+        LocalizeFormat("Отсутствует архивов: {0}", MissingProjectArtifactCount);
 
     public bool HasNoProjectHistory => ProjectHistory.Count == 0;
 
@@ -380,6 +425,7 @@ public partial class MainViewModel : ViewModelBase
         }
 
         Settings = await _userSettingsService.LoadAsync();
+        await RefreshArtifactStorageSummaryAsync();
         RemoteMachineArchitecture = FormatArchitecture(
             Settings.RemoteMachine.Architecture);
         AuthenticationMethod =
@@ -468,6 +514,8 @@ public partial class MainViewModel : ViewModelBase
         {
             var variablesTask = _projectEnvironmentService.GetAsync(project.Id);
             var versionsTask = _projectVersionService.GetByProjectIdAsync(project.Id);
+            var protectedVersionsTask = _projectVersionService.GetProtectedVersionIdsAsync(
+                project.Id);
             var historyTask = _projectDeploymentService.SearchAsync(
                 project.Name,
                 null,
@@ -476,7 +524,11 @@ public partial class MainViewModel : ViewModelBase
                 null,
                 0,
                 HistoryPageSize + 1);
-            await Task.WhenAll(variablesTask, versionsTask, historyTask);
+            await Task.WhenAll(
+                variablesTask,
+                versionsTask,
+                protectedVersionsTask,
+                historyTask);
 
             _isLoadingEnvironment = true;
             _environmentAutoSaveCancellation?.Cancel();
@@ -511,10 +563,24 @@ public partial class MainViewModel : ViewModelBase
 
             ProjectVersions.Clear();
 
-            foreach (var version in versionsTask.Result)
+            var artifactStates = _artifactStorageService is null ?
+                versionsTask.Result.Select(version =>
+                    new ArtifactFileState(string.Empty, true, version.ArtifactSize)).ToArray() :
+                await Task.WhenAll(versionsTask.Result.Select(version =>
+                    _artifactStorageService.GetFileStateAsync(version.ArtifactRelativePath)));
+
+            ProjectArtifactsSizeBytes = artifactStates
+                .Where(state => state.Exists)
+                .Sum(state => state.Size);
+            MissingProjectArtifactCount = artifactStates.Count(state => !state.Exists);
+
+            for (var index = 0; index < versionsTask.Result.Count; index++)
             {
                 ProjectVersions.Add(new ProjectVersionItemViewModel(
-                    version,
+                    versionsTask.Result[index],
+                    artifactStates[index].Exists,
+                    protectedVersionsTask.Result.Contains(versionsTask.Result[index].Id),
+                    artifactStates[index].Size,
                     _localizationService));
             }
 
@@ -530,6 +596,9 @@ public partial class MainViewModel : ViewModelBase
             }
 
             OnPropertyChanged(nameof(HasNoProjectVersions));
+            OnPropertyChanged(nameof(ProjectArtifactsSizeDisplay));
+            OnPropertyChanged(nameof(HasMissingProjectArtifacts));
+            OnPropertyChanged(nameof(MissingProjectArtifactsDisplay));
             OnPropertyChanged(nameof(HasNoProjectHistory));
 
             if (_deploymentStates.TryGetValue(project.Id, out var deploymentState) &&
@@ -613,8 +682,9 @@ public partial class MainViewModel : ViewModelBase
             return;
         }
 
-        DeploymentVersionTag = deployment.Version?.Tag ?? string.Empty;
-        DeploymentDescription = deployment.Version?.Description ?? string.Empty;
+        DeploymentVersionTag = deployment.Version?.Tag ?? deployment.VersionTag;
+        DeploymentDescription =
+            deployment.Version?.Description ?? deployment.VersionDescription ?? string.Empty;
         _deploymentEditorProjectId = SelectedProject.Id;
     }
 
@@ -955,6 +1025,7 @@ public partial class MainViewModel : ViewModelBase
         }
         catch (OperationCanceledException)
         {
+            return;
         }
     }
 
@@ -1090,6 +1161,7 @@ public partial class MainViewModel : ViewModelBase
         }
         catch (OperationCanceledException)
         {
+            return;
         }
         catch (Exception exception)
         {
@@ -1348,6 +1420,140 @@ public partial class MainViewModel : ViewModelBase
         SettingsStatus = Localize("Настройки сохранены");
     }
 
+    public async Task ToggleVersionPinnedAsync(ProjectVersionItemViewModel item)
+    {
+        if (_projectVersionService is null || SelectedProject is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await _projectVersionService.SetPinnedAsync(
+                item.Version.Id,
+                !item.Version.IsPinned);
+            await LoadProjectDetailsAsync(SelectedProject);
+        }
+        catch (Exception exception)
+        {
+            PublishNotification(exception.Message, isError: true);
+        }
+    }
+
+    public async Task DeleteVersionAsync(ProjectVersionItemViewModel item)
+    {
+        if (_projectVersionService is null || SelectedProject is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await _projectVersionService.DeleteAsync(item.Version.Id);
+            PublishNotification(
+                LocalizeFormat("Версия «{0}» удалена", item.Tag),
+                isError: false);
+            await LoadProjectDetailsAsync(SelectedProject);
+        }
+        catch (Exception exception)
+        {
+            PublishNotification(exception.Message, isError: true);
+        }
+    }
+
+    public async Task PrepareArtifactStorageMigrationAsync(string? targetPath)
+    {
+        if (_artifactStorageService is null || IsArtifactStorageBusy)
+        {
+            return;
+        }
+
+        IsArtifactStorageBusy = true;
+        SettingsError = string.Empty;
+        ArtifactStorageWarning = string.Empty;
+
+        try
+        {
+            PendingArtifactStorageMigration = await _artifactStorageService.PlanMigrationAsync(
+                targetPath);
+        }
+        catch (Exception exception)
+        {
+            PendingArtifactStorageMigration = null;
+            SettingsError = exception.Message;
+        }
+        finally
+        {
+            IsArtifactStorageBusy = false;
+        }
+    }
+
+    public async Task ApplyArtifactStorageMigrationAsync()
+    {
+        if (_artifactStorageService is null ||
+            PendingArtifactStorageMigration is not { } plan ||
+            IsArtifactStorageBusy)
+        {
+            return;
+        }
+
+        IsArtifactStorageBusy = true;
+        SettingsError = string.Empty;
+        ArtifactStorageWarning = string.Empty;
+
+        try
+        {
+            var result = await _artifactStorageService.MigrateAsync(plan.TargetRoot);
+            Settings.ArtifactsDirectoryPath = string.Equals(
+                result.Plan.TargetRoot,
+                Path.GetFullPath(DatabasePaths.ArtifactsDirectory),
+                StringComparison.OrdinalIgnoreCase) ?
+                    null :
+                    result.Plan.TargetRoot;
+            PendingArtifactStorageMigration = null;
+            ArtifactStorageWarning = result.Warning ?? string.Empty;
+            SettingsStatus = Localize("Каталог локальных версий изменён");
+            await RefreshArtifactStorageSummaryAsync();
+        }
+        catch (Exception exception)
+        {
+            SettingsError = exception.Message;
+        }
+        finally
+        {
+            IsArtifactStorageBusy = false;
+        }
+    }
+
+    public void CancelArtifactStorageMigration()
+    {
+        PendingArtifactStorageMigration = null;
+        ArtifactStorageWarning = string.Empty;
+    }
+
+    public async Task RefreshArtifactStorageSummaryAsync()
+    {
+        if (_artifactStorageService is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var summary = await _artifactStorageService.GetSummaryAsync();
+            ArtifactStorageEffectivePath = summary.EffectiveRoot;
+            ArtifactStorageUsedBytes = summary.UsedBytes;
+        }
+        catch (Exception exception)
+        {
+            ArtifactStorageEffectivePath = Localize("Каталог недоступен");
+            ArtifactStorageUsedBytes = 0;
+            SettingsError = exception.Message;
+        }
+
+        OnPropertyChanged(nameof(ArtifactStorageUsedDisplay));
+    }
+
     public void RequireFirstRunSetup()
     {
         IsFirstRunSetupRequired = true;
@@ -1540,6 +1746,22 @@ public partial class MainViewModel : ViewModelBase
 
     public string LocalizeFormat(string key, params object?[] arguments) =>
         _localizationService?.Format(key, arguments) ?? string.Format(key, arguments);
+
+    partial void OnPendingArtifactStorageMigrationChanged(
+        ArtifactStorageMigrationPlan? value)
+    {
+        OnPropertyChanged(nameof(HasPendingArtifactStorageMigration));
+        OnPropertyChanged(nameof(ArtifactStorageMigrationFileCountDisplay));
+        OnPropertyChanged(nameof(ArtifactStorageMigrationSizeDisplay));
+    }
+
+    private string FormatByteSize(long size) => size switch
+    {
+        >= 1_073_741_824 => $"{size / 1_073_741_824d:F2} {Localize("ГБ")}",
+        >= 1_048_576 => $"{size / 1_048_576d:F2} {Localize("МБ")}",
+        >= 1024 => $"{size / 1024d:F1} {Localize("КБ")}",
+        _ => $"{size} {Localize("Б")}",
+    };
 
     private static async Task<string?> ReadDeploymentLogAsync(string? logPath)
     {

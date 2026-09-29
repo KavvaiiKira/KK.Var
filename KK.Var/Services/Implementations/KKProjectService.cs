@@ -165,6 +165,22 @@ public sealed class KKProjectService(
 
         NormalizeAndValidateHealthCheck(project);
 
+        if (project.MaxStoredVersions is < 1 or > 10000)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(project.MaxStoredVersions),
+                localizationService.Get(
+                    "Максимальное количество версий должно быть от 1 до 10000."));
+        }
+
+        if (project.MaxStoredVersionBytes is <= 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(project.MaxStoredVersionBytes),
+                localizationService.Get(
+                    "Лимит размера должен быть больше нуля."));
+        }
+
         project.BuildConfigurationJson =
             string.IsNullOrWhiteSpace(project.BuildConfigurationJson) ?
                 "{}" :

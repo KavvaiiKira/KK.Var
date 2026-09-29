@@ -145,6 +145,44 @@
                             CornerRadius="14">
                         <StackPanel Spacing="14">
                             <StackPanel Spacing="5">
+                                <TextBlock Text="{DynamicResource 'Хранение версий'}"
+                                           FontSize="19"
+                                           FontWeight="Bold" />
+                                <TextBlock Text="{DynamicResource 'Ограничения применяются при автоматической очистке после успешного Deploy.'}"
+                                           FontSize="12"
+                                           TextWrapping="Wrap"
+                                           Foreground="{DynamicResource AppTextMutedBrush}" />
+                            </StackPanel>
+
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="18">
+                                <StackPanel Spacing="7">
+                                    <TextBlock Classes="field-label"
+                                               Text="{DynamicResource 'Максимальное количество версий'}" />
+                                    <NumericUpDown Classes="project-field"
+                                                   Minimum="1"
+                                                   Maximum="10000"
+                                                   Increment="1"
+                                                   Value="{Binding MaxStoredVersions, Mode=TwoWay}" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Spacing="7">
+                                    <TextBlock Classes="field-label"
+                                               Text="{DynamicResource 'Лимит размера, МБ'}" />
+                                    <TextBox Classes="project-field"
+                                             Text="{Binding MaxStoredVersionSizeMb, Mode=TwoWay}"
+                                             PlaceholderText="{DynamicResource 'Без ограничения'}" />
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Padding="24"
+                            Background="{DynamicResource AppSurfaceBrush}"
+                            BorderBrush="{DynamicResource AppBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="14">
+                        <StackPanel Spacing="14">
+                            <StackPanel Spacing="5">
                                 <TextBlock Text="{DynamicResource 'Исходный код'}"
                                            FontSize="19"
                                            FontWeight="Bold" />
