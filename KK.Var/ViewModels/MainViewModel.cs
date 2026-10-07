@@ -40,6 +40,7 @@ public partial class MainViewModel : ViewModelBase
     private readonly IKKProjectDeploymentService? _projectDeploymentService;
     private readonly IArtifactStorageService? _artifactStorageService;
     private readonly IVersionCleanupService? _versionCleanupService;
+    private readonly IDeploymentPreflightService? _deploymentPreflightService;
     private readonly IDeploymentOperationQueue? _deploymentOperationQueue;
     private readonly ILocalizationService? _localizationService;
     private CancellationTokenSource? _gitHubAuthorizationCancellation;
@@ -70,6 +71,7 @@ public partial class MainViewModel : ViewModelBase
         IKKProjectDeploymentService projectDeploymentService,
         IArtifactStorageService artifactStorageService,
         IVersionCleanupService versionCleanupService,
+        IDeploymentPreflightService deploymentPreflightService,
         IDeploymentOperationQueue deploymentOperationQueue,
         ILocalizationService localizationService,
         CreateProjectViewModel projectEditor)
@@ -85,6 +87,7 @@ public partial class MainViewModel : ViewModelBase
         _projectDeploymentService = projectDeploymentService;
         _artifactStorageService = artifactStorageService;
         _versionCleanupService = versionCleanupService;
+        _deploymentPreflightService = deploymentPreflightService;
         _deploymentOperationQueue = deploymentOperationQueue;
         _localizationService = localizationService;
         ProjectEditor = projectEditor;
@@ -742,7 +745,7 @@ public partial class MainViewModel : ViewModelBase
     {
         if (_projectDeploymentService is null ||
             SelectedProject is null ||
-            IsSelectedProjectDeploymentActive)
+            !CanCheckDeployment)
         {
             return false;
         }
@@ -764,6 +767,7 @@ public partial class MainViewModel : ViewModelBase
             VersionTag = deployedTag,
             Description = DeploymentDescription,
             OperationType = DeploymentOperationType.Deploy,
+            PreflightRevision = GetPreflightRevision(projectId),
         };
 
         _deploymentStates[projectId] = state;
@@ -1052,6 +1056,7 @@ public partial class MainViewModel : ViewModelBase
         }
 
         HasUnsavedEnvironmentChanges = true;
+        InvalidateDeploymentPreflight(SelectedProject?.Id);
         _environmentChangeVersion++;
         EnvironmentSaveStatus = Localize("Есть несохранённые изменения");
         _environmentAutoSaveCancellation?.Cancel();
@@ -1250,6 +1255,7 @@ public partial class MainViewModel : ViewModelBase
 
     private void ProjectEditor_OnProjectUpdated(object? sender, KKProject project)
     {
+        InvalidateDeploymentPreflight(project.Id);
         var index = Projects
             .Select((item, itemIndex) => new { item, itemIndex })
             .FirstOrDefault(entry => entry.item.Id == project.Id)
@@ -1322,6 +1328,13 @@ public partial class MainViewModel : ViewModelBase
         object? sender,
         PropertyChangedEventArgs e)
     {
+        if (ProjectEditor.IsEditing &&
+            e.PropertyName is nameof(CreateProjectViewModel.BuildConfigurationJson) or
+                nameof(CreateProjectViewModel.SelectedBuildProvider))
+        {
+            InvalidateDeploymentPreflight(SelectedProject?.Id);
+        }
+
         if (e.PropertyName == nameof(CreateProjectViewModel.ErrorMessage))
         {
             if (string.IsNullOrWhiteSpace(ProjectEditor.ErrorMessage))
@@ -1458,6 +1471,7 @@ public partial class MainViewModel : ViewModelBase
     [RelayCommand]
     private async Task SaveSettingsAsync()
     {
+        InvalidateDeploymentPreflight();
         if (_userSettingsService is null)
         {
             return;
@@ -1692,6 +1706,7 @@ public partial class MainViewModel : ViewModelBase
     [RelayCommand]
     private async Task CheckRemoteConnectionAsync()
     {
+        InvalidateDeploymentPreflight();
         if (_remoteConnectionService is null ||
             _userSettingsService is null ||
             IsConnectionCheckRunning)
@@ -1808,6 +1823,7 @@ public partial class MainViewModel : ViewModelBase
             ApplicationLanguage.Russian;
 
         _localizationService.SetLanguage(nextLanguage);
+        InvalidateDeploymentPreflight();
 
         Settings.Language = nextLanguage;
 
@@ -1969,11 +1985,17 @@ public partial class MainViewModel : ViewModelBase
     partial void OnIsProjectOperationRunningChanged(bool value) =>
         NotifyOperationStateChanged();
 
-    partial void OnIsProjectDetailsLoadingChanged(bool value) =>
+    partial void OnIsProjectDetailsLoadingChanged(bool value)
+    {
         NotifyOperationStateChanged();
+        OnPropertyChanged(nameof(CanCheckDeployment));
+    }
 
-    partial void OnIsEnvironmentSavingChanged(bool value) =>
+    partial void OnIsEnvironmentSavingChanged(bool value)
+    {
         NotifyOperationStateChanged();
+        OnPropertyChanged(nameof(CanCheckDeployment));
+    }
 
     partial void OnIsDeploymentRunningChanged(bool value)
     {
@@ -1986,6 +2008,7 @@ public partial class MainViewModel : ViewModelBase
 
     partial void OnDeploymentVersionTagChanged(string value)
     {
+        InvalidateDeploymentPreflight(SelectedProject?.Id);
         if (!IsNotificationError)
         {
             return;
@@ -2096,6 +2119,8 @@ public partial class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(HasDeploymentPreflightResult));
         OnPropertyChanged(nameof(DeploymentPreflightSummary));
         OnPropertyChanged(nameof(DeploymentPreflightDetails));
+        OnPropertyChanged(nameof(DeploymentPreflightItems));
+        OnPropertyChanged(nameof(CanCheckDeployment));
         OnPropertyChanged(nameof(OperationStatusText));
     }
 
@@ -2105,6 +2130,11 @@ public partial class MainViewModel : ViewModelBase
         DeploymentPreflightResult result)
     {
         if (!TryGetDeploymentState(projectId, operationId, out var state))
+        {
+            return;
+        }
+
+        if (state.PreflightRevision != GetPreflightRevision(projectId))
         {
             return;
         }
@@ -2320,6 +2350,7 @@ public partial class MainViewModel : ViewModelBase
 
     partial void OnAuthenticationMethodChanged(string value)
     {
+        InvalidateDeploymentPreflight();
         Settings.RemoteMachine.AuthenticationMethod =
             Canonicalize(value) == PasswordAuthentication ?
                 PasswordAuthentication :

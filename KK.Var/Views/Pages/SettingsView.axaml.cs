@@ -12,6 +12,15 @@ public partial class SettingsView : UserControl
     public SettingsView()
     {
         InitializeComponent();
+        AddHandler(TextBox.TextChangedEvent, SettingsInput_OnChanged);
+    }
+
+    private void SettingsInput_OnChanged(object? sender, TextChangedEventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel)
+        {
+            viewModel.InvalidateDeploymentPreflight();
+        }
     }
 
     private async void CopyGitHubCodeButton_OnClick(

@@ -1,7 +1,9 @@
 using System;
+using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using KK.Var.ViewModels;
 
 namespace KK.Var.Views.Pages;
@@ -149,8 +151,55 @@ public partial class ProjectDetailsView : UserControl
     {
         if (DataContext is MainViewModel viewModel)
         {
+            var projectId = viewModel.SelectedProject?.Id;
             await viewModel.DeploySelectedProjectAsync();
+            if (viewModel.SelectedProject?.Id == projectId)
+            {
+                FocusPreflightError();
+            }
         }
+    }
+
+    private async void CheckDeploymentButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel)
+        {
+            var projectId = viewModel.SelectedProject?.Id;
+            await viewModel.CheckSelectedDeploymentAsync();
+            if (viewModel.SelectedProject?.Id == projectId)
+            {
+                FocusPreflightError();
+            }
+        }
+    }
+
+    private void FocusPreflightError()
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (!DeployPanel.IsVisible)
+            {
+                return;
+            }
+
+            var error = PreflightResults.Items.OfType<DeploymentPreflightItemViewModel>()
+                .FirstOrDefault(item => item.IsError);
+            if (error is null)
+            {
+                if (DataContext is MainViewModel { DeploymentVersionTag: var tag } &&
+                    string.IsNullOrWhiteSpace(tag))
+                {
+                    DeploymentTagInput.Focus();
+                }
+
+                return;
+            }
+
+            PreflightResults.SelectedItem = error;
+            PreflightResults.ScrollIntoView(error);
+            PreflightResults.Focus();
+            PreflightResults.ContainerFromItem(error)?.Focus();
+        }, DispatcherPriority.Loaded);
     }
 
     private void CancelDeploymentButton_OnClick(object? sender, RoutedEventArgs e)
