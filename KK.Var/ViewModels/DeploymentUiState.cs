@@ -1,5 +1,6 @@
 using System;
 using KK.Var.Enums;
+using KK.Var.Models;
 
 namespace KK.Var.ViewModels;
 
@@ -25,6 +26,8 @@ internal sealed class DeploymentUiState
     public string ProgressMessage { get; set; } = string.Empty;
 
     public string LogText { get; set; } = string.Empty;
+
+    public DeploymentPreflightResult? PreflightResult { get; set; }
 
     public bool IsActive =>
         QueueStatus is DeploymentQueueStatus.Waiting or DeploymentQueueStatus.Running;

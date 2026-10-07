@@ -9,6 +9,11 @@ public interface IArtifactStorageService
 {
     bool IsMigrationRunning { get; }
 
+    bool IsCleanupRunning { get; }
+
+    Task<IAsyncDisposable> AcquireCleanupLeaseAsync(
+        CancellationToken cancellationToken = default);
+
     Task<string> GetEffectiveRootAsync(
         CancellationToken cancellationToken = default);
 

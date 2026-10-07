@@ -20,8 +20,29 @@ public sealed class ArtifactStorageService(
 {
     private readonly SemaphoreSlim _migrationLock = new SemaphoreSlim(1, 1);
     private int _migrationRunning;
+    private int _cleanupRunning;
 
     public bool IsMigrationRunning => Volatile.Read(ref _migrationRunning) != 0;
+
+    public bool IsCleanupRunning => Volatile.Read(ref _cleanupRunning) != 0;
+
+    public async Task<IAsyncDisposable> AcquireCleanupLeaseAsync(
+        CancellationToken cancellationToken = default)
+    {
+        await _migrationLock.WaitAsync(cancellationToken);
+        Interlocked.Exchange(ref _cleanupRunning, 1);
+        return new CleanupLease(this);
+    }
+
+    private sealed class CleanupLease(ArtifactStorageService owner) : IAsyncDisposable
+    {
+        public ValueTask DisposeAsync()
+        {
+            Interlocked.Exchange(ref owner._cleanupRunning, 0);
+            owner._migrationLock.Release();
+            return ValueTask.CompletedTask;
+        }
+    }
 
     public async Task<string> GetEffectiveRootAsync(
         CancellationToken cancellationToken = default)
@@ -48,9 +69,16 @@ public sealed class ArtifactStorageService(
         cancellationToken.ThrowIfCancellationRequested();
 
         var path = await ResolvePathAsync(relativePath, cancellationToken);
-        if (!File.Exists(path))
+        var attributes = GetExistingAttributes(path);
+        if (!attributes.HasValue)
         {
             return new ArtifactFileState(path, false, 0);
+        }
+
+        if ((attributes.Value & FileAttributes.Directory) != 0)
+        {
+            throw new InvalidOperationException(localizationService.Get(
+                "Путь к архиву версии недопустим."));
         }
 
         EnsureNotReparsePoint(path);
@@ -76,6 +104,12 @@ public sealed class ArtifactStorageService(
             throw new ArgumentException("Project id is required.", nameof(projectId));
         }
 
+        if (IsCleanupRunning)
+        {
+            throw new InvalidOperationException(localizationService.Get(
+                "Нельзя удалять проект во время очистки версий."));
+        }
+
         var root = await GetEffectiveRootAsync(cancellationToken);
         var projectDirectory = ResolvePath(root, projectId.ToString("N"));
 
@@ -95,9 +129,16 @@ public sealed class ArtifactStorageService(
         cancellationToken.ThrowIfCancellationRequested();
 
         var path = await ResolvePathAsync(relativePath, cancellationToken);
-        if (!File.Exists(path))
+        var attributes = GetExistingAttributes(path);
+        if (!attributes.HasValue)
         {
             return;
+        }
+
+        if ((attributes.Value & FileAttributes.Directory) != 0)
+        {
+            throw new InvalidOperationException(localizationService.Get(
+                "Путь к архиву версии недопустим."));
         }
 
         EnsureNotReparsePoint(path);
@@ -565,6 +606,22 @@ public sealed class ArtifactStorageService(
         {
             throw new InvalidOperationException(localizationService.Get(
                 "Файл архива не может быть reparse point."));
+        }
+    }
+
+    private static FileAttributes? GetExistingAttributes(string path)
+    {
+        try
+        {
+            return File.GetAttributes(path);
+        }
+        catch (FileNotFoundException)
+        {
+            return null;
+        }
+        catch (DirectoryNotFoundException)
+        {
+            return null;
         }
     }
 

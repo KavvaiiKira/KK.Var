@@ -39,6 +39,7 @@ public partial class MainViewModel : ViewModelBase
     private readonly IKKProjectVersionService? _projectVersionService;
     private readonly IKKProjectDeploymentService? _projectDeploymentService;
     private readonly IArtifactStorageService? _artifactStorageService;
+    private readonly IVersionCleanupService? _versionCleanupService;
     private readonly IDeploymentOperationQueue? _deploymentOperationQueue;
     private readonly ILocalizationService? _localizationService;
     private CancellationTokenSource? _gitHubAuthorizationCancellation;
@@ -68,6 +69,7 @@ public partial class MainViewModel : ViewModelBase
         IKKProjectVersionService projectVersionService,
         IKKProjectDeploymentService projectDeploymentService,
         IArtifactStorageService artifactStorageService,
+        IVersionCleanupService versionCleanupService,
         IDeploymentOperationQueue deploymentOperationQueue,
         ILocalizationService localizationService,
         CreateProjectViewModel projectEditor)
@@ -82,6 +84,7 @@ public partial class MainViewModel : ViewModelBase
         _projectVersionService = projectVersionService;
         _projectDeploymentService = projectDeploymentService;
         _artifactStorageService = artifactStorageService;
+        _versionCleanupService = versionCleanupService;
         _deploymentOperationQueue = deploymentOperationQueue;
         _localizationService = localizationService;
         ProjectEditor = projectEditor;
@@ -205,6 +208,12 @@ public partial class MainViewModel : ViewModelBase
     public partial string ArtifactStorageWarning { get; set; } = string.Empty;
 
     [ObservableProperty]
+    public partial VersionCleanupPlan? PendingVersionCleanup { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsVersionCleanupBusy { get; set; }
+
+    [ObservableProperty]
     public partial bool IsHostKeyConfirmationRequired { get; set; }
 
     [ObservableProperty]
@@ -235,6 +244,15 @@ public partial class MainViewModel : ViewModelBase
     public ObservableCollection<string> AuthenticationMethods { get; } = [];
 
     public string ArtifactStorageUsedDisplay => FormatByteSize(ArtifactStorageUsedBytes);
+
+    public bool HasPendingVersionCleanup => PendingVersionCleanup is not null;
+
+    public string VersionCleanupPreview => PendingVersionCleanup is { } plan ?
+        LocalizeFormat(
+            "Будет удалено версий: {0}, байт: {1}. Отменить это действие нельзя.",
+            plan.VersionCount,
+            plan.BytesToDelete.ToString("N0")) :
+        string.Empty;
 
     public bool HasPendingArtifactStorageMigration => PendingArtifactStorageMigration is not null;
 
@@ -294,6 +312,32 @@ public partial class MainViewModel : ViewModelBase
 
     public string VisibleDeploymentLogText =>
         SelectedDeploymentState?.LogText ?? string.Empty;
+
+    public bool HasDeploymentPreflightResult =>
+        SelectedDeploymentState?.PreflightResult is not null;
+
+    public string DeploymentPreflightSummary
+    {
+        get
+        {
+            var result = SelectedDeploymentState?.PreflightResult;
+            return result is null ? string.Empty : FormatPreflightSummary(result);
+        }
+    }
+
+    public string DeploymentPreflightDetails =>
+        SelectedDeploymentState?.PreflightResult is { } result ?
+            string.Join(Environment.NewLine, result.Checks.Select(check =>
+                $"{Localize(check.Status switch
+                {
+                    PreflightStatus.Success => "Успешно",
+                    PreflightStatus.Warning => "Предупреждение",
+                    _ => "Ошибка",
+                })}: {check.Message}" +
+                (string.IsNullOrWhiteSpace(check.Detail) ?
+                    string.Empty :
+                    $" — {check.Detail}"))) :
+            string.Empty;
 
     public bool HasVisibleDeploymentLog => !string.IsNullOrWhiteSpace(VisibleDeploymentLogText);
 
@@ -367,6 +411,7 @@ public partial class MainViewModel : ViewModelBase
         IsProjectDetailsLoading ||
         IsEnvironmentSaving ||
         IsDeploymentRunning ||
+        IsVersionCleanupBusy ||
         ProjectEditor.IsSaving ||
         ProjectEditor.IsLoadingRepositories;
 
@@ -409,6 +454,11 @@ public partial class MainViewModel : ViewModelBase
                 return string.IsNullOrWhiteSpace(DeploymentProgressMessage) ?
                     Localize("Выполнение deploy") :
                     DeploymentProgressMessage;
+            }
+
+            if (IsVersionCleanupBusy)
+            {
+                return Localize("Очистка локальных версий");
             }
 
             return ProjectEditor.IsSaving ?
@@ -721,6 +771,8 @@ public partial class MainViewModel : ViewModelBase
 
         var progress = new UiThreadProgress<DeploymentProgress>(value =>
             HandleDeploymentProgress(projectId, state.OperationId, value));
+        var preflightProgress = new UiThreadProgress<DeploymentPreflightResult>(value =>
+            HandleDeploymentPreflight(projectId, state.OperationId, value));
 
         try
         {
@@ -729,12 +781,17 @@ public partial class MainViewModel : ViewModelBase
                     projectId,
                     deployedTag,
                     DeploymentDescription),
-                progress);
+                progress,
+                preflightProgress);
 
             if (SelectedProject?.Id == projectId)
             {
                 PublishNotification(
-                    LocalizeFormat("Версия «{0}» успешно развёрнута", deployedTag),
+                    state.PreflightResult?.HasWarnings == true ?
+                        LocalizeFormat(
+                            "Версия «{0}» развёрнута с предупреждениями preflight.",
+                            deployedTag) :
+                        LocalizeFormat("Версия «{0}» успешно развёрнута", deployedTag),
                     isError: false);
             }
 
@@ -761,6 +818,8 @@ public partial class MainViewModel : ViewModelBase
             {
                 PublishNotification(exception.Message, isError: true);
             }
+
+            await ReloadSelectedProjectAsync(projectId);
 
             return false;
         }
@@ -1461,6 +1520,75 @@ public partial class MainViewModel : ViewModelBase
         }
     }
 
+    public async Task PrepareVersionCleanupAsync()
+    {
+        if (_versionCleanupService is null ||
+            SelectedProject is null ||
+            IsVersionCleanupBusy)
+        {
+            return;
+        }
+
+        IsVersionCleanupBusy = true;
+
+        try
+        {
+            var plan = await _versionCleanupService.PlanAsync(SelectedProject.Id);
+            PendingVersionCleanup = plan.VersionCount == 0 ? null : plan;
+
+            if (plan.VersionCount == 0)
+            {
+                PublishNotification(Localize("Очистка версий не требуется."), isError: false);
+            }
+        }
+        catch (Exception exception)
+        {
+            PendingVersionCleanup = null;
+            PublishNotification(exception.Message, isError: true);
+        }
+        finally
+        {
+            IsVersionCleanupBusy = false;
+        }
+    }
+
+    public async Task ApplyVersionCleanupAsync()
+    {
+        if (_versionCleanupService is null ||
+            PendingVersionCleanup is not { } plan ||
+            SelectedProject?.Id != plan.ProjectId ||
+            IsVersionCleanupBusy)
+        {
+            return;
+        }
+
+        IsVersionCleanupBusy = true;
+        PendingVersionCleanup = null;
+
+        try
+        {
+            var result = await _versionCleanupService.ExecuteAsync(
+                plan.ProjectId,
+                expectedPlan: plan);
+            await LoadProjectDetailsAsync(SelectedProject);
+            PublishNotification(LocalizeFormat(
+                "Очищено версий: {0}, байт: {1}.",
+                result.VersionCount,
+                result.BytesToDelete.ToString("N0")), isError: false);
+        }
+        catch (Exception exception)
+        {
+            await LoadProjectDetailsAsync(SelectedProject);
+            PublishNotification(exception.Message, isError: true);
+        }
+        finally
+        {
+            IsVersionCleanupBusy = false;
+        }
+    }
+
+    public void CancelVersionCleanup() => PendingVersionCleanup = null;
+
     public async Task PrepareArtifactStorageMigrationAsync(string? targetPath)
     {
         if (_artifactStorageService is null || IsArtifactStorageBusy)
@@ -1755,6 +1883,12 @@ public partial class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(ArtifactStorageMigrationSizeDisplay));
     }
 
+    partial void OnPendingVersionCleanupChanged(VersionCleanupPlan? value)
+    {
+        OnPropertyChanged(nameof(HasPendingVersionCleanup));
+        OnPropertyChanged(nameof(VersionCleanupPreview));
+    }
+
     private string FormatByteSize(long size) => size switch
     {
         >= 1_073_741_824 => $"{size / 1_073_741_824d:F2} {Localize("ГБ")}",
@@ -1846,6 +1980,9 @@ public partial class MainViewModel : ViewModelBase
         NotifyOperationStateChanged();
         NotifySelectedDeploymentStateChanged();
     }
+
+    partial void OnIsVersionCleanupBusyChanged(bool value) =>
+        NotifyOperationStateChanged();
 
     partial void OnDeploymentVersionTagChanged(string value)
     {
@@ -1956,7 +2093,38 @@ public partial class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(SelectedProjectQueueStatusText));
         OnPropertyChanged(nameof(VisibleDeploymentLogText));
         OnPropertyChanged(nameof(HasVisibleDeploymentLog));
+        OnPropertyChanged(nameof(HasDeploymentPreflightResult));
+        OnPropertyChanged(nameof(DeploymentPreflightSummary));
+        OnPropertyChanged(nameof(DeploymentPreflightDetails));
         OnPropertyChanged(nameof(OperationStatusText));
+    }
+
+    private void HandleDeploymentPreflight(
+        Guid projectId,
+        Guid operationId,
+        DeploymentPreflightResult result)
+    {
+        if (!TryGetDeploymentState(projectId, operationId, out var state))
+        {
+            return;
+        }
+
+        state.PreflightResult = result;
+        AppendDeploymentLog(state, FormatPreflightSummary(result));
+        NotifySelectedDeploymentStateChanged();
+    }
+
+    private string FormatPreflightSummary(DeploymentPreflightResult result)
+    {
+        if (result.FirstError is { } error)
+        {
+            return LocalizeFormat("Preflight: ошибка — {0}", error.Message);
+        }
+
+        var warnings = result.Checks.Count(check => check.Status == PreflightStatus.Warning);
+        return warnings == 0 ?
+            Localize("Preflight: проверка пройдена.") :
+            LocalizeFormat("Preflight: предупреждений — {0}.", warnings);
     }
 
     private void DeploymentOperationQueue_OnQueueChanged(object? sender, EventArgs e)
@@ -2189,6 +2357,7 @@ public partial class MainViewModel : ViewModelBase
 
     partial void OnSelectedProjectChanged(KKProject? value)
     {
+        PendingVersionCleanup = null;
         OnPropertyChanged(nameof(SelectedProjectSourceDisplay));
         OnPropertyChanged(nameof(SelectedProjectLastDeploymentDisplay));
         OnPropertyChanged(nameof(SelectedProjectLatestVersionTag));

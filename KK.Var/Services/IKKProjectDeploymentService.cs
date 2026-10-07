@@ -42,6 +42,7 @@ public interface IKKProjectDeploymentService
     Task<KKProjectDeployment> DeployAsync(
         DeploymentRequest request,
         IProgress<DeploymentProgress>? progress = null,
+        IProgress<DeploymentPreflightResult>? preflightProgress = null,
         CancellationToken cancellationToken = default);
 
     Task<KKProjectDeployment> RollbackAsync(

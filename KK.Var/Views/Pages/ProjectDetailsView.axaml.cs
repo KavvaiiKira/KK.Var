@@ -195,6 +195,34 @@ public partial class ProjectDetailsView : UserControl
         DeleteVersionConfirmation.IsVisible = true;
     }
 
+    private async void PrepareVersionCleanupButton_OnClick(
+        object? sender,
+        RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel)
+        {
+            await viewModel.PrepareVersionCleanupAsync();
+        }
+    }
+
+    private void CancelVersionCleanupButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel)
+        {
+            viewModel.CancelVersionCleanup();
+        }
+    }
+
+    private async void ConfirmVersionCleanupButton_OnClick(
+        object? sender,
+        RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel)
+        {
+            await viewModel.ApplyVersionCleanupAsync();
+        }
+    }
+
     private void CancelDeleteVersionButton_OnClick(object? sender, RoutedEventArgs e)
     {
         _versionPendingDelete = null;

@@ -99,6 +99,8 @@ sealed class Program
         builder.Services.AddSingleton<ISshPasswordStore, SshPasswordStore>();
         builder.Services.AddSingleton<ILocalizationService, LocalizationService>();
         builder.Services.AddSingleton<IRemoteConnectionService, RemoteConnectionService>();
+        builder.Services.AddSingleton<IDeploymentPreflightService, DeploymentPreflightService>();
+        builder.Services.AddSingleton<IDeploymentPreflightService, DeploymentPreflightService>();
         builder.Services.AddSingleton<IGitHubTokenStore, GitHubTokenStore>();
         builder.Services.AddSingleton<IGitHubService, GitHubService>();
         builder.Services.AddSingleton<
@@ -119,6 +121,7 @@ sealed class Program
             KKProjectEnvironmentService>();
         builder.Services.AddSingleton<IKKProjectVersionService, KKProjectVersionService>();
         builder.Services.AddSingleton<IArtifactStorageService, ArtifactStorageService>();
+        builder.Services.AddSingleton<IVersionCleanupService, VersionCleanupService>();
         builder.Services.AddSingleton<IProjectArtifactService, ProjectArtifactService>();
         builder.Services.AddSingleton<IRemoteDeploymentService, RemoteDeploymentService>();
         builder.Services.AddSingleton<

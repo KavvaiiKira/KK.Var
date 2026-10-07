@@ -199,6 +199,11 @@
                                    Text="{Binding MissingProjectArtifactsDisplay}"
                                    Foreground="{DynamicResource AppDangerBrush}" />
                     </StackPanel>
+                    <Button Classes="details-secondary"
+                            HorizontalAlignment="Left"
+                            IsEnabled="{Binding !IsVersionCleanupBusy}"
+                            Content="{DynamicResource 'Очистить версии'}"
+                            Click="PrepareVersionCleanupButton_OnClick" />
                     <TextBlock IsVisible="{Binding HasNoProjectVersions}" Margin="0,36,0,0"
                                HorizontalAlignment="Center" Text="{DynamicResource 'У проекта пока нет собранных версий'}"
                                Foreground="{DynamicResource AppTextMutedBrush}" />
@@ -320,6 +325,25 @@
                         <ProgressBar Height="4" Minimum="0" Maximum="100"
                                      IsVisible="{Binding IsSelectedProjectDeploymentRunning}"
                                      Value="{Binding DeploymentProgressPercentage}" />
+                        <Border IsVisible="{Binding HasDeploymentPreflightResult}"
+                                Padding="12"
+                                Background="{DynamicResource AppSurfaceRaisedBrush}"
+                                BorderBrush="{DynamicResource AppBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="{Binding DeploymentPreflightSummary}"
+                                           TextWrapping="Wrap"
+                                           Foreground="{DynamicResource AppTextMutedBrush}" />
+                                <Expander Header="{DynamicResource 'Технические подробности'}">
+                                    <ScrollViewer MaxHeight="150">
+                                        <TextBlock Text="{Binding DeploymentPreflightDetails}"
+                                                   TextWrapping="Wrap"
+                                                   FontSize="12" />
+                                    </ScrollViewer>
+                                </Expander>
+                            </StackPanel>
+                        </Border>
                         <Border IsVisible="{Binding HasVisibleDeploymentLog}"
                                 Height="210" Padding="12"
                                 Background="{DynamicResource AppBackgroundBrush}"
@@ -382,6 +406,41 @@
                                 Padding="16,10"
                                 Content="{DynamicResource 'Сохранить и перейти'}"
                                 Click="SaveEnvironmentAndContinueButton_OnClick" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Border>
+
+        <Border IsVisible="{Binding HasPendingVersionCleanup}"
+                Grid.RowSpan="3"
+                Background="#C9080510">
+            <Border Width="500"
+                    Padding="28"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource AppSurfaceBrush}"
+                    BorderBrush="{DynamicResource AppBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="14">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="{DynamicResource 'Очистить версии?'}"
+                               FontSize="20"
+                               FontWeight="Bold" />
+                    <TextBlock Text="{Binding VersionCleanupPreview}"
+                               TextWrapping="Wrap"
+                               FontSize="13"
+                               Foreground="{DynamicResource AppTextMutedBrush}" />
+                    <StackPanel Margin="0,10,0,0"
+                                HorizontalAlignment="Right"
+                                Orientation="Horizontal"
+                                Spacing="10">
+                        <Button Classes="details-secondary"
+                                Content="{DynamicResource 'Отмена'}"
+                                Click="CancelVersionCleanupButton_OnClick" />
+                        <Button Classes="details-secondary"
+                                Foreground="{DynamicResource AppDangerBrush}"
+                                Content="{DynamicResource 'Очистить версии'}"
+                                Click="ConfirmVersionCleanupButton_OnClick" />
                     </StackPanel>
                 </StackPanel>
             </Border>

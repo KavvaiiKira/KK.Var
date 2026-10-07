@@ -21,6 +21,8 @@ public sealed class KKProjectDeploymentService(
     IKKProjectEnvironmentService environmentService,
     IProjectArtifactService artifactService,
     IArtifactStorageService artifactStorageService,
+    IDeploymentPreflightService preflightService,
+    IVersionCleanupService versionCleanupService,
     IRemoteDeploymentService remoteDeploymentService,
     IDeploymentOperationQueue operationQueue,
     IUserSettingsService userSettingsService,
@@ -145,9 +147,11 @@ public sealed class KKProjectDeploymentService(
     public Task<KKProjectDeployment> DeployAsync(
         DeploymentRequest request,
         IProgress<DeploymentProgress>? progress = null,
+        IProgress<DeploymentPreflightResult>? preflightProgress = null,
         CancellationToken cancellationToken = default)
     {
-        if (artifactStorageService.IsMigrationRunning)
+        if (artifactStorageService.IsMigrationRunning ||
+            artifactStorageService.IsCleanupRunning)
         {
             throw new InvalidOperationException(localizationService.Get(
                 "Нельзя начать Deploy во время переноса локальных версий."));
@@ -157,15 +161,31 @@ public sealed class KKProjectDeploymentService(
             request.ProjectId,
             request.VersionTag,
             DeploymentOperationType.Deploy,
-            token => DeployCoreAsync(request, progress, token),
+            token => DeployCoreAsync(request, progress, preflightProgress, token),
             cancellationToken);
     }
 
     private async Task<KKProjectDeployment> DeployCoreAsync(
         DeploymentRequest request,
         IProgress<DeploymentProgress>? progress,
+        IProgress<DeploymentPreflightResult>? preflightProgress,
         CancellationToken cancellationToken)
     {
+        progress?.Report(new DeploymentProgress(
+            1,
+            localizationService.Get("Предварительная проверка Deploy")));
+        var preflight = await preflightService.CheckAsync(
+            request,
+            currentOperationOwnsQueue: true,
+            cancellationToken);
+        preflightProgress?.Report(preflight);
+        if (preflight.FirstError is { } firstError)
+        {
+            throw new InvalidOperationException(localizationService.Format(
+                "Предварительная проверка остановила Deploy: {0}",
+                firstError.Message));
+        }
+
         var project = await projectRepository.GetByIdAsync(
                 request.ProjectId,
                 cancellationToken) ??
@@ -211,7 +231,7 @@ public sealed class KKProjectDeploymentService(
             },
             cancellationToken);
 
-        return await ExecuteRemoteAsync(
+        var deployment = await ExecuteRemoteAsync(
             project,
             version,
             artifact.AbsolutePath,
@@ -219,6 +239,22 @@ public sealed class KKProjectDeploymentService(
             settings,
             progress,
             cancellationToken);
+
+        try
+        {
+            await versionCleanupService.ExecuteAsync(
+                project.Id,
+                afterSuccessfulDeploy: true,
+                cancellationToken: CancellationToken.None);
+        }
+        catch (Exception exception)
+        {
+            throw new InvalidOperationException(localizationService.Format(
+                "Deploy завершён, но очистка версий не удалась: {0}",
+                exception.Message), exception);
+        }
+
+        return deployment;
     }
 
     public async Task<KKProjectDeployment> RollbackAsync(
@@ -227,7 +263,8 @@ public sealed class KKProjectDeploymentService(
         IProgress<DeploymentProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
-        if (artifactStorageService.IsMigrationRunning)
+        if (artifactStorageService.IsMigrationRunning ||
+            artifactStorageService.IsCleanupRunning)
         {
             throw new InvalidOperationException(localizationService.Get(
                 "Нельзя начать rollback во время переноса локальных версий."));

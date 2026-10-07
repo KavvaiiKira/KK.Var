@@ -118,6 +118,12 @@ public sealed class KKProjectVersionService(
         bool isPinned,
         CancellationToken cancellationToken = default)
     {
+        if (artifactStorageService.IsCleanupRunning)
+        {
+            throw new InvalidOperationException(localizationService.Get(
+                "Нельзя изменять версии во время очистки."));
+        }
+
         var version = await versionRepository.GetByIdAsync(versionId, cancellationToken) ??
             throw new KeyNotFoundException(localizationService.Get("Версия не найдена."));
 
@@ -133,7 +139,8 @@ public sealed class KKProjectVersionService(
             throw new KeyNotFoundException(localizationService.Get("Версия не найдена."));
 
         if (operationQueue.HasActiveOperation(version.KKProjectId) ||
-            artifactStorageService.IsMigrationRunning)
+            artifactStorageService.IsMigrationRunning ||
+            artifactStorageService.IsCleanupRunning)
         {
             throw new InvalidOperationException(localizationService.Get(
                 "Нельзя удалить версию во время активной операции."));
