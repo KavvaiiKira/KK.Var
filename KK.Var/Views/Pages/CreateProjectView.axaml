@@ -263,7 +263,7 @@
                                           SelectedItem="{Binding SelectedBuildProvider, Mode=TwoWay}" />
                             </StackPanel>
 
-                            <StackPanel Grid.Row="1" Grid.Column="1" Spacing="7">
+                            <StackPanel Grid.Row="1" Grid.Column="1" Spacing="7" IsVisible="{Binding !IsPythonBuild}">
                                 <TextBlock Classes="field-label" Text="{DynamicResource 'Исполняемый файл или точка входа'}" />
                                 <TextBox Classes="project-field"
                                          Text="{Binding RemoteExecutableFileName, Mode=TwoWay}"
@@ -284,22 +284,87 @@
                                          PlaceholderText="/opt/kk-var/billing-api" />
                             </StackPanel>
 
-                            <StackPanel Grid.Row="3"
-                                        Grid.ColumnSpan="2"
-                                        Margin="0,18,0,0"
-                                        Spacing="7">
-                                <TextBlock Classes="field-label" Text="{DynamicResource 'Параметры сборки (JSON)'}" />
-                                <TextBlock Text="{DynamicResource 'Поддерживаются configuration, configureArguments, buildArguments и environment. Для C++ и Custom нужны дополнительные поля.'}"
-                                           FontSize="11"
-                                           Foreground="{DynamicResource AppTextMutedBrush}" />
-                                <TextBox Classes="project-field"
-                                         MinHeight="92"
-                                         Padding="12,10"
-                                         VerticalContentAlignment="Top"
-                                         AcceptsReturn="True"
-                                         TextWrapping="Wrap"
-                                         FontFamily="Consolas"
-                                         Text="{Binding BuildConfigurationJson, Mode=TwoWay}" />
+                            <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Margin="0,18,0,0" Spacing="12">
+                                <Button Classes="project-secondary" HorizontalAlignment="Left"
+                                        Content="{DynamicResource 'Определить параметры сборки'}"
+                                        Command="{Binding DetectBuildSettingsCommand}" />
+                                <TextBlock Text="{DynamicResource 'Пути задаются относительно рабочего каталога; пустой файл зависимостей Python означает автоопределение.'}"
+                                           TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                <TextBlock IsVisible="{Binding IsAutomaticBuild}"
+                                           Text="{DynamicResource 'Для настройки параметров выберите тип сборки или определите его по локальной папке.'}"
+                                           TextWrapping="Wrap" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                <StackPanel Spacing="7">
+                                    <TextBlock Classes="field-label" Text="{DynamicResource 'Рабочий каталог сборки'}" />
+                                    <TextBox Classes="project-field" Text="{Binding BuildWorkingDirectory, Mode=TwoWay}" PlaceholderText="." />
+                                </StackPanel>
+                                <StackPanel IsVisible="{Binding IsDotNetBuild}" Spacing="12">
+                                    <StackPanel Spacing="7">
+                                        <TextBlock Classes="field-label" Text="{DynamicResource 'Проект или решение (.NET)'}" />
+                                        <TextBox Classes="project-field" Text="{Binding DotNetProjectPath, Mode=TwoWay}" PlaceholderText="{DynamicResource 'Автоматический выбор .csproj'}" />
+                                    </StackPanel>
+                                </StackPanel>
+                                <StackPanel IsVisible="{Binding HasBuildConfiguration}" Spacing="12">
+                                    <StackPanel Spacing="7">
+                                        <TextBlock Classes="field-label" Text="{DynamicResource 'Конфигурация сборки'}" />
+                                        <TextBox Classes="project-field" Text="{Binding BuildConfiguration, Mode=TwoWay}" PlaceholderText="Release" />
+                                    </StackPanel>
+                                </StackPanel>
+                                <StackPanel IsVisible="{Binding IsGoBuild}" Spacing="12">
+                                    <CheckBox IsChecked="{Binding CgoEnabled, Mode=TwoWay}" Content="{DynamicResource 'Включить CGO'}" />
+                                    <TextBlock Text="{DynamicResource 'Для CGO нужен C-компилятор под целевую Linux-архитектуру.'}" TextWrapping="Wrap" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                </StackPanel>
+                                <StackPanel IsVisible="{Binding IsPythonBuild}" Spacing="12">
+                                    <StackPanel Spacing="7">
+                                        <TextBlock Classes="field-label" Text="{DynamicResource 'Точка входа Python'}" />
+                                        <TextBox Classes="project-field" Text="{Binding RemoteExecutableFileName, Mode=TwoWay}" PlaceholderText="main.py" />
+                                    </StackPanel>
+                                    <StackPanel Spacing="7">
+                                        <TextBlock Classes="field-label" Text="{DynamicResource 'Файл зависимостей Python'}" />
+                                        <TextBox Classes="project-field" Text="{Binding PythonDependencyFilePath, Mode=TwoWay}" PlaceholderText="requirements.txt / pyproject.toml" />
+                                    </StackPanel>
+                                </StackPanel>
+                                <StackPanel IsVisible="{Binding IsCppBuild}" Spacing="12">
+                                    <StackPanel Spacing="7">
+                                        <TextBlock Classes="field-label" Text="{DynamicResource 'Генератор CMake'}" />
+                                        <TextBox Classes="project-field" Text="{Binding CmakeGenerator, Mode=TwoWay}" PlaceholderText="Ninja" />
+                                    </StackPanel>
+                                    <StackPanel Spacing="7">
+                                        <TextBlock Classes="field-label" Text="{DynamicResource 'Toolchain-файл'}" />
+                                        <TextBox Classes="project-field" Text="{Binding ToolchainFile, Mode=TwoWay}" PlaceholderText="toolchains/linux-{architecture}.cmake" />
+                                    </StackPanel>
+                                </StackPanel>
+                                <StackPanel IsVisible="{Binding IsCustomBuild}" Spacing="12">
+                                    <StackPanel Spacing="7">
+                                        <TextBlock Classes="field-label" Text="{DynamicResource 'Команда сборки'}" />
+                                        <TextBox Classes="project-field" Text="{Binding CustomBuildCommand, Mode=TwoWay}" PlaceholderText="dotnet / cmd.exe / build.cmd" />
+                                    </StackPanel>
+                                </StackPanel>
+                                <StackPanel IsVisible="{Binding IsCppBuild}" Spacing="7">
+                                    <TextBlock Classes="field-label" Text="{DynamicResource 'Аргументы конфигурации CMake'}" />
+                                    <TextBox Classes="project-field" MinHeight="80" Padding="12,10"
+                                             AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top"
+                                             Text="{Binding ConfigureArgumentsText, Mode=TwoWay}" />
+                                </StackPanel>
+                                <StackPanel IsVisible="{Binding !IsPythonBuild}" Spacing="7">
+                                    <TextBlock Classes="field-label" Text="{DynamicResource 'Дополнительные аргументы сборки'}" />
+                                    <TextBox Classes="project-field" MinHeight="80" Padding="12,10"
+                                             AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top"
+                                             Text="{Binding BuildArgumentsText, Mode=TwoWay}" />
+                                </StackPanel>
+                                <StackPanel IsVisible="{Binding IsPythonBuild}" Spacing="7">
+                                    <TextBlock Classes="field-label" Text="{DynamicResource 'Параметры установки pip'}" />
+                                    <TextBox Classes="project-field" MinHeight="80" Padding="12,10"
+                                             AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top"
+                                             Text="{Binding BuildArgumentsText, Mode=TwoWay}" />
+                                </StackPanel>
+                                <StackPanel IsVisible="{Binding !IsPythonBuild}" Spacing="7">
+                                    <TextBlock Classes="field-label" Text="{DynamicResource 'Переменные процесса сборки'}" />
+                                    <TextBox Classes="project-field" MinHeight="80" Padding="12,10"
+                                             AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top"
+                                             Text="{Binding BuildEnvironmentText, Mode=TwoWay}" />
+                                </StackPanel>
+                                <TextBlock Text="{DynamicResource 'Один аргумент на строку. Переменные: NAME=value; NAME удаляет переменную. Экранирование: \n, \r, \\.'}"
+                                           TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
                             </StackPanel>
                         </Grid>
                     </Border>

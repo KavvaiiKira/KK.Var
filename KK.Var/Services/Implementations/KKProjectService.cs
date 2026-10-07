@@ -199,6 +199,9 @@ public sealed class KKProjectService(
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ??
                 throw new ArgumentException("Build configuration is invalid.");
 
+        BuildConfigurationHelper.Validate(buildConfiguration, project.BuildProvider,
+            project.SourceType == ProjectSourceType.LocalDirectory ? project.LocalDirectoryPath : null);
+
         if (buildConfiguration.ConfigureArguments is null ||
             buildConfiguration.BuildArguments is null ||
             buildConfiguration.Environment is null ||

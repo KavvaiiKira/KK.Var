@@ -187,6 +187,7 @@ public partial class CreateProjectViewModel : ViewModelBase
         RemoteDeploymentDirectory = string.Empty;
         ProjectEnvironmentFilePath = string.Empty;
         BuildConfigurationJson = "{}";
+        LoadBuildFields();
         SelectedHealthCheckType = Localize(NoHealthCheck);
         HealthCheckTimeoutSeconds = 30;
         HealthCheckIntervalSeconds = 5;
@@ -244,6 +245,7 @@ public partial class CreateProjectViewModel : ViewModelBase
         RemoteDeploymentDirectory = project.RemoteDeploymentDirectory;
         ProjectEnvironmentFilePath = project.ProjectEnvironmentFilePath;
         BuildConfigurationJson = project.BuildConfigurationJson;
+        LoadBuildFields();
         SelectedHealthCheckType = MapHealthCheckType(project.HealthCheckType);
         HealthCheckTimeoutSeconds = project.HealthCheckTimeoutSeconds ?? 30;
         HealthCheckIntervalSeconds = project.HealthCheckIntervalSeconds ?? 5;
@@ -276,6 +278,7 @@ public partial class CreateProjectViewModel : ViewModelBase
             return false;
         }
 
+        UpdateBuildConfiguration();
         ErrorMessage = Validate();
 
         if (!string.IsNullOrEmpty(ErrorMessage))
@@ -435,28 +438,20 @@ public partial class CreateProjectViewModel : ViewModelBase
 
     partial void OnSelectedBuildProviderChanged(string value)
     {
+        NotifyBuildFields();
         if (_isResetting)
         {
             return;
         }
-
-        if (string.IsNullOrWhiteSpace(BuildConfigurationJson) ||
-            BuildConfigurationJson.Trim() == "{}")
+        if (IsCppBuild && string.IsNullOrWhiteSpace(ToolchainFile))
         {
-            BuildConfigurationJson = MapBuildProvider() switch
-            {
-                ProjectBuildProvider.DotNet =>
-                    "{\r\n  \"configuration\": \"Release\",\r\n  \"workingDirectory\": \".\",\r\n  \"buildArguments\": [],\r\n  \"environment\": {}\r\n}",
-                ProjectBuildProvider.Go or ProjectBuildProvider.Python =>
-                    "{\r\n  \"workingDirectory\": \".\",\r\n  \"buildArguments\": [],\r\n  \"environment\": {}\r\n}",
-                ProjectBuildProvider.Cpp =>
-                    "{\r\n  \"configuration\": \"Release\",\r\n  \"workingDirectory\": \".\",\r\n  \"toolchainFile\": \"toolchains/linux-{architecture}.cmake\",\r\n  \"cmakeGenerator\": \"Ninja\",\r\n  \"configureArguments\": [],\r\n  \"buildArguments\": [],\r\n  \"environment\": {}\r\n}",
-                ProjectBuildProvider.Custom =>
-                    "{\r\n  \"command\": \"\",\r\n  \"workingDirectory\": \".\",\r\n  \"buildArguments\": [\"{output}\", \"{runtime}\"],\r\n  \"environment\": {}\r\n}",
-                _ => "{}",
-            };
+            ToolchainFile = "toolchains/linux-{architecture}.cmake";
         }
-
+        if (IsCustomBuild && string.IsNullOrWhiteSpace(BuildArgumentsText))
+        {
+            BuildArgumentsText = "{output}\r\n{runtime}";
+        }
+        UpdateBuildConfiguration();
         MarkDirty();
     }
 
@@ -466,7 +461,11 @@ public partial class CreateProjectViewModel : ViewModelBase
 
     partial void OnRemoteDeploymentDirectoryChanged(string value) => MarkDirty();
 
-    partial void OnBuildConfigurationJsonChanged(string value) => MarkDirty();
+    partial void OnBuildConfigurationJsonChanged(string value)
+    {
+        LoadBuildFields();
+        MarkDirty();
+    }
 
     partial void OnProjectEnvironmentFilePathChanged(string value) => MarkDirty();
 
@@ -510,6 +509,10 @@ public partial class CreateProjectViewModel : ViewModelBase
 
     private string Validate()
     {
+        if (!string.IsNullOrEmpty(_buildEditorError))
+        {
+            return _buildEditorError;
+        }
         if (string.IsNullOrWhiteSpace(Name))
         {
             return Localize("Укажите название проекта.");
@@ -588,6 +591,8 @@ public partial class CreateProjectViewModel : ViewModelBase
                     }) ?? new ProjectBuildConfiguration();
 
             var provider = MapBuildProvider();
+            BuildConfigurationHelper.Validate(configuration, provider,
+                IsLocalSource ? LocalDirectoryPath : null);
             if (provider == ProjectBuildProvider.Custom &&
                 string.IsNullOrWhiteSpace(configuration.Command))
             {
@@ -599,6 +604,14 @@ public partial class CreateProjectViewModel : ViewModelBase
             {
                 return Localize("Укажите toolchainFile для сборки C++ под Linux.");
             }
+        }
+        catch (System.IO.IOException exception)
+        {
+            return Localize(exception.Message);
+        }
+        catch (ArgumentException)
+        {
+            return Localize("Проверьте пути в параметрах сборки.");
         }
         catch (System.Text.Json.JsonException)
         {

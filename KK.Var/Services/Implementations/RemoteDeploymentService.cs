@@ -185,14 +185,24 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
                         string.Empty :
                         pipArguments + " ";
 
+                BuildConfigurationHelper.Validate(buildConfiguration, ProjectBuildProvider.Python);
+                var dependency = buildConfiguration.PythonDependencyFilePath;
+                var installCommand = string.IsNullOrWhiteSpace(dependency) ?
+                    $"if test -f {Q(staging + "/requirements.txt")}; then " +
+                    $"sudo -u {Q(settings.UserName!)} {Q(staging + "/.venv/bin/pip")} install {pipArgumentPrefix}-r {Q(staging + "/requirements.txt")}; " +
+                    $"elif test -f {Q(staging + "/pyproject.toml")}; then " +
+                    $"sudo -u {Q(settings.UserName!)} {Q(staging + "/.venv/bin/pip")} install {pipArgumentPrefix}{Q(staging)}; fi" :
+                    $"test -f {Q(staging + "/" + dependency.Replace('\\', '/'))} && " +
+                    $"sudo -u {Q(settings.UserName!)} {Q(staging + "/.venv/bin/pip")} install {pipArgumentPrefix}" +
+                    (dependency.EndsWith(".txt", StringComparison.OrdinalIgnoreCase) ?
+                        $"-r {Q(staging + "/" + dependency.Replace('\\', '/'))}" :
+                        Q(staging + "/" + (Path.GetDirectoryName(dependency)?.Replace('\\', '/') ?? ".")));
+
                 RunChecked(ssh, "command -v python3 >/dev/null", log);
                 RunChecked(
                     ssh,
                     $"sudo -u {Q(settings.UserName!)} python3 -m venv {Q(staging + "/.venv")} && " +
-                    $"if test -f {Q(staging + "/requirements.txt")}; then " +
-                    $"sudo -u {Q(settings.UserName!)} {Q(staging + "/.venv/bin/pip")} install {pipArgumentPrefix}-r {Q(staging + "/requirements.txt")}; " +
-                    $"elif test -f {Q(staging + "/pyproject.toml")}; then " +
-                    $"sudo -u {Q(settings.UserName!)} {Q(staging + "/.venv/bin/pip")} install {pipArgumentPrefix}{Q(staging)}; fi",
+                    installCommand,
                     log);
             }
             else

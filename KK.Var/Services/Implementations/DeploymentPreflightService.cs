@@ -203,8 +203,14 @@ public sealed class DeploymentPreflightService(
                 !string.IsNullOrWhiteSpace(project.LocalDirectoryPath) &&
                 Directory.Exists(project.LocalDirectoryPath))
             {
-                provider = DetectProvider(project.LocalDirectoryPath);
+                provider = DetectProvider(BuildConfigurationHelper.ResolveSourcePath(
+                    project.LocalDirectoryPath, configuration.WorkingDirectory ?? "."));
             }
+
+            var sourceRoot = project.SourceType == ProjectSourceType.LocalDirectory ?
+                project.LocalDirectoryPath :
+                null;
+            BuildConfigurationHelper.Validate(configuration, provider, sourceRoot);
 
             if (provider == ProjectBuildProvider.Unknown)
             {
@@ -212,9 +218,6 @@ public sealed class DeploymentPreflightService(
                 return;
             }
 
-            var sourceRoot = project.SourceType == ProjectSourceType.LocalDirectory ?
-                project.LocalDirectoryPath :
-                null;
             if (sourceRoot is null)
             {
                 checks.Add(Warning(
@@ -227,46 +230,20 @@ public sealed class DeploymentPreflightService(
                 return;
             }
 
-            if (sourceRoot is not null &&
-                !string.IsNullOrWhiteSpace(configuration.WorkingDirectory))
-            {
-                var workPath = Path.GetFullPath(Path.Combine(
-                    sourceRoot,
-                    configuration.WorkingDirectory.Replace(
-                        "{source}",
-                        sourceRoot,
-                        StringComparison.Ordinal)));
-                var sourcePrefix = Path.GetFullPath(sourceRoot).TrimEnd(
-                    Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
-                if (!string.Equals(workPath, Path.GetFullPath(sourceRoot),
-                        StringComparison.OrdinalIgnoreCase) &&
-                    !workPath.StartsWith(sourcePrefix, StringComparison.OrdinalIgnoreCase))
-                {
-                    throw new InvalidDataException("Build working directory leaves the source directory.");
-                }
-
-                if (!Directory.Exists(workPath))
-                {
-                    throw new DirectoryNotFoundException(workPath);
-                }
-            }
-
             if (sourceRoot is not null)
             {
-                var buildRoot = string.IsNullOrWhiteSpace(configuration.WorkingDirectory) ?
-                    sourceRoot :
-                    Path.GetFullPath(Path.Combine(sourceRoot,
-                        configuration.WorkingDirectory.Replace(
-                            "{source}", sourceRoot, StringComparison.Ordinal)));
+                var buildRoot = BuildConfigurationHelper.ResolveSourcePath(
+                    sourceRoot, configuration.WorkingDirectory ?? ".");
                 var hasInputs = provider switch
                 {
                     ProjectBuildProvider.DotNet =>
+                        !string.IsNullOrWhiteSpace(configuration.DotNetProjectPath) ||
                         Directory.EnumerateFiles(buildRoot, "*.csproj",
                             SearchOption.AllDirectories).Any(),
                     ProjectBuildProvider.Go =>
                         File.Exists(Path.Combine(buildRoot, "go.mod")),
                     ProjectBuildProvider.Python =>
-                        File.Exists(Path.Combine(sourceRoot,
+                        File.Exists(Path.Combine(buildRoot,
                             project.RemoteExecutableFileName.Replace('/',
                                 Path.DirectorySeparatorChar))),
                     ProjectBuildProvider.Cpp =>
@@ -457,44 +434,8 @@ public sealed class DeploymentPreflightService(
                 segment is not ("." or ".."));
     }
 
-    private static ProjectBuildProvider DetectProvider(string sourceDirectory)
-    {
-        var options = new EnumerationOptions
-        {
-            RecurseSubdirectories = true,
-            AttributesToSkip = FileAttributes.ReparsePoint,
-        };
-        var found = new List<ProjectBuildProvider>();
-        if (Directory.EnumerateFiles(sourceDirectory, "*.csproj", options).Any())
-        {
-            found.Add(ProjectBuildProvider.DotNet);
-        }
-
-        if (File.Exists(Path.Combine(sourceDirectory, "go.mod")))
-        {
-            found.Add(ProjectBuildProvider.Go);
-        }
-
-        if (File.Exists(Path.Combine(sourceDirectory, "pyproject.toml")) ||
-            File.Exists(Path.Combine(sourceDirectory, "requirements.txt")) ||
-            Directory.EnumerateFiles(sourceDirectory, "*.py").Any())
-        {
-            found.Add(ProjectBuildProvider.Python);
-        }
-
-        if (File.Exists(Path.Combine(sourceDirectory, "CMakeLists.txt")) ||
-            Directory.EnumerateFiles(sourceDirectory, "*.cpp", options).Any())
-        {
-            found.Add(ProjectBuildProvider.Cpp);
-        }
-
-        if (found.Count != 1)
-        {
-            throw new InvalidDataException("Build provider cannot be detected unambiguously.");
-        }
-
-        return found[0];
-    }
+    private static ProjectBuildProvider DetectProvider(string sourceDirectory) =>
+        BuildConfigurationHelper.DetectProvider(sourceDirectory);
 
     private static long EstimateSourceBytes(
         string root,

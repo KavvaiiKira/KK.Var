@@ -86,6 +86,7 @@ public sealed class ProjectArtifactService(
                 sourceDirectory);
 
             var provider = DetectProvider(project, buildSourceDirectory);
+            BuildConfigurationHelper.Validate(configuration, provider, sourceDirectory);
 
             progress?.Report(new DeploymentProgress(
                 15,
@@ -159,11 +160,16 @@ public sealed class ProjectArtifactService(
                 sourceCommitSha,
                 provider);
         }
-        catch
+        catch (Exception exception)
         {
             if (artifactPath is not null && File.Exists(artifactPath))
             {
                 File.Delete(artifactPath);
+            }
+
+            if (exception is InvalidDataException or DirectoryNotFoundException)
+            {
+                throw new InvalidOperationException(localizationService.Get(exception.Message), exception);
             }
 
             throw;
@@ -419,51 +425,9 @@ public sealed class ProjectArtifactService(
             target;
     }
 
-    private ProjectBuildProvider DetectProvider(
-        KKProject project,
-        string sourceDirectory)
-    {
-        if (project.BuildProvider != ProjectBuildProvider.Unknown)
-        {
-            return project.BuildProvider;
-        }
-
-        var detected = new List<ProjectBuildProvider>();
-
-        if (Directory.EnumerateFiles(sourceDirectory, "*.sln*", SearchOption.TopDirectoryOnly).Any() ||
-            Directory.EnumerateFiles(sourceDirectory, "*.csproj", SearchOption.AllDirectories).Any())
-        {
-            detected.Add(ProjectBuildProvider.DotNet);
-        }
-
-        if (File.Exists(Path.Combine(sourceDirectory, "go.mod")))
-        {
-            detected.Add(ProjectBuildProvider.Go);
-        }
-
-        if (File.Exists(Path.Combine(sourceDirectory, "pyproject.toml")) ||
-            File.Exists(Path.Combine(sourceDirectory, "requirements.txt")) ||
-            Directory.EnumerateFiles(sourceDirectory, "*.py", SearchOption.TopDirectoryOnly).Any())
-        {
-            detected.Add(ProjectBuildProvider.Python);
-        }
-
-        if (File.Exists(Path.Combine(sourceDirectory, "CMakeLists.txt")) ||
-            Directory.EnumerateFiles(sourceDirectory, "*.cpp", SearchOption.AllDirectories).Any())
-        {
-            detected.Add(ProjectBuildProvider.Cpp);
-        }
-
-        return detected.Count switch
-        {
-            1 => detected[0],
-            0 => throw new InvalidOperationException(localizationService.Get(
-                "Не удалось автоматически определить способ сборки проекта.")),
-            _ => throw new InvalidOperationException(localizationService.Get(
-                "Найдено несколько способов сборки. Выберите нужный в настройках проекта.")),
-        };
-    }
-
+    private ProjectBuildProvider DetectProvider(KKProject project, string sourceDirectory) =>
+        project.BuildProvider != ProjectBuildProvider.Unknown ?
+            project.BuildProvider : BuildConfigurationHelper.DetectProvider(sourceDirectory);
     private async Task BuildAsync(
         ProjectBuildProvider provider,
         KKProject project,
@@ -481,9 +445,9 @@ public sealed class ProjectArtifactService(
         {
             case ProjectBuildProvider.DotNet:
                 {
-                    var target = SelectDotNetProject(
-                        sourceDirectory,
-                        project.RemoteExecutableFileName);
+                    var target = string.IsNullOrWhiteSpace(configuration.DotNetProjectPath) ?
+                        SelectDotNetProject(sourceDirectory, project.RemoteExecutableFileName) :
+                        BuildConfigurationHelper.ResolveSourcePath(sourceDirectory, configuration.DotNetProjectPath);
                     var rid = MapDotNetRuntime(remoteArchitecture);
                     var arguments = new List<string>
                 {
@@ -521,7 +485,7 @@ public sealed class ProjectArtifactService(
                     {
                         ["GOOS"] = "linux",
                         ["GOARCH"] = goArch,
-                        ["CGO_ENABLED"] = "0",
+                        ["CGO_ENABLED"] = configuration.CgoEnabled == true ? "1" : "0",
                     };
 
                     var goOutputPath = Path.Combine(
@@ -552,22 +516,12 @@ public sealed class ProjectArtifactService(
                 {
                     var runtime = MapLinuxRuntime(remoteArchitecture);
 
-                    var toolchainReplacements = new Dictionary<string, string>(StringComparer.Ordinal)
-                    {
-                        ["{source}"] = sourceDirectory,
-                        ["{output}"] = outputDirectory,
-                        ["{runtime}"] = runtime,
-                        ["{architecture}"] = remoteArchitecture,
-                    };
+                    var configuredToolchain = (configuration.ToolchainFile ?? string.Empty)
+                        .Replace("{architecture}", remoteArchitecture, StringComparison.Ordinal)
+                        .Replace("{runtime}", runtime, StringComparison.Ordinal);
 
-                    var configuredToolchain = ReplacePlaceholders(
-                        configuration.ToolchainFile ?? string.Empty,
-                        toolchainReplacements);
-
-                    var toolchainFile = Path.GetFullPath(
-                        Path.IsPathRooted(configuredToolchain) ?
-                            configuredToolchain :
-                            Path.Combine(sourceDirectory, configuredToolchain));
+                    var toolchainFile = BuildConfigurationHelper.ResolveSourcePath(
+                        sourceDirectory, configuredToolchain);
 
                     if (string.IsNullOrWhiteSpace(configuredToolchain) ||
                         !File.Exists(toolchainFile))
@@ -698,40 +652,16 @@ public sealed class ProjectArtifactService(
             architecture)),
     };
 
-    private static string ResolveBuildSourceDirectory(
-        string? configuredDirectory,
-        string sourceDirectory)
+    private static string ResolveBuildSourceDirectory(string? configuredDirectory, string sourceDirectory)
     {
-        var value = string.IsNullOrWhiteSpace(configuredDirectory) ?
-            sourceDirectory :
-            configuredDirectory.Replace(
-                "{source}",
-                sourceDirectory,
-                StringComparison.Ordinal);
-
-        var path = Path.GetFullPath(
-            Path.IsPathRooted(value) ?
-                value :
-                Path.Combine(sourceDirectory, value));
-
-        var sourceRoot = Path.GetFullPath(sourceDirectory) + Path.DirectorySeparatorChar;
-
-        if (!path.StartsWith(sourceRoot, StringComparison.OrdinalIgnoreCase) &&
-            !string.Equals(path, sourceDirectory, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException(
-                "Build working directory must stay inside the source directory.");
-        }
-
+        var path = BuildConfigurationHelper.ResolveSourcePath(sourceDirectory,
+            string.IsNullOrWhiteSpace(configuredDirectory) ? "." : configuredDirectory);
         if (!Directory.Exists(path))
         {
-            throw new DirectoryNotFoundException(
-                $"Build working directory was not found: {path}");
+            throw new DirectoryNotFoundException("Рабочий каталог сборки не найден.");
         }
-
         return path;
     }
-
     private static string ReplacePlaceholders(
         string value,
         IReadOnlyDictionary<string, string> replacements)
