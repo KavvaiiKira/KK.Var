@@ -51,6 +51,9 @@ public sealed class KKProjectConfiguration : IEntityTypeConfiguration<KKProject>
         builder.Property(project => project.GitHubCloneUrl)
             .HasMaxLength(2048);
 
+        builder.Property(project => project.GitHubBranch)
+            .HasMaxLength(255);
+
         builder.Property(project => project.BuildProvider)
             .HasConversion<int>();
 

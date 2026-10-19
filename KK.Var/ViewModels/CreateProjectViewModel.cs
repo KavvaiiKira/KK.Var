@@ -46,6 +46,8 @@ public partial class CreateProjectViewModel : ViewModelBase
         _gitHubService = gitHubService;
         _gitHubAuthenticationService = gitHubAuthenticationService;
         _localizationService = localizationService;
+        GitHubBranchSelection = new GitHubSourceSelectionViewModel(gitHubService, gitHubAuthenticationService, localizationService);
+        GitHubBranchSelection.BranchChanged += (_, _) => MarkDirty();
         RefreshLocalization();
     }
 
@@ -60,6 +62,8 @@ public partial class CreateProjectViewModel : ViewModelBase
     public ObservableCollection<string> HealthCheckTypes { get; } = [];
 
     public ObservableCollection<GitHubRepository> GitHubRepositories { get; } = [];
+
+    public GitHubSourceSelectionViewModel GitHubBranchSelection { get; } = new GitHubSourceSelectionViewModel();
 
     [ObservableProperty]
     public partial string Name { get; set; } = string.Empty;
@@ -181,6 +185,7 @@ public partial class CreateProjectViewModel : ViewModelBase
         SelectedSourceType = Localize(LocalSource);
         LocalDirectoryPath = string.Empty;
         SelectedGitHubRepository = null;
+        GitHubBranchSelection.Configure(null, null);
         SelectedBuildProvider = Localize(AutomaticBuild);
         RemoteServiceName = string.Empty;
         RemoteExecutableFileName = string.Empty;
@@ -240,6 +245,7 @@ public partial class CreateProjectViewModel : ViewModelBase
                 null;
 
         SelectedBuildProvider = MapBuildProvider(project.BuildProvider);
+        GitHubBranchSelection.Configure(project.GitHubRepositoryFullName, project.GitHubBranch);
         RemoteServiceName = project.RemoteServiceName;
         RemoteExecutableFileName = project.RemoteExecutableFileName;
         RemoteDeploymentDirectory = project.RemoteDeploymentDirectory;
@@ -304,6 +310,7 @@ public partial class CreateProjectViewModel : ViewModelBase
                 null,
 
             GitHubCloneUrl = IsGitHubSource ? SelectedGitHubRepository?.CloneUrl : null,
+            GitHubBranch = IsGitHubSource ? GitHubBranchSelection.BranchName : null,
             BuildProvider = MapBuildProvider(),
             BuildConfigurationJson = BuildConfigurationJson,
             RemoteServiceName = RemoteServiceName,
@@ -388,8 +395,11 @@ public partial class CreateProjectViewModel : ViewModelBase
                 return;
             }
 
-            var selectedRepositoryId = SelectedGitHubRepository?.Id;
             var repositories = await _gitHubService.GetRepositoriesAsync(token.AccessToken);
+
+            var selectedRepositoryId = SelectedGitHubRepository?.Id;
+            var selectedBranch = GitHubBranchSelection.BranchName;
+            _isResetting = true;
 
             GitHubRepositories.Clear();
 
@@ -403,6 +413,7 @@ public partial class CreateProjectViewModel : ViewModelBase
                 _isResetting = true;
                 SelectedGitHubRepository = GitHubRepositories.FirstOrDefault(
                     repository => repository.Id == selectedRepositoryId.Value);
+                GitHubBranchSelection.Configure(SelectedGitHubRepository?.FullName, selectedBranch);
                 _isResetting = false;
             }
         }
@@ -413,6 +424,7 @@ public partial class CreateProjectViewModel : ViewModelBase
         finally
         {
             IsLoadingRepositories = false;
+            _isResetting = false;
         }
     }
 
@@ -434,7 +446,14 @@ public partial class CreateProjectViewModel : ViewModelBase
 
     partial void OnLocalDirectoryPathChanged(string value) => MarkDirty();
 
-    partial void OnSelectedGitHubRepositoryChanged(GitHubRepository? value) => MarkDirty();
+    partial void OnSelectedGitHubRepositoryChanged(GitHubRepository? value)
+    {
+        if (value?.FullName != GitHubBranchSelection.Repository)
+        {
+            GitHubBranchSelection.Configure(value?.FullName, null);
+        }
+        MarkDirty();
+    }
 
     partial void OnSelectedBuildProviderChanged(string value)
     {
@@ -746,6 +765,7 @@ public partial class CreateProjectViewModel : ViewModelBase
 
     public void RefreshLocalization()
     {
+        GitHubBranchSelection.RefreshLocalization();
         var sourceKey = Canonicalize(SelectedSourceType);
         var providerKey = Canonicalize(SelectedBuildProvider);
         var healthCheckKey = Canonicalize(SelectedHealthCheckType);

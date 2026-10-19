@@ -20,6 +20,10 @@ internal sealed class DeploymentUiState
 
     public string Description { get; init; } = string.Empty;
 
+    public string? GitHubBranch { get; init; }
+
+    public GitHubCommit? GitHubCommit { get; init; }
+
     public DeploymentOperationType OperationType { get; init; }
 
     public DeploymentQueueStatus QueueStatus { get; set; } =

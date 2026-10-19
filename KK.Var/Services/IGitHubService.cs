@@ -8,6 +8,23 @@ namespace KK.Var.Services;
 
 public interface IGitHubService
 {
+    Task<IReadOnlyList<string>> GetBranchesAsync(
+        string repositoryFullName,
+        string accessToken,
+        CancellationToken cancellationToken = default);
+
+    Task<GitHubCommit> GetBranchCommitAsync(
+        string repositoryFullName,
+        string? branch,
+        string accessToken,
+        CancellationToken cancellationToken = default);
+
+    Task<GitHubCommit> GetCommitAsync(
+        string repositoryFullName,
+        string commitSha,
+        string accessToken,
+        CancellationToken cancellationToken = default);
+
     Task<GitHubDeviceAuthorization> StartDeviceAuthorizationAsync(
         CancellationToken cancellationToken = default);
 

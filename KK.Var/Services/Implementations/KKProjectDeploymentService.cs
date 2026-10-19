@@ -216,6 +216,7 @@ public sealed class KKProjectDeploymentService(
             versionTag,
             architecture,
             progress,
+            preflight.SourceCommitSha,
             cancellationToken);
 
         var version = await versionService.CreateAsync(

@@ -43,6 +43,7 @@ public sealed class ProjectArtifactService(
         string versionTag,
         string remoteArchitecture,
         IProgress<DeploymentProgress>? progress = null,
+        string? sourceCommitSha = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(project);
@@ -72,9 +73,10 @@ public sealed class ProjectArtifactService(
             progress?.Report(new DeploymentProgress(
                 5,
                 localizationService.Get("Подготовка исходного кода")));
-            var sourceCommitSha = await AcquireSourceAsync(
+            sourceCommitSha = await AcquireSourceAsync(
                 project,
                 sourceDirectory,
+                sourceCommitSha,
                 cancellationToken);
 
             var configuration = JsonSerializer.Deserialize<ProjectBuildConfiguration>(
@@ -186,6 +188,7 @@ public sealed class ProjectArtifactService(
     private async Task<string?> AcquireSourceAsync(
         KKProject project,
         string destination,
+        string? sourceCommitSha,
         CancellationToken cancellationToken)
     {
         if (project.SourceType == ProjectSourceType.LocalDirectory)
@@ -219,10 +222,10 @@ public sealed class ProjectArtifactService(
                 "Подключите GitHub в настройках перед сборкой проекта."));
         }
 
-        var commitSha = await gitHubService.GetDefaultBranchCommitShaAsync(
-            repository,
-            token.AccessToken,
-            cancellationToken);
+        var commit = sourceCommitSha is not null ?
+            await gitHubService.GetCommitAsync(repository, sourceCommitSha, token.AccessToken, cancellationToken) :
+            await gitHubService.GetBranchCommitAsync(repository, project.GitHubBranch, token.AccessToken, cancellationToken);
+        var commitSha = commit.Sha;
 
         await using var archive = await gitHubService.DownloadRepositoryArchiveAsync(
             repository,

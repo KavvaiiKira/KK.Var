@@ -297,6 +297,30 @@
                         <TextBlock Text="{DynamicResource 'KK.Var соберёт исходный код, создаст локальную версию, передаст файлы на Linux-машину и перезапустит systemd-сервис.'}"
                                    MaxWidth="680" HorizontalAlignment="Left" TextWrapping="Wrap" LineHeight="20"
                                    Foreground="{DynamicResource AppTextMutedBrush}" />
+                                <StackPanel IsVisible="{Binding IsSelectedProjectGitHub}" Spacing="8">
+                                    <TextBlock Text="{DynamicResource 'Ветка для этого Deploy'}" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                    <ComboBox IsEnabled="{Binding !IsSelectedProjectDeploymentActive}"
+                                              HorizontalAlignment="Stretch"
+                                              ItemsSource="{Binding DeploymentGitHubSource.Branches}"
+                                              SelectedItem="{Binding DeploymentGitHubSource.SelectedBranch, Mode=TwoWay}"
+                                              DropDownOpened="DeploymentBranches_OnOpened">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:GitHubBranchOption">
+                                                <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                    <Button IsEnabled="{Binding !IsSelectedProjectDeploymentActive}"
+                                            Classes="details-secondary" HorizontalAlignment="Left"
+                                            Content="{DynamicResource 'Обновить коммит'}" Click="DeploymentCommit_OnClick" />
+                                    <TextBlock IsVisible="{Binding DeploymentGitHubSource.IsLoadingBranches}" Text="{DynamicResource 'Загрузка веток…'}" />
+                                    <TextBlock IsVisible="{Binding DeploymentGitHubSource.IsResolving}" Text="{DynamicResource 'Загрузка коммита…'}" />
+                                    <TextBlock IsVisible="{Binding DeploymentGitHubSource.HasError}" Text="{Binding DeploymentGitHubSource.ErrorMessage}"
+                                               TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}" />
+                                    <ScrollViewer IsVisible="{Binding DeploymentGitHubSource.HasCommit}" MaxHeight="160" HorizontalScrollBarVisibility="Disabled">
+                                        <TextBlock Text="{Binding DeploymentGitHubSource.CommitDisplay}" TextWrapping="Wrap" FontSize="12" />
+                                    </ScrollViewer>
+                                </StackPanel>
                         <Grid Margin="0,12,0,0" ColumnDefinitions="220,*" RowDefinitions="Auto,Auto" RowSpacing="12">
                             <TextBlock Text="{DynamicResource 'Следующая версия'}" Foreground="{DynamicResource AppTextMutedBrush}" />
                             <TextBox x:Name="DeploymentTagInput" Grid.Column="1" PlaceholderText="{DynamicResource 'Например, release-1'}"

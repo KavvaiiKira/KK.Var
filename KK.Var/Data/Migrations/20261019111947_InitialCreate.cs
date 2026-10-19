@@ -23,6 +23,7 @@ namespace KK.Var.Data.Migrations
                     GitHubRepositoryId = table.Column<long>(type: "INTEGER", nullable: true),
                     GitHubRepositoryFullName = table.Column<string>(type: "TEXT", maxLength: 300, nullable: true),
                     GitHubCloneUrl = table.Column<string>(type: "TEXT", maxLength: 2048, nullable: true),
+                    GitHubBranch = table.Column<string>(type: "TEXT", maxLength: 255, nullable: true),
                     BuildProvider = table.Column<int>(type: "INTEGER", nullable: false),
                     BuildConfigurationJson = table.Column<string>(type: "TEXT", nullable: false),
                     RemoteServiceName = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false, collation: "NOCASE"),

@@ -116,6 +116,11 @@ public sealed class KKProjectService(
         project.LocalDirectoryPath = Optional(project.LocalDirectoryPath, 1024);
         project.GitHubRepositoryFullName = Optional(project.GitHubRepositoryFullName, 300);
         project.GitHubCloneUrl = Optional(project.GitHubCloneUrl, 2048);
+        project.GitHubBranch = Optional(project.GitHubBranch, 255);
+        if (project.GitHubBranch?.Any(char.IsControl) == true)
+        {
+            throw new ArgumentException(localizationService.Get("Некорректное имя ветки GitHub."));
+        }
         project.RemoteDeploymentDirectory = Required(
             project.RemoteDeploymentDirectory,
             nameof(project.RemoteDeploymentDirectory),
@@ -235,6 +240,7 @@ public sealed class KKProjectService(
                 project.GitHubRepositoryId = null;
                 project.GitHubRepositoryFullName = null;
                 project.GitHubCloneUrl = null;
+                project.GitHubBranch = null;
 
                 break;
 

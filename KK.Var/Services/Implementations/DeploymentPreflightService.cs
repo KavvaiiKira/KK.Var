@@ -74,7 +74,7 @@ public sealed class DeploymentPreflightService(
         }
 
         var settings = await userSettingsService.LoadAsync(cancellationToken);
-        var sourceBytes = await CheckSourceAsync(project, checks, cancellationToken);
+        var source = await CheckSourceAsync(project, request, checks, cancellationToken);
         await CheckBuildConfigurationAsync(project, checks, cancellationToken);
 
         try
@@ -89,7 +89,7 @@ public sealed class DeploymentPreflightService(
         }
 
         const long minimumFreeBytes = 64L * 1024 * 1024;
-        if (sourceBytes > minimumFreeBytes)
+        if (source.Bytes > minimumFreeBytes)
         {
             checks.Add(Warning(
                 "space-estimate",
@@ -102,7 +102,7 @@ public sealed class DeploymentPreflightService(
         if (checks.Any(check =>
                 check.Key == "remote-path" && check.Status == PreflightStatus.Error))
         {
-            return new DeploymentPreflightResult(checks);
+            return new DeploymentPreflightResult(checks, source.CommitSha);
         }
 
         var remoteChecks = await remoteConnectionService.CheckDeploymentAsync(
@@ -114,11 +114,12 @@ public sealed class DeploymentPreflightService(
             cancellationToken);
         checks.AddRange(remoteChecks);
 
-        return new DeploymentPreflightResult(checks);
+        return new DeploymentPreflightResult(checks, source.CommitSha);
     }
 
-    private async Task<long> CheckSourceAsync(
+    private async Task<(long Bytes, string? CommitSha)> CheckSourceAsync(
         KKProject project,
+        DeploymentRequest request,
         List<DeploymentPreflightCheck> checks,
         CancellationToken cancellationToken)
     {
@@ -139,13 +140,13 @@ public sealed class DeploymentPreflightService(
                     cancellationToken);
 
                 checks.Add(Success("source", "Локальный исходный каталог доступен."));
-                return bytes;
+                return (bytes, null);
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
                 checks.Add(Error("source", "Локальный исходный каталог недоступен.",
                     exception.Message));
-                return 0;
+                return (0, null);
             }
         }
 
@@ -156,12 +157,15 @@ public sealed class DeploymentPreflightService(
                 var token = await gitHubAuthenticationService.GetTokenAsync(cancellationToken) ??
                     throw new InvalidOperationException(localizationService.Get(
                         "Подключите GitHub в настройках перед сборкой проекта."));
-                var commitSha = await gitHubService.GetDefaultBranchCommitShaAsync(
-                    project.GitHubRepositoryFullName ?? string.Empty,
-                    token.AccessToken,
-                    cancellationToken);
+                var commit = request.SourceCommitSha is not null ?
+                    await gitHubService.GetCommitAsync(project.GitHubRepositoryFullName ?? string.Empty,
+                        request.SourceCommitSha, token.AccessToken, cancellationToken) :
+                    await gitHubService.GetBranchCommitAsync(project.GitHubRepositoryFullName ?? string.Empty,
+                        request.GitHubBranch ?? project.GitHubBranch, token.AccessToken, cancellationToken);
+                var commitSha = commit.Sha;
                 checks.Add(Success("source", "GitHub-репозиторий доступен.", commitSha));
                 checks.Add(Warning("source-size", "Размер GitHub-архива станет известен после загрузки."));
+                return (0, commitSha);
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
@@ -169,11 +173,11 @@ public sealed class DeploymentPreflightService(
                     exception.Message));
             }
 
-            return 0;
+            return (0, null);
         }
 
         checks.Add(Error("source", "Тип источника проекта недопустим."));
-        return 0;
+        return (0, null);
     }
 
     private async Task CheckBuildConfigurationAsync(

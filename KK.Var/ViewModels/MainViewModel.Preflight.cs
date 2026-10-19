@@ -24,7 +24,8 @@ public partial class MainViewModel
         !IsProjectDetailsLoading &&
         !IsSelectedProjectDeploymentActive &&
         !HasUnsavedEnvironmentChanges &&
-        !IsEnvironmentSaving;
+        !IsEnvironmentSaving &&
+        (!IsSelectedProjectGitHub || DeploymentGitHubSource.HasCommit);
 
     public IReadOnlyList<DeploymentPreflightItemViewModel> DeploymentPreflightItems =>
         SelectedDeploymentState?.PreflightItems ?? [];
@@ -56,7 +57,9 @@ public partial class MainViewModel
         try
         {
             var result = await _deploymentPreflightService.CheckAsync(
-                new DeploymentRequest(projectId, state.VersionTag, DeploymentDescription),
+                new DeploymentRequest(projectId, state.VersionTag, DeploymentDescription,
+                    IsSelectedProjectGitHub ? DeploymentGitHubSource.BranchName : null,
+                    IsSelectedProjectGitHub ? DeploymentGitHubSource.Commit?.Sha : null),
                 cancellationToken: cancellation.Token);
 
             if (revision == GetPreflightRevision(projectId) &&

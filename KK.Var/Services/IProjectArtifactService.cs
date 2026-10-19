@@ -12,6 +12,7 @@ public interface IProjectArtifactService
         string versionTag,
         string remoteArchitecture,
         IProgress<DeploymentProgress>? progress = null,
+        string? sourceCommitSha = null,
         CancellationToken cancellationToken = default);
 
     Task DeleteAllAsync(

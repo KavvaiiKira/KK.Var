@@ -40,6 +40,10 @@ namespace KK.Var.Data.Migrations
                     b.Property<int>("EnvironmentFileFormat")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("GitHubBranch")
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("GitHubCloneUrl")
                         .HasMaxLength(2048)
                         .HasColumnType("TEXT");

@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace KK.Var.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260929120600_InitialCreate")]
+    [Migration("20261019111947_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -42,6 +42,10 @@ namespace KK.Var.Data.Migrations
 
                     b.Property<int>("EnvironmentFileFormat")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("GitHubBranch")
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("GitHubCloneUrl")
                         .HasMaxLength(2048)

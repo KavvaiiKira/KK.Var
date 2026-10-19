@@ -11,7 +11,7 @@ using KK.Var.Models;
 
 namespace KK.Var.Services.Implementations;
 
-public sealed class GitHubService : IGitHubService, IDisposable
+public sealed partial class GitHubService : IGitHubService, IDisposable
 {
     private static readonly Uri DeviceCodeUri =
         new Uri("https://github.com/login/device/code");

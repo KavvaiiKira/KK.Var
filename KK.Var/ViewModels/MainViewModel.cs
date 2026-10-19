@@ -90,6 +90,9 @@ public partial class MainViewModel : ViewModelBase
         _deploymentPreflightService = deploymentPreflightService;
         _deploymentOperationQueue = deploymentOperationQueue;
         _localizationService = localizationService;
+        DeploymentGitHubSource = new GitHubSourceSelectionViewModel(
+            gitHubService, gitHubAuthenticationService, localizationService);
+        DeploymentGitHubSource.PropertyChanged += DeploymentGitHubSource_OnPropertyChanged;
         ProjectEditor = projectEditor;
         ProjectEditor.ProjectCreated += ProjectEditor_OnProjectCreated;
         ProjectEditor.ProjectUpdated += ProjectEditor_OnProjectUpdated;
@@ -768,6 +771,8 @@ public partial class MainViewModel : ViewModelBase
             Description = DeploymentDescription,
             OperationType = DeploymentOperationType.Deploy,
             PreflightRevision = GetPreflightRevision(projectId),
+            GitHubBranch = IsSelectedProjectGitHub ? DeploymentGitHubSource.BranchName : null,
+            GitHubCommit = IsSelectedProjectGitHub ? DeploymentGitHubSource.Commit : null,
         };
 
         _deploymentStates[projectId] = state;
@@ -784,7 +789,9 @@ public partial class MainViewModel : ViewModelBase
                 new DeploymentRequest(
                     projectId,
                     deployedTag,
-                    DeploymentDescription),
+                    DeploymentDescription,
+                    state.GitHubBranch,
+                    state.GitHubCommit?.Sha),
                 progress,
                 preflightProgress);
 
@@ -842,6 +849,10 @@ public partial class MainViewModel : ViewModelBase
 
         _deploymentStates.Remove(SelectedProject.Id);
         NotifySelectedDeploymentStateChanged();
+        if (IsSelectedProjectGitHub)
+        {
+            _ = DeploymentGitHubSource.RefreshCommitAsync();
+        }
     }
 
     public async Task<bool> RollbackAsync(ProjectVersionItemViewModel item)
@@ -1823,6 +1834,7 @@ public partial class MainViewModel : ViewModelBase
             ApplicationLanguage.Russian;
 
         _localizationService.SetLanguage(nextLanguage);
+        DeploymentGitHubSource.RefreshLocalization();
         InvalidateDeploymentPreflight();
 
         Settings.Language = nextLanguage;
@@ -2388,6 +2400,7 @@ public partial class MainViewModel : ViewModelBase
 
     partial void OnSelectedProjectChanged(KKProject? value)
     {
+        ConfigureDeploymentGitHubSource(value);
         PendingVersionCleanup = null;
         OnPropertyChanged(nameof(SelectedProjectSourceDisplay));
         OnPropertyChanged(nameof(SelectedProjectLastDeploymentDisplay));

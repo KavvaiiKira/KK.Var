@@ -5,7 +5,8 @@ using KK.Var.Enums;
 namespace KK.Var.Models;
 
 public sealed record DeploymentPreflightResult(
-    IReadOnlyList<DeploymentPreflightCheck> Checks)
+    IReadOnlyList<DeploymentPreflightCheck> Checks,
+    string? SourceCommitSha = null)
 {
     public bool HasErrors => Checks.Any(check => check.Status == PreflightStatus.Error);
 

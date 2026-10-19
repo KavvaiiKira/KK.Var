@@ -238,6 +238,30 @@
                                         Content="{DynamicResource 'Обновить'}"
                                         Command="{Binding RefreshGitHubRepositoriesCommand}" />
                             </Grid>
+                                <StackPanel IsVisible="{Binding IsGitHubSource}" Spacing="8">
+                                    <TextBlock Text="{DynamicResource 'Ветка проекта GitHub'}" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                    <ComboBox
+                                              HorizontalAlignment="Stretch"
+                                              ItemsSource="{Binding GitHubBranchSelection.Branches}"
+                                              SelectedItem="{Binding GitHubBranchSelection.SelectedBranch, Mode=TwoWay}"
+                                              DropDownOpened="ProjectBranches_OnOpened">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:GitHubBranchOption">
+                                                <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                    <Button
+                                            Classes="project-secondary" HorizontalAlignment="Left"
+                                            Content="{DynamicResource 'Обновить коммит'}" Click="ProjectCommit_OnClick" />
+                                    <TextBlock IsVisible="{Binding GitHubBranchSelection.IsLoadingBranches}" Text="{DynamicResource 'Загрузка веток…'}" />
+                                    <TextBlock IsVisible="{Binding GitHubBranchSelection.IsResolving}" Text="{DynamicResource 'Загрузка коммита…'}" />
+                                    <TextBlock IsVisible="{Binding GitHubBranchSelection.HasError}" Text="{Binding GitHubBranchSelection.ErrorMessage}"
+                                               TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}" />
+                                    <ScrollViewer IsVisible="{Binding GitHubBranchSelection.HasCommit}" MaxHeight="160" HorizontalScrollBarVisibility="Disabled">
+                                        <TextBlock Text="{Binding GitHubBranchSelection.CommitDisplay}" TextWrapping="Wrap" FontSize="12" />
+                                    </ScrollViewer>
+                                </StackPanel>
                         </StackPanel>
                     </Border>
 

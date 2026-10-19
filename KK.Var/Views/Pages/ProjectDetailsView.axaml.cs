@@ -20,6 +20,23 @@ public partial class ProjectDetailsView : UserControl
 
     public event EventHandler? BackRequested;
 
+    private async void DeploymentBranches_OnOpened(object? sender, EventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel)
+        {
+            await viewModel.DeploymentGitHubSource.LoadBranchesAsync();
+            await viewModel.DeploymentGitHubSource.RefreshCommitAsync();
+        }
+    }
+
+    private async void DeploymentCommit_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel)
+        {
+            await viewModel.DeploymentGitHubSource.RefreshCommitAsync();
+        }
+    }
+
     public event EventHandler? EditRequested;
 
     public event EventHandler? DeleteRequested;

@@ -57,6 +57,8 @@ public sealed class KKProject
 
     public string? GitHubCloneUrl { get; set; }
 
+    public string? GitHubBranch { get; set; }
+
     public ProjectBuildProvider BuildProvider { get; set; }
 
     public string BuildConfigurationJson { get; set; } = "{}";

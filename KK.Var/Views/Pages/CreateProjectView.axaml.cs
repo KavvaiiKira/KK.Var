@@ -18,6 +18,23 @@ public partial class CreateProjectView : UserControl
 
     public event EventHandler? CloseRequested;
 
+    private async void ProjectBranches_OnOpened(object? sender, EventArgs e)
+    {
+        if (DataContext is CreateProjectViewModel viewModel)
+        {
+            await viewModel.GitHubBranchSelection.LoadBranchesAsync();
+            await viewModel.GitHubBranchSelection.RefreshCommitAsync();
+        }
+    }
+
+    private async void ProjectCommit_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is CreateProjectViewModel viewModel)
+        {
+            await viewModel.GitHubBranchSelection.RefreshCommitAsync();
+        }
+    }
+
     public void BeginCreation()
     {
         DiscardConfirmation.IsVisible = false;
