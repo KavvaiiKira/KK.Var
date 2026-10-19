@@ -78,6 +78,16 @@
             <StackPanel MaxWidth="1050"
                         HorizontalAlignment="Stretch"
                         Spacing="18">
+                <Border Padding="24" Background="{DynamicResource AppSurfaceBrush}"
+                        BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="14">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="{DynamicResource 'Уведомления Windows'}" FontSize="19" FontWeight="Bold" />
+                        <CheckBox Content="{DynamicResource 'Уведомлять о завершении Deploy и rollback'}"
+                                  IsChecked="{Binding DeploymentNotificationsEnabled, Mode=TwoWay}" />
+                        <TextBlock Text="{DynamicResource 'Показывать краткий результат, когда окно свёрнуто или открыта другая страница. Настройка сохраняется сразу.'}"
+                                   TextWrapping="Wrap" Foreground="{DynamicResource AppTextMutedBrush}" />
+                    </StackPanel>
+                </Border>
                 <Border Padding="24"
                         Background="{DynamicResource AppSurfaceBrush}"
                         BorderBrush="{DynamicResource AppBorderBrush}"

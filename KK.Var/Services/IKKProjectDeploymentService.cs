@@ -9,6 +9,10 @@ namespace KK.Var.Services;
 
 public interface IKKProjectDeploymentService
 {
+    event Action<DeploymentCompletionNotice>? DeploymentCompleted;
+
+    Task<KKProjectDeployment?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<KKProjectDeployment>> SearchAsync(
         string? projectName,
         string? searchText,
@@ -37,7 +41,9 @@ public interface IKKProjectDeploymentService
         DeploymentStatus status,
         string? logPath = null,
         string? errorMessage = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        bool automaticRollbackCompleted = false,
+        bool automaticRollbackFailed = false);
 
     Task<KKProjectDeployment> DeployAsync(
         DeploymentRequest request,

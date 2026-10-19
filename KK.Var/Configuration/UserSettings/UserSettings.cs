@@ -9,6 +9,8 @@ public sealed class UserSettings
 
     public string Theme { get; set; } = "System";
 
+    public bool DeploymentNotificationsEnabled { get; set; } = true;
+
     public string? ArtifactsDirectoryPath { get; set; }
 
     public ApplicationLanguage Language { get; set; } =

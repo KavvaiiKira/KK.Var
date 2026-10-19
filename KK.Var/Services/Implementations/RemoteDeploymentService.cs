@@ -393,11 +393,11 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
 
             if (rollbackException is not null)
             {
-                throw new InvalidOperationException(localizationService.Format(
+                throw new RemoteDeploymentFailureException(localizationService.Format(
                     "Удалённая операция завершилась ошибкой: {0} Автоматический rollback завершился ошибкой: {1}",
                     exception.Message,
                     rollbackException.Message),
-                    new AggregateException(exception, rollbackException));
+                    new AggregateException(exception, rollbackException), automaticRollbackCompleted: false);
             }
 
             log.WriteLine(localizationService.Format(
@@ -414,11 +414,11 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
                     cancellationToken);
             }
 
-            throw new InvalidOperationException(localizationService.Format(
+            throw new RemoteDeploymentFailureException(localizationService.Format(
                 "Удалённая операция завершилась ошибкой: {0} Результат автоматического rollback: {1}",
                 exception.Message,
                 rollbackResult),
-                exception);
+                exception, automaticRollbackCompleted: true);
         }
         finally
         {

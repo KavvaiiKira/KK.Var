@@ -86,6 +86,8 @@ public partial class MainViewModel : ViewModelBase
         _projectEnvironmentService = projectEnvironmentService;
         _projectVersionService = projectVersionService;
         _projectDeploymentService = projectDeploymentService;
+        _projectDeploymentService.DeploymentCompleted += notice =>
+            Dispatcher.UIThread.Post(() => DeploymentCompleted?.Invoke(notice));
         _artifactStorageService = artifactStorageService;
         _versionCleanupService = versionCleanupService;
         _projectConfigurationTransferService = projectConfigurationTransferService;
@@ -483,6 +485,7 @@ public partial class MainViewModel : ViewModelBase
         }
 
         Settings = await _userSettingsService.LoadAsync();
+        LoadNotificationPreference();
         await RefreshArtifactStorageSummaryAsync();
         RemoteMachineArchitecture = FormatArchitecture(
             Settings.RemoteMachine.Architecture);

@@ -76,6 +76,21 @@ public sealed class UserSettingsService(ISshPasswordStore sshPasswordStore) : IU
         }
     }
 
+    public async Task SaveDeploymentNotificationsEnabledAsync(bool enabled, CancellationToken cancellationToken = default)
+    {
+        await _fileLock.WaitAsync(cancellationToken);
+        try
+        {
+            var settings = await LoadCoreAsync(cancellationToken);
+            settings.DeploymentNotificationsEnabled = enabled;
+            await SaveCoreAsync(settings, cancellationToken);
+        }
+        finally
+        {
+            _fileLock.Release();
+        }
+    }
+
     public async Task SaveGitHubConnectionAsync(
         string accountLogin,
         DateTimeOffset connectedAtUtc,

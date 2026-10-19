@@ -23,6 +23,8 @@ public partial class ProjectDetailsView : UserControl
 
     public event EventHandler? BackRequested;
 
+    public bool IsDeploySectionVisible => DeployPanel.IsVisible;
+
     private async void ExportProjectButton_OnClick(object? sender, RoutedEventArgs e)
     {
         if (DataContext is not MainViewModel viewModel ||
@@ -361,9 +363,9 @@ public partial class ProjectDetailsView : UserControl
         ShowSection(OverviewPanel, OverviewTab);
     }
 
-    public void ShowDeploySection()
+    public void ShowDeploySection(bool prepare = true)
     {
-        if (DataContext is MainViewModel viewModel)
+        if (prepare && DataContext is MainViewModel viewModel)
         {
             viewModel.PrepareDeploymentView();
         }

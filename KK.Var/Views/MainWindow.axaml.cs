@@ -157,6 +157,7 @@ public partial class MainWindow : Window
         }
 
         _firstRunHandled = true;
+        InitializeDeploymentNotifications(viewModel);
         await viewModel.LoadSettingsAsync();
         UpdateProjectsAccessState(viewModel);
 
@@ -388,6 +389,13 @@ public partial class MainWindow : Window
     private async void CreateProjectPage_OnCloseRequested(object? sender, EventArgs e)
     {
         CreateProjectPage.IsVisible = false;
+        if (_pendingNotificationNavigation is { } notice)
+        {
+            _pendingNotificationNavigation = null;
+            (DataContext as MainViewModel)?.TakeCreatedProjectForNavigation();
+            await ShowNotificationTargetAsync(notice);
+            return;
+        }
 
         if (DataContext is MainViewModel projectViewModel &&
             projectViewModel.TakeCreatedProjectForNavigation() is { } createdProject)

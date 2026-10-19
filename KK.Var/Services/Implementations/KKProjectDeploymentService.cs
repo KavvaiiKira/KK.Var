@@ -29,6 +29,11 @@ public sealed class KKProjectDeploymentService(
     ILocalizationService localizationService)
     : IKKProjectDeploymentService
 {
+    public event Action<DeploymentCompletionNotice>? DeploymentCompleted;
+
+    public Task<KKProjectDeployment?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        deploymentRepository.GetByIdAsync(id, cancellationToken);
+
     public Task<IReadOnlyList<KKProjectDeployment>> SearchAsync(
         string? projectName,
         string? searchText,
@@ -110,7 +115,9 @@ public sealed class KKProjectDeploymentService(
         DeploymentStatus status,
         string? logPath = null,
         string? errorMessage = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        bool automaticRollbackCompleted = false,
+        bool automaticRollbackFailed = false)
     {
         if (status is not (DeploymentStatus.Succeeded or
             DeploymentStatus.Failed or
@@ -142,6 +149,10 @@ public sealed class KKProjectDeploymentService(
                 errorMessage.Trim();
 
         await deploymentRepository.UpdateAsync(deployment, cancellationToken);
+        if (status is DeploymentStatus.Succeeded or DeploymentStatus.Failed || automaticRollbackCompleted)
+        {
+            await ReportPersistedCompletionAsync(deployment, automaticRollbackCompleted, automaticRollbackFailed);
+        }
     }
 
     public Task<KKProjectDeployment> DeployAsync(
@@ -161,7 +172,9 @@ public sealed class KKProjectDeploymentService(
             request.ProjectId,
             request.VersionTag,
             DeploymentOperationType.Deploy,
-            token => DeployCoreAsync(request, progress, preflightProgress, token),
+            token => WithFailureNotificationAsync(request.ProjectId, request.VersionTag,
+                DeploymentOperationType.Deploy,
+                () => DeployCoreAsync(request, progress, preflightProgress, token)),
             cancellationToken);
     }
 
@@ -284,7 +297,9 @@ public sealed class KKProjectDeploymentService(
             projectId,
             queuedVersion.Tag,
             DeploymentOperationType.Rollback,
-            token => RollbackCoreAsync(projectId, versionId, progress, token),
+            token => WithFailureNotificationAsync(projectId, queuedVersion.Tag,
+                DeploymentOperationType.Rollback,
+                () => RollbackCoreAsync(projectId, versionId, progress, token)),
             cancellationToken);
     }
 
@@ -407,7 +422,9 @@ public sealed class KKProjectDeploymentService(
                 status,
                 logPath,
                 exception.Message,
-                CancellationToken.None);
+                CancellationToken.None,
+                exception is RemoteDeploymentFailureException { AutomaticRollbackCompleted: true },
+                exception is RemoteDeploymentFailureException { AutomaticRollbackCompleted: false });
 
             throw;
         }
@@ -488,9 +505,68 @@ public sealed class KKProjectDeploymentService(
             status,
             logPath,
             status == DeploymentStatus.Interrupted ? message : null,
-            cancellationToken);
+            cancellationToken,
+            automaticRollbackCompleted: result.Outcome == DeploymentRecoveryOutcome.PreviousVersionRestored);
 
         return 1;
+    }
+
+    private async Task ReportPersistedCompletionAsync(KKProjectDeployment deployment,
+        bool automaticRollbackCompleted = false, bool automaticRollbackFailed = false)
+    {
+        try
+        {
+            var project = await projectRepository.GetByIdAsync(deployment.KKProjectId, CancellationToken.None);
+            ReportCompletion(new DeploymentCompletionNotice(deployment.KKProjectId, deployment.Id,
+                project?.Name ?? string.Empty, deployment.Status, deployment.OperationType,
+                automaticRollbackCompleted, automaticRollbackFailed));
+        }
+        catch
+        {
+        }
+    }
+
+    private void ReportCompletion(DeploymentCompletionNotice notice)
+    {
+        foreach (var handler in DeploymentCompleted?.GetInvocationList() ?? [])
+        {
+            try
+            {
+                ((Action<DeploymentCompletionNotice>)handler)(notice);
+            }
+            catch
+            {
+            }
+        }
+    }
+
+    private async Task<KKProjectDeployment> WithFailureNotificationAsync(Guid projectId, string tag,
+        DeploymentOperationType operationType, Func<Task<KKProjectDeployment>> operation)
+    {
+        var startedAt = DateTime.UtcNow;
+        try
+        {
+            return await operation();
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            try
+            {
+                var deployments = await deploymentRepository.GetByProjectIdAsync(projectId, CancellationToken.None);
+                var deployment = deployments.FirstOrDefault(item =>
+                    item.VersionTag == tag.Trim() && item.StartedAtUtc >= startedAt);
+                if (deployment is null || deployment.Status is DeploymentStatus.Pending or DeploymentStatus.Running)
+                {
+                    var project = await projectRepository.GetByIdAsync(projectId, CancellationToken.None);
+                    ReportCompletion(new DeploymentCompletionNotice(projectId, deployment?.Id,
+                        project?.Name ?? string.Empty, DeploymentStatus.Failed, operationType));
+                }
+            }
+            catch
+            {
+            }
+            throw;
+        }
     }
 
     private async Task SaveCheckpointAsync(
