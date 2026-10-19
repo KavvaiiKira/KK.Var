@@ -71,6 +71,7 @@ public partial class MainViewModel : ViewModelBase
         IKKProjectDeploymentService projectDeploymentService,
         IArtifactStorageService artifactStorageService,
         IVersionCleanupService versionCleanupService,
+        IProjectConfigurationTransferService projectConfigurationTransferService,
         IDeploymentPreflightService deploymentPreflightService,
         IDeploymentOperationQueue deploymentOperationQueue,
         ILocalizationService localizationService,
@@ -87,6 +88,7 @@ public partial class MainViewModel : ViewModelBase
         _projectDeploymentService = projectDeploymentService;
         _artifactStorageService = artifactStorageService;
         _versionCleanupService = versionCleanupService;
+        _projectConfigurationTransferService = projectConfigurationTransferService;
         _deploymentPreflightService = deploymentPreflightService;
         _deploymentOperationQueue = deploymentOperationQueue;
         _localizationService = localizationService;
@@ -2005,6 +2007,7 @@ public partial class MainViewModel : ViewModelBase
 
     partial void OnIsEnvironmentSavingChanged(bool value)
     {
+        OnPropertyChanged(nameof(CanExportProjectConfiguration));
         NotifyOperationStateChanged();
         OnPropertyChanged(nameof(CanCheckDeployment));
     }
@@ -2400,6 +2403,7 @@ public partial class MainViewModel : ViewModelBase
 
     partial void OnSelectedProjectChanged(KKProject? value)
     {
+        OnPropertyChanged(nameof(CanExportProjectConfiguration));
         ConfigureDeploymentGitHubSource(value);
         PendingVersionCleanup = null;
         OnPropertyChanged(nameof(SelectedProjectSourceDisplay));

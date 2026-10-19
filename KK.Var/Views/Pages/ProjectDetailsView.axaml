@@ -76,6 +76,9 @@
                         Content="Deploy"
                         Click="DeployButton_OnClick" />
                 <Button Classes="details-secondary" Content="{DynamicResource 'Редактировать'}" Click="EditButton_OnClick" />
+                <Button Classes="details-secondary" Content="{DynamicResource 'Экспорт'}"
+                        ToolTip.Tip="{DynamicResource 'Экспорт включает значения переменных проекта и процесса сборки.'}"
+                        IsEnabled="{Binding CanExportProjectConfiguration}" Click="ExportProjectButton_OnClick" />
                 <Button Classes="details-secondary" Foreground="{DynamicResource AppDangerBrush}"
                         Content="{DynamicResource 'Удалить'}" Click="DeleteButton_OnClick" />
             </StackPanel>

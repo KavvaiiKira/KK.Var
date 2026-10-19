@@ -222,11 +222,14 @@
                                        FontSize="13"
                                        Foreground="{DynamicResource AppTextMutedBrush}" />
                         </StackPanel>
-                        <Button Grid.Column="1"
-                                Classes="primary"
-                                Content="{DynamicResource '＋  Новый проект'}"
-                                VerticalAlignment="Center"
-                                Click="NewProjectButton_OnClick" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                            <Button Classes="nav" Content="{DynamicResource 'Импорт проекта'}"
+                                    IsEnabled="{Binding !IsProjectTransferBusy}" Click="ImportProjectButton_OnClick" />
+                            <Button Classes="primary"
+                                    Content="{DynamicResource '＋  Новый проект'}"
+                                    VerticalAlignment="Center"
+                                    Click="NewProjectButton_OnClick" />
+                        </StackPanel>
                     </Grid>
 
                     <ScrollViewer x:Name="ProjectsList"
@@ -420,6 +423,8 @@
                                         HorizontalAlignment="Center"
                                         Content="{DynamicResource 'Открыть настройки'}"
                                         Click="OpenRequiredSettingsButton_OnClick" />
+                                <Button Classes="nav" HorizontalAlignment="Center"
+                                        Content="{DynamicResource 'Импорт проекта'}" Click="ImportProjectButton_OnClick" />
                             </StackPanel>
                         </Border>
                     </Border>
@@ -523,6 +528,46 @@
                     IsVisible="False"
                     Background="#A6000000"
                     CornerRadius="14" />
+
+            <Border IsVisible="{Binding HasPendingProjectImport}" Grid.RowSpan="3"
+                    Background="#C9080510" Padding="24">
+                <Border Width="720" MaxHeight="680" Padding="24"
+                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Background="{DynamicResource AppSurfaceBrush}"
+                        BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="14">
+                    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="16">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="{DynamicResource 'Импорт конфигурации проекта'}" FontSize="22" FontWeight="Bold" />
+                            <TextBlock Text="{DynamicResource 'Будет создан новый проект. Проверьте пути, имя и systemd-сервис; при конфликте измените их.'}"
+                                       TextWrapping="Wrap" Foreground="{DynamicResource AppTextMutedBrush}" />
+                        </StackPanel>
+                        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+                            <StackPanel Spacing="10" IsEnabled="{Binding !IsProjectTransferBusy}">
+                                <TextBlock Text="{DynamicResource 'Название проекта'}" />
+                                <TextBox Text="{Binding ImportProjectName, Mode=TwoWay}" />
+                                <StackPanel IsVisible="{Binding IsImportLocalSource}" Spacing="6">
+                                    <TextBlock Text="{DynamicResource 'Локальная папка проекта'}" />
+                                    <TextBox Text="{Binding ImportLocalDirectory, Mode=TwoWay}" />
+                                </StackPanel>
+                                <TextBlock Text="{DynamicResource 'Название systemd-сервиса'}" />
+                                <TextBox Text="{Binding ImportServiceName, Mode=TwoWay}" />
+                                <TextBlock Text="{DynamicResource 'Директория на удалённой машине'}" />
+                                <TextBox Text="{Binding ImportDeploymentDirectory, Mode=TwoWay}" />
+                                <TextBlock Text="{DynamicResource 'Создаваемая конфигурация'}" FontWeight="SemiBold" />
+                                <TextBox Text="{Binding ImportPreviewJson}" IsReadOnly="True" AcceptsReturn="True"
+                                         MinHeight="180" MaxHeight="260" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding ImportError}" TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}" />
+                            </StackPanel>
+                        </ScrollViewer>
+                        <Grid Grid.Row="2" ColumnDefinitions="*,12,*" IsEnabled="{Binding !IsProjectTransferBusy}">
+                            <Button Classes="nav" HorizontalAlignment="Stretch" Content="{DynamicResource 'Отмена'}"
+                                    Click="CancelProjectImportButton_OnClick" />
+                            <Button Grid.Column="2" Classes="primary" HorizontalAlignment="Stretch"
+                                    Content="{DynamicResource 'Создать проект'}" Click="ConfirmProjectImportButton_OnClick" />
+                        </Grid>
+                    </Grid>
+                </Border>
+            </Border>
 
             <Border x:Name="DeleteProjectConfirmation"
                     IsVisible="False"

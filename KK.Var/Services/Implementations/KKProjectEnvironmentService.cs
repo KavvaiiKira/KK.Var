@@ -53,6 +53,19 @@ public sealed class KKProjectEnvironmentService(
         _ = await projectRepository.GetByIdAsync(projectId, cancellationToken) ??
             throw new KeyNotFoundException($"Project '{projectId}' was not found.");
 
+        var entities = PrepareVariables(projectId, variables);
+        await variableRepository.ReplaceAsync(
+            projectId,
+            format,
+            entities,
+            cancellationToken);
+    }
+
+    public List<KKProjectEnvironmentVariable> PrepareVariables(
+        Guid projectId,
+        IReadOnlyList<KeyValuePair<string, string>> variables)
+    {
+        ArgumentNullException.ThrowIfNull(variables);
         var entities = new List<KKProjectEnvironmentVariable>(variables.Count);
         var names = new HashSet<string>(StringComparer.Ordinal);
 
@@ -85,11 +98,7 @@ public sealed class KKProjectEnvironmentService(
             });
         }
 
-        await variableRepository.ReplaceAsync(
-            projectId,
-            format,
-            entities,
-            cancellationToken);
+        return entities;
     }
 
     public async Task<string> GenerateAsync(

@@ -1,10 +1,12 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.IO;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
 using KK.Var.Models;
 using KK.Var.ViewModels;
 
@@ -281,6 +283,54 @@ public partial class MainWindow : Window
         viewModel.ClearStatusNotification();
         CreateProjectPage.BeginCreation();
         ShowProjectEditorPage();
+    }
+
+    private async void ImportProjectButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainViewModel viewModel || viewModel.IsProjectTransferBusy)
+        {
+            return;
+        }
+        try
+        {
+            var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                Title = viewModel.Localize("Импорт конфигурации проекта"),
+                AllowMultiple = false,
+                FileTypeFilter = [FilePickerFileTypes.Json],
+            });
+            if (files.Count == 0)
+            {
+                return;
+            }
+            await using var stream = await files[0].OpenReadAsync();
+            using var reader = new StreamReader(stream);
+            var json = await reader.ReadToEndAsync();
+            viewModel.PrepareProjectImport(json);
+        }
+        catch (Exception exception)
+        {
+            viewModel.ShowNotification(exception.Message, isError: true);
+        }
+    }
+
+    private void CancelProjectImportButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel)
+        {
+            viewModel.CancelProjectImport();
+        }
+    }
+
+    private async void ConfirmProjectImportButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel &&
+            await viewModel.ConfirmProjectImportAsync() is { } project)
+        {
+            await viewModel.LoadProjectDetailsAsync(project);
+            ProjectDetailsPage.ShowOverviewSection();
+            ShowProjectDetailsPage();
+        }
     }
 
     private async void OpenProjectButton_OnClick(object? sender, RoutedEventArgs e)

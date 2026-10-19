@@ -1,9 +1,12 @@
 using System;
 using System.Linq;
+using System.IO;
+using System.Text;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using Avalonia.Platform.Storage;
 using KK.Var.ViewModels;
 
 namespace KK.Var.Views.Pages;
@@ -19,6 +22,44 @@ public partial class ProjectDetailsView : UserControl
     }
 
     public event EventHandler? BackRequested;
+
+    private async void ExportProjectButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainViewModel viewModel ||
+            TopLevel.GetTopLevel(this)?.StorageProvider is not { } storageProvider)
+        {
+            return;
+        }
+        try
+        {
+            var json = await viewModel.ExportProjectConfigurationAsync();
+            if (json is null)
+            {
+                return;
+            }
+            var file = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            {
+                Title = viewModel.Localize("Экспорт конфигурации проекта"),
+                SuggestedFileName = "project.kkvar.json",
+                DefaultExtension = "json",
+                FileTypeChoices = [FilePickerFileTypes.Json],
+            });
+            if (file is null)
+            {
+                return;
+            }
+            await using var stream = await file.OpenWriteAsync();
+            stream.SetLength(0);
+            await using var writer = new StreamWriter(stream, new UTF8Encoding(false));
+            await writer.WriteAsync(json);
+            await writer.FlushAsync();
+            viewModel.ShowNotification(viewModel.Localize("Конфигурация проекта экспортирована."), isError: false);
+        }
+        catch (Exception exception)
+        {
+            viewModel.ShowNotification(exception.Message, isError: true);
+        }
+    }
 
     private async void DeploymentBranches_OnOpened(object? sender, EventArgs e)
     {

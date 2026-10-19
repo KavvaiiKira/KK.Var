@@ -116,6 +116,7 @@ sealed class Program
             KKProjectDeploymentRepository>();
 
         builder.Services.AddSingleton<IKKProjectService, KKProjectService>();
+        builder.Services.AddSingleton<IProjectConfigurationTransferService, ProjectConfigurationTransferService>();
         builder.Services.AddSingleton<
             IKKProjectEnvironmentService,
             KKProjectEnvironmentService>();
