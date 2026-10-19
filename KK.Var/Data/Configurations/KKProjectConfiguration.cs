@@ -65,7 +65,7 @@ public sealed class KKProjectConfiguration : IEntityTypeConfiguration<KKProject>
             .HasMaxLength(255)
             .UseCollation("NOCASE");
 
-        builder.HasIndex(project => project.RemoteServiceName)
+        builder.HasIndex(project => new { project.RemoteMachineId, project.RemoteServiceName })
             .IsUnique();
 
         builder.Property(project => project.RemoteExecutableFileName)

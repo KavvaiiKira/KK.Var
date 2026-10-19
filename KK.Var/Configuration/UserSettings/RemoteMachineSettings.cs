@@ -4,6 +4,8 @@ namespace KK.Var.Configuration;
 
 public sealed class RemoteMachineSettings
 {
+    [JsonIgnore]
+    public bool CleanDeployment { get; set; }
     public string? Host { get; set; }
 
     public int Port { get; set; } = 22;

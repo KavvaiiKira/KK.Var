@@ -12,6 +12,10 @@ public sealed class KKProject
 
     public string Name { get; set; } = string.Empty;
 
+    public Guid RemoteMachineId { get; set; }
+
+    public RemoteMachine RemoteMachine { get; set; } = null!;
+
     public string? Description { get; set; }
 
     [NotMapped]

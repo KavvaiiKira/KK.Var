@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:KK.Var.ViewModels"
+             xmlns:models="using:KK.Var.Models"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
@@ -78,6 +79,31 @@
             <StackPanel MaxWidth="1050"
                         HorizontalAlignment="Stretch"
                         Spacing="18">
+                <Border Padding="24" Background="{DynamicResource AppSurfaceBrush}"
+                        BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="14">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="{DynamicResource 'Профили удалённых машин'}" FontSize="19" FontWeight="Bold" />
+                        <ComboBox ItemsSource="{Binding MachineProfiles}" SelectedItem="{Binding SelectedMachineProfile}"
+                                  IsEnabled="{Binding !IsConnectionCheckRunning}" HorizontalAlignment="Stretch">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="models:RemoteMachine">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <TextBlock Text="{Binding Name}" />
+                                        <TextBlock IsVisible="{Binding IsArchived}" Text="{DynamicResource 'Архив'}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <WrapPanel ItemSpacing="10" LineSpacing="8">
+                            <Button Classes="settings-secondary" Content="{DynamicResource 'Добавить профиль'}" Command="{Binding AddMachineProfileCommand}" />
+                            <Button Classes="settings-secondary" Content="{Binding ArchiveMachineCaption}" Command="{Binding ArchiveMachineProfileCommand}" />
+                        </WrapPanel>
+                        <TextBlock Text="{DynamicResource 'Имя профиля машины'}" />
+                        <TextBox Classes="settings-field" Text="{Binding MachineProfileName}" IsEnabled="{Binding !IsConnectionCheckRunning}" />
+                        <TextBlock Text="{DynamicResource 'Проекты этого профиля'}" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding MachineProjectsDisplay}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
                 <Border Padding="24" Background="{DynamicResource AppSurfaceBrush}"
                         BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="14">
                     <StackPanel Spacing="8">
@@ -313,7 +339,7 @@
                             <TextBlock Text="{DynamicResource 'Удалённая Linux-машина'}"
                                        FontSize="19"
                                        FontWeight="Bold" />
-                            <TextBlock Text="{DynamicResource 'Одна машина для доставки проектов и управления systemd-сервисами'}"
+                            <TextBlock Text="{DynamicResource 'Параметры выбранного профиля. Адрес сохраняется только после проверки и подтверждения.'}"
                                        FontSize="12"
                                            Foreground="{DynamicResource AppTextMutedBrush}" />
                         </StackPanel>
@@ -337,7 +363,7 @@
 
                         <Border Height="1" Background="{DynamicResource AppBorderBrush}" />
 
-                        <Grid ColumnDefinitions="*,24,*" RowDefinitions="Auto,18,Auto,18,Auto">
+                        <Grid ColumnDefinitions="*,24,*" RowDefinitions="Auto,18,Auto,18,Auto" IsEnabled="{Binding !IsConnectionCheckRunning}">
                             <StackPanel Grid.Row="0" Grid.Column="0" Spacing="7">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="{DynamicResource 'Адрес или IP'}" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
@@ -441,21 +467,30 @@
                                     <TextBlock Text="{DynamicResource 'Сверьте отпечаток с данными администратора удалённой машины.'}"
                                                FontSize="11"
                                                Foreground="{DynamicResource AppTextMutedBrush}" />
-                                    <TextBlock Text="{Binding PendingHostKeyFingerprint}"
+                                    <TextBlock Text="{Binding MachineIdentityMessage}"
                                                FontSize="12"
                                                FontFamily="Consolas"
                                                TextWrapping="Wrap" />
+                                    <TextBlock IsVisible="{Binding HasMachineIdentityWarning}"
+                                               Text="{DynamicResource 'Fingerprint отличается или ещё не подтверждён. Возможна переустановка, замена SSH-ключей или другой сервер.'}"
+                                               TextWrapping="Wrap" FontWeight="SemiBold" Foreground="{DynamicResource AppDangerBrush}" />
+                                    <TextBlock IsVisible="{Binding IsMachineFingerprintMatch}"
+                                               Text="{DynamicResource 'Fingerprint совпадает: это сильное подтверждение идентичности машины. Подтвердите выбор.'}"
+                                               TextWrapping="Wrap" Foreground="{DynamicResource AppSuccessBrush}" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="1"
                                             VerticalAlignment="Center"
-                                            Orientation="Horizontal"
+                                            Orientation="Vertical"
+                                            IsEnabled="{Binding !IsConnectionCheckRunning}"
                                             Spacing="8">
                                     <Button Classes="settings-secondary"
                                             Content="{DynamicResource 'Отмена'}"
                                             Command="{Binding CancelHostKeyConfirmationCommand}" />
                                     <Button Classes="settings-primary"
-                                            Content="{DynamicResource 'Доверять и продолжить'}"
+                                            Content="{Binding ConfirmMachineIdentityCaption}"
                                             Command="{Binding ConfirmHostKeyCommand}" />
+                                    <Button Classes="settings-secondary" Content="{DynamicResource 'Нет, создать новую'}"
+                                            Command="{Binding CreateNewMachineFromCandidateCommand}" />
                                 </StackPanel>
                             </Grid>
                         </Border>

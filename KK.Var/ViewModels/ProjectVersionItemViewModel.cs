@@ -13,6 +13,9 @@ public sealed class ProjectVersionItemViewModel(
 {
     public KKProjectVersion Version { get; } = version;
 
+    public string TargetArchitecture => string.IsNullOrWhiteSpace(Version.TargetArchitecture) || Version.TargetArchitecture == "unknown" ?
+        Localize("Архитектура неизвестна") : Version.TargetArchitecture;
+
     public string Tag => Version.Tag;
 
     public string CreatedAtDisplay => Version.CreatedAtUtc.ToLocalTime().ToString("g");

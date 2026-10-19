@@ -12,11 +12,37 @@ namespace KK.Var.Data.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "RemoteMachines",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    Host = table.Column<string>(type: "TEXT", maxLength: 1024, nullable: false),
+                    Port = table.Column<int>(type: "INTEGER", nullable: false),
+                    UserName = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
+                    AuthenticationMethod = table.Column<string>(type: "TEXT", nullable: false),
+                    PrivateKeyPath = table.Column<string>(type: "TEXT", maxLength: 2048, nullable: true),
+                    HostKeyFingerprint = table.Column<string>(type: "TEXT", nullable: true),
+                    Architecture = table.Column<string>(type: "TEXT", nullable: true),
+                    IsVerified = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsArchived = table.Column<bool>(type: "INTEGER", nullable: false),
+                    ServerGeneration = table.Column<int>(type: "INTEGER", nullable: false),
+                    CreatedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    LastVerifiedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RemoteMachines", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "KKProjects",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false, collation: "NOCASE"),
+                    RemoteMachineId = table.Column<Guid>(type: "TEXT", nullable: false),
                     Description = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
                     SourceType = table.Column<int>(type: "INTEGER", nullable: false),
                     LocalDirectoryPath = table.Column<string>(type: "TEXT", maxLength: 1024, nullable: true),
@@ -50,6 +76,12 @@ namespace KK.Var.Data.Migrations
                     table.CheckConstraint("CK_KKProjects_MaxStoredVersionBytes", "MaxStoredVersionBytes IS NULL OR MaxStoredVersionBytes > 0");
                     table.CheckConstraint("CK_KKProjects_MaxStoredVersions", "MaxStoredVersions > 0");
                     table.CheckConstraint("CK_KKProjects_Source", "(SourceType = 1 AND LocalDirectoryPath IS NOT NULL AND GitHubRepositoryId IS NULL AND GitHubRepositoryFullName IS NULL AND GitHubCloneUrl IS NULL) OR (SourceType = 2 AND LocalDirectoryPath IS NULL AND GitHubRepositoryId IS NOT NULL AND GitHubRepositoryFullName IS NOT NULL AND GitHubCloneUrl IS NOT NULL)");
+                    table.ForeignKey(
+                        name: "FK_KKProjects_RemoteMachines_RemoteMachineId",
+                        column: x => x.RemoteMachineId,
+                        principalTable: "RemoteMachines",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -79,6 +111,7 @@ namespace KK.Var.Data.Migrations
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     KKProjectId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    TargetArchitecture = table.Column<string>(type: "TEXT", nullable: false),
                     Tag = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false, collation: "NOCASE"),
                     ArtifactRelativePath = table.Column<string>(type: "TEXT", maxLength: 1024, nullable: false),
                     ArtifactSha256 = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
@@ -106,6 +139,16 @@ namespace KK.Var.Data.Migrations
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     KKProjectId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    RemoteMachineId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    RemoteMachineName = table.Column<string>(type: "TEXT", nullable: false),
+                    RemoteHost = table.Column<string>(type: "TEXT", nullable: false),
+                    RemotePort = table.Column<int>(type: "INTEGER", nullable: false),
+                    RemoteUserName = table.Column<string>(type: "TEXT", nullable: false),
+                    RemoteArchitecture = table.Column<string>(type: "TEXT", nullable: false),
+                    RemoteServerGeneration = table.Column<int>(type: "INTEGER", nullable: false),
+                    RemoteServiceNameSnapshot = table.Column<string>(type: "TEXT", nullable: false),
+                    RemoteDirectorySnapshot = table.Column<string>(type: "TEXT", nullable: false),
+                    RemoteExecutableSnapshot = table.Column<string>(type: "TEXT", nullable: false),
                     KKProjectVersionId = table.Column<Guid>(type: "TEXT", nullable: true),
                     VersionTag = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
                     VersionDescription = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
@@ -136,6 +179,12 @@ namespace KK.Var.Data.Migrations
                         principalTable: "KKProjects",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_KKProjectDeployments_RemoteMachines_RemoteMachineId",
+                        column: x => x.RemoteMachineId,
+                        principalTable: "RemoteMachines",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
@@ -147,6 +196,11 @@ namespace KK.Var.Data.Migrations
                 name: "IX_KKProjectDeployments_KKProjectVersionId",
                 table: "KKProjectDeployments",
                 column: "KKProjectVersionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_KKProjectDeployments_RemoteMachineId",
+                table: "KKProjectDeployments",
+                column: "RemoteMachineId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_KKProjectDeployments_StartedAtUtc",
@@ -172,9 +226,9 @@ namespace KK.Var.Data.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_KKProjects_RemoteServiceName",
+                name: "IX_KKProjects_RemoteMachineId_RemoteServiceName",
                 table: "KKProjects",
-                column: "RemoteServiceName",
+                columns: new[] { "RemoteMachineId", "RemoteServiceName" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -198,6 +252,9 @@ namespace KK.Var.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "KKProjects");
+
+            migrationBuilder.DropTable(
+                name: "RemoteMachines");
         }
     }
 }

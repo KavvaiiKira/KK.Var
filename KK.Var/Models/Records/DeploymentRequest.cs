@@ -7,4 +7,5 @@ public sealed record DeploymentRequest(
     string VersionTag,
     string? Description,
     string? GitHubBranch = null,
-    string? SourceCommitSha = null);
+    string? SourceCommitSha = null,
+    Guid? RemoteMachineId = null);

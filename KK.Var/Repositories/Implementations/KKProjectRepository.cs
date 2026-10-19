@@ -57,13 +57,15 @@ public sealed class KKProjectRepository(
     public async Task<bool> ServiceNameExistsAsync(
         string serviceName,
         Guid? excludedProjectId = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Guid? remoteMachineId = null)
     {
         await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         return await db.Projects.AnyAsync(
             project =>
                 project.RemoteServiceName == serviceName &&
+                (!remoteMachineId.HasValue || project.RemoteMachineId == remoteMachineId) &&
                 (
                     !excludedProjectId.HasValue ||
                     project.Id != excludedProjectId.Value

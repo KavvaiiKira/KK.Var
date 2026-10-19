@@ -544,6 +544,14 @@
                         <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
                             <StackPanel Spacing="10" IsEnabled="{Binding !IsProjectTransferBusy}">
                                 <TextBlock Text="{DynamicResource 'Название проекта'}" />
+                                <TextBlock Text="{DynamicResource 'Машина проекта'}" />
+                                <ComboBox ItemsSource="{Binding AvailableMachines}" SelectedItem="{Binding SelectedImportMachine}" HorizontalAlignment="Stretch">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="models:RemoteMachine">
+                                            <TextBlock Text="{Binding Name}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
                                 <TextBox Text="{Binding ImportProjectName, Mode=TwoWay}" />
                                 <StackPanel IsVisible="{Binding IsImportLocalSource}" Spacing="6">
                                     <TextBlock Text="{DynamicResource 'Локальная папка проекта'}" />

@@ -118,13 +118,13 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
             var actualArchitecture = RunCheckedWithOutput(ssh, "uname -m", log);
 
             if (!string.Equals(
-                    actualArchitecture,
-                    settings.Architecture,
+                    ArchitectureCompatibility.Normalize(actualArchitecture),
+                    ArchitectureCompatibility.Normalize(settings.Architecture),
                     StringComparison.OrdinalIgnoreCase))
             {
                 throw new InvalidOperationException(localizationService.Format(
                     "Архитектура удалённой машины изменилась: ожидалась {0}, получена {1}. Выполните проверку подключения ещё раз.",
-                    settings.Architecture,
+                    ArchitectureCompatibility.Normalize(settings.Architecture),
                     actualArchitecture));
             }
 
@@ -213,7 +213,7 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
                     log);
             }
 
-            var unitExists = Run(ssh, $"sudo test -f {Q(unitPath)}", log).ExitStatus == 0;
+            var unitExists = !settings.CleanDeployment && Run(ssh, $"sudo test -f {Q(unitPath)}", log).ExitStatus == 0;
             if (!unitExists)
             {
                 unitState = DeploymentUnitChange.Created;
@@ -247,7 +247,8 @@ public sealed class RemoteDeploymentService(ILocalizationService localizationSer
             Run(ssh, $"sudo systemctl stop {Q(project.RemoteServiceName)}", log);
             RunChecked(
                 ssh,
-                $"if sudo test -e {Q(target)}; then sudo mv -- {Q(target)} {Q(backup)}; fi && " +
+                (settings.CleanDeployment ? $"sudo rm -rf -- {Q(target)} && " :
+                    $"if sudo test -e {Q(target)}; then sudo mv -- {Q(target)} {Q(backup)}; fi && ") +
                 $"sudo mv -- {Q(staging)} {Q(target)}",
                 log);
 

@@ -12,7 +12,18 @@ public sealed class SshPasswordStore : ISshPasswordStore
 {
     private static readonly byte[] AdditionalEntropy = Encoding.UTF8.GetBytes("KK.Var.SSH.Password.v1");
 
+    private static byte[] PasswordEntropy(Guid id) => id == Guid.Empty ? AdditionalEntropy :
+        Encoding.UTF8.GetBytes($"KK.Var.SSH.Password.v2:{id:N}");
+
+    public Task SaveAsync(string password, CancellationToken cancellationToken = default) => SaveAsync(Guid.Empty, password, cancellationToken);
+    public Task<string?> LoadAsync(CancellationToken cancellationToken = default) => LoadAsync(Guid.Empty, cancellationToken);
+    public Task DeleteAsync(CancellationToken cancellationToken = default) => DeleteAsync(Guid.Empty, cancellationToken);
+
+    private static string PasswordPath(Guid id) => id == Guid.Empty ? DatabasePaths.SshPasswordFilePath :
+        Path.Combine(DatabasePaths.UserDataDirectory, $"ssh-{id:N}.dat");
+
     public async Task SaveAsync(
+        Guid machineId,
         string password,
         CancellationToken cancellationToken = default)
     {
@@ -28,10 +39,10 @@ public sealed class SshPasswordStore : ISshPasswordStore
 
         var encryptedPassword = ProtectedData.Protect(
             Encoding.UTF8.GetBytes(password),
-            AdditionalEntropy,
+            PasswordEntropy(machineId),
             DataProtectionScope.CurrentUser);
 
-        var temporaryPath = DatabasePaths.SshPasswordFilePath + ".tmp";
+        var temporaryPath = PasswordPath(machineId) + ".tmp";
 
         await File.WriteAllBytesAsync(
             temporaryPath,
@@ -40,11 +51,12 @@ public sealed class SshPasswordStore : ISshPasswordStore
 
         File.Move(
             temporaryPath,
-            DatabasePaths.SshPasswordFilePath,
+            PasswordPath(machineId),
             overwrite: true);
     }
 
     public async Task<string?> LoadAsync(
+        Guid machineId,
         CancellationToken cancellationToken = default)
     {
         if (!OperatingSystem.IsWindows())
@@ -52,7 +64,7 @@ public sealed class SshPasswordStore : ISshPasswordStore
             throw new PlatformNotSupportedException("Защищённое хранение SSH-пароля реализовано только для Windows.");
         }
 
-        if (!File.Exists(DatabasePaths.SshPasswordFilePath))
+        if (!File.Exists(PasswordPath(machineId)))
         {
             return null;
         }
@@ -60,12 +72,12 @@ public sealed class SshPasswordStore : ISshPasswordStore
         try
         {
             var encryptedPassword = await File.ReadAllBytesAsync(
-                DatabasePaths.SshPasswordFilePath,
+                PasswordPath(machineId),
                 cancellationToken);
 
             var password = ProtectedData.Unprotect(
                 encryptedPassword,
-                AdditionalEntropy,
+                PasswordEntropy(machineId),
                 DataProtectionScope.CurrentUser);
 
             return Encoding.UTF8.GetString(password);
@@ -76,13 +88,13 @@ public sealed class SshPasswordStore : ISshPasswordStore
         }
     }
 
-    public Task DeleteAsync(CancellationToken cancellationToken = default)
+    public Task DeleteAsync(Guid machineId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (File.Exists(DatabasePaths.SshPasswordFilePath))
+        if (File.Exists(PasswordPath(machineId)))
         {
-            File.Delete(DatabasePaths.SshPasswordFilePath);
+            File.Delete(PasswordPath(machineId));
         }
 
         return Task.CompletedTask;

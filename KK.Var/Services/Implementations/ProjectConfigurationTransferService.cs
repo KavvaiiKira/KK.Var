@@ -103,7 +103,7 @@ public sealed class ProjectConfigurationTransferService(
     public string Describe(ProjectConfigurationDocument document) =>
         JsonSerializer.Serialize(document, JsonOptions);
 
-    public async Task<KKProject> ImportAsync(ProjectConfigurationDocument document,
+    public async Task<KKProject> ImportAsync(ProjectConfigurationDocument document, Guid remoteMachineId,
         CancellationToken cancellationToken = default)
     {
         ValidateDocument(document);
@@ -113,13 +113,15 @@ public sealed class ProjectConfigurationTransferService(
             throw new InvalidDataException(localizationService.Format(
                 "Проект «{0}» уже существует. Измените имя перед импортом.", data.Name.Trim()));
         }
-        if (await projectRepository.ServiceNameExistsAsync(data.RemoteServiceName.Trim(), cancellationToken: cancellationToken))
+        if (await projectRepository.ServiceNameExistsAsync(data.RemoteServiceName.Trim(), cancellationToken: cancellationToken,
+                remoteMachineId: remoteMachineId))
         {
             throw new InvalidDataException(localizationService.Format(
                 "Сервис «{0}» уже назначен другому проекту. Измените сервис перед импортом.", data.RemoteServiceName.Trim()));
         }
         var project = new KKProject
         {
+            RemoteMachineId = remoteMachineId,
             Name = data.Name,
             Description = data.Description,
             SourceType = data.SourceType,

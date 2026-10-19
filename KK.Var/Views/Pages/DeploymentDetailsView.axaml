@@ -44,6 +44,8 @@
                         Click="RepeatDeployButton_OnClick" />
             </Grid>
 
+            <TextBlock Text="{Binding MachineDisplay}" TextWrapping="Wrap" FontSize="13"
+                       Foreground="{DynamicResource AppTextMutedBrush}" />
             <Border Padding="22"
                     Background="{DynamicResource AppSurfaceBrush}"
                     BorderBrush="{DynamicResource AppBorderBrush}"

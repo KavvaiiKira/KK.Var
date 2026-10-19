@@ -16,6 +16,8 @@ public sealed class DeploymentDetailsViewModel(
 
     public string ProjectName => Deployment.Project?.Name ?? string.Empty;
 
+    public string MachineDisplay => $"{Deployment.RemoteMachineName} · {Deployment.RemoteUserName}@{Deployment.RemoteHost}:{Deployment.RemotePort} · {Deployment.RemoteArchitecture}";
+
     public string VersionTag => Deployment.Version?.Tag ?? Deployment.VersionTag;
 
     public string OperationDisplay => Deployment.OperationType switch

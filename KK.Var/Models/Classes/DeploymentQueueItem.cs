@@ -10,6 +10,8 @@ public sealed class DeploymentQueueItem
 
     public Guid ProjectId { get; init; }
 
+    public Guid? RemoteMachineId { get; init; }
+
     public string Version { get; init; } = string.Empty;
 
     public DeploymentOperationType OperationType { get; init; }

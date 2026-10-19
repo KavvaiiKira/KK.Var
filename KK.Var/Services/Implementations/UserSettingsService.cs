@@ -34,8 +34,11 @@ public sealed class UserSettingsService(ISshPasswordStore sshPasswordStore) : IU
         {
             var settings = await LoadCoreAsync(cancellationToken);
 
-            settings.RemoteMachine.Password = await sshPasswordStore.LoadAsync(
-                cancellationToken);
+            if (settings.LegacyRemoteMachine is not null)
+            {
+                settings.RemoteMachine = settings.LegacyRemoteMachine;
+                settings.RemoteMachine.Password = await sshPasswordStore.LoadAsync(cancellationToken);
+            }
 
             return settings;
         }
@@ -55,14 +58,15 @@ public sealed class UserSettingsService(ISshPasswordStore sshPasswordStore) : IU
 
         try
         {
-            if (settings.RemoteMachine.AuthenticationMethod == PasswordAuthentication &&
+            if (settings.LegacyRemoteMachine is not null &&
+                settings.RemoteMachine.AuthenticationMethod == PasswordAuthentication &&
                 !string.IsNullOrWhiteSpace(settings.RemoteMachine.Password))
             {
                 await sshPasswordStore.SaveAsync(
                     settings.RemoteMachine.Password,
                     cancellationToken);
             }
-            else
+            else if (settings.LegacyRemoteMachine is not null)
             {
                 await sshPasswordStore.DeleteAsync(cancellationToken);
                 settings.RemoteMachine.Password = null;
@@ -83,6 +87,21 @@ public sealed class UserSettingsService(ISshPasswordStore sshPasswordStore) : IU
         {
             var settings = await LoadCoreAsync(cancellationToken);
             settings.DeploymentNotificationsEnabled = enabled;
+            await SaveCoreAsync(settings, cancellationToken);
+        }
+        finally
+        {
+            _fileLock.Release();
+        }
+    }
+
+    public async Task ClearLegacyRemoteMachineAsync(CancellationToken cancellationToken = default)
+    {
+        await _fileLock.WaitAsync(cancellationToken);
+        try
+        {
+            var settings = await LoadCoreAsync(cancellationToken);
+            settings.LegacyRemoteMachine = null;
             await SaveCoreAsync(settings, cancellationToken);
         }
         finally

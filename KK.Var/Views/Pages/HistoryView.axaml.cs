@@ -8,6 +8,13 @@ namespace KK.Var.Views.Pages;
 
 public partial class HistoryView : UserControl
 {
+    private void ClearMachineFilter_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel)
+        {
+            viewModel.SelectedHistoryMachine = null;
+        }
+    }
     public HistoryView()
     {
         InitializeComponent();

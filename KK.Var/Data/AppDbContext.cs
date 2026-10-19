@@ -8,6 +8,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
 {
     public DbSet<KKProject> Projects => Set<KKProject>();
 
+    public DbSet<RemoteMachine> RemoteMachines => Set<RemoteMachine>();
+
     public DbSet<KKProjectEnvironmentVariable> ProjectEnvironmentVariables => Set<KKProjectEnvironmentVariable>();
 
     public DbSet<KKProjectVersion> ProjectVersions => Set<KKProjectVersion>();

@@ -49,12 +49,22 @@ public sealed class DeploymentOperationQueue(
         }
     }
 
+    public bool HasActiveOperationForMachine(Guid machineId)
+    {
+        lock (_syncRoot)
+        {
+            return _items.Any(item => item.RemoteMachineId == machineId &&
+                item.Status is DeploymentQueueStatus.Waiting or DeploymentQueueStatus.Running);
+        }
+    }
+
     public Task<TResult> EnqueueAsync<TResult>(
         Guid projectId,
         string version,
         DeploymentOperationType operationType,
         Func<CancellationToken, Task<TResult>> operation,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Guid? remoteMachineId = null)
     {
         ArgumentNullException.ThrowIfNull(operation);
 
@@ -73,6 +83,7 @@ public sealed class DeploymentOperationQueue(
         var item = new DeploymentQueueItem
         {
             ProjectId = projectId,
+            RemoteMachineId = remoteMachineId,
             Version = version.Trim(),
             OperationType = operationType,
             CancellationTokenSource = cancellationTokenSource,

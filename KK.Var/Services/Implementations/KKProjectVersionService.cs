@@ -41,6 +41,11 @@ public sealed class KKProjectVersionService(
             throw new KeyNotFoundException($"Project '{version.KKProjectId}' was not found.");
 
         version.Tag = Required(version.Tag, nameof(version.Tag), 200);
+        version.TargetArchitecture = ArchitectureCompatibility.Normalize(version.TargetArchitecture);
+        if (string.IsNullOrWhiteSpace(version.TargetArchitecture) || version.TargetArchitecture == "unknown")
+        {
+            throw new ArgumentException(localizationService.Get("Укажите целевую архитектуру версии."));
+        }
         version.ArtifactRelativePath = Required(
             version.ArtifactRelativePath,
             nameof(version.ArtifactRelativePath),

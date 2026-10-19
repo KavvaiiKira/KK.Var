@@ -20,6 +20,10 @@ public partial class SettingsView : UserControl
         if (DataContext is MainViewModel viewModel)
         {
             viewModel.InvalidateDeploymentPreflight();
+            if (!viewModel.IsMachineProfileLoading && !viewModel.IsConnectionCheckRunning)
+            {
+                viewModel.InvalidatePendingMachineVerification();
+            }
         }
     }
 

@@ -84,13 +84,13 @@ public sealed class RemoteConnectionService(ILocalizationService localizationSer
                 "architecture",
                 architecture.ExitStatus == 0 &&
                 string.Equals(
-                    architecture.Result.Trim(),
-                    settings.Architecture,
+                    ArchitectureCompatibility.Normalize(architecture.Result),
+                    ArchitectureCompatibility.Normalize(settings.Architecture),
                     StringComparison.OrdinalIgnoreCase) ?
                     PreflightStatus.Success :
                     PreflightStatus.Error,
                 localizationService.Get(architecture.ExitStatus == 0 &&
-                    string.Equals(architecture.Result.Trim(), settings.Architecture,
+                    string.Equals(ArchitectureCompatibility.Normalize(architecture.Result), ArchitectureCompatibility.Normalize(settings.Architecture),
                         StringComparison.OrdinalIgnoreCase) ?
                     "Архитектура удалённой машины проверена." :
                     "Архитектура удалённой машины не совпадает с настройками."),

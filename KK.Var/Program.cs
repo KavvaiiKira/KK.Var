@@ -95,6 +95,8 @@ sealed class Program
                 $"Data Source={DatabasePaths.GetDatabaseFilePath(databaseOptions.FileName)}"));
 
         builder.Services.AddSingleton<IUserSettingsService, UserSettingsService>();
+        builder.Services.AddSingleton<IRemoteMachineService, RemoteMachineService>();
+        builder.Services.AddSingleton<LegacyRemoteMachineMigration>();
         builder.Services.AddSingleton<IStartupRecoveryService, StartupRecoveryService>();
         builder.Services.AddSingleton<ISshPasswordStore, SshPasswordStore>();
         builder.Services.AddSingleton<ILocalizationService, LocalizationService>();
@@ -143,11 +145,14 @@ sealed class Program
 
     private static void ApplyDatabaseMigrations()
     {
+        var legacy = Services.GetRequiredService<LegacyRemoteMachineMigration>();
+        legacy.UpgradeDatabaseIfNeededAsync().GetAwaiter().GetResult();
         using var dbContext = Services
             .GetRequiredService<IDbContextFactory<AppDbContext>>()
             .CreateDbContext();
 
         dbContext.Database.Migrate();
+        legacy.MigrateSettingsAsync().GetAwaiter().GetResult();
     }
 
     internal static void MarkDatabaseRecovered()

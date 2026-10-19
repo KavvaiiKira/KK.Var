@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:KK.Var.ViewModels"
+             xmlns:models="using:KK.Var.Models"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
@@ -37,7 +38,7 @@
 
     <Grid RowDefinitions="Auto,*">
         <Grid Margin="30,26,30,18"
-              ColumnDefinitions="*,Auto,Auto,280"
+              ColumnDefinitions="*,Auto,Auto,280" RowDefinitions="Auto,Auto"
               ColumnSpacing="12">
             <StackPanel Spacing="5">
                 <TextBlock Text="{DynamicResource 'История'}"
@@ -67,6 +68,17 @@
                      VerticalAlignment="Center"
                      PlaceholderText="{DynamicResource 'Проект, версия или дата'}"
                      Text="{Binding HistorySearchText, UpdateSourceTrigger=PropertyChanged}" />
+            <StackPanel Grid.Row="1" Grid.ColumnSpan="4" Margin="0,10,0,0" Orientation="Horizontal" Spacing="10">
+                <ComboBox Width="280" ItemsSource="{Binding MachineProfiles}" SelectedItem="{Binding SelectedHistoryMachine}"
+                          PlaceholderText="{DynamicResource 'Все машины'}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:RemoteMachine">
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <Button Content="{DynamicResource 'Все машины'}" Click="ClearMachineFilter_OnClick" />
+            </StackPanel>
         </Grid>
 
         <ScrollViewer Grid.Row="1"
@@ -100,6 +112,7 @@
                                     <StackPanel Grid.Column="1" Spacing="3">
                                         <TextBlock Text="{DynamicResource 'Проект'}" FontSize="10" Foreground="{DynamicResource AppTextMutedBrush}" />
                                         <TextBlock Text="{Binding ProjectName}" FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding MachineDisplay}" FontSize="11" TextWrapping="Wrap" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="2" Spacing="3">
                                         <TextBlock Text="{DynamicResource 'Версия'}" FontSize="10" Foreground="{DynamicResource AppTextMutedBrush}" />

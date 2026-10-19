@@ -27,6 +27,7 @@ public partial class CreateProjectViewModel : ViewModelBase
     private readonly IGitHubService? _gitHubService;
     private readonly IGitHubAuthenticationService? _gitHubAuthenticationService;
     private readonly ILocalizationService? _localizationService;
+    private readonly IRemoteMachineService? _remoteMachineService;
     private bool _isResetting;
     private Guid? _editingProjectId;
     private KKProject? _editingProject;
@@ -40,12 +41,14 @@ public partial class CreateProjectViewModel : ViewModelBase
         IKKProjectService projectService,
         IGitHubService gitHubService,
         IGitHubAuthenticationService gitHubAuthenticationService,
+        IRemoteMachineService remoteMachineService,
         ILocalizationService localizationService)
     {
         _projectService = projectService;
         _gitHubService = gitHubService;
         _gitHubAuthenticationService = gitHubAuthenticationService;
         _localizationService = localizationService;
+        _remoteMachineService = remoteMachineService;
         GitHubBranchSelection = new GitHubSourceSelectionViewModel(gitHubService, gitHubAuthenticationService, localizationService);
         GitHubBranchSelection.BranchChanged += (_, _) => MarkDirty();
         RefreshLocalization();
@@ -185,6 +188,8 @@ public partial class CreateProjectViewModel : ViewModelBase
         SelectedSourceType = Localize(LocalSource);
         LocalDirectoryPath = string.Empty;
         SelectedGitHubRepository = null;
+        SelectedProjectMachine = ProjectMachines.FirstOrDefault();
+        MachineSwitchConfirmed = false;
         GitHubBranchSelection.Configure(null, null);
         SelectedBuildProvider = Localize(AutomaticBuild);
         RemoteServiceName = string.Empty;
@@ -220,6 +225,8 @@ public partial class CreateProjectViewModel : ViewModelBase
         _isResetting = true;
         _editingProjectId = project.Id;
         _editingProject = project;
+        SelectedProjectMachine = ProjectMachines.FirstOrDefault(machine => machine.Id == project.RemoteMachineId);
+        MachineSwitchConfirmed = false;
 
         Name = project.Name;
         Description = project.Description ?? string.Empty;
@@ -295,6 +302,7 @@ public partial class CreateProjectViewModel : ViewModelBase
         var project = new KKProject
         {
             Id = _editingProjectId ?? Guid.NewGuid(),
+            RemoteMachineId = SelectedProjectMachine!.Id,
             Name = Name,
             Description = Description,
 
@@ -528,6 +536,14 @@ public partial class CreateProjectViewModel : ViewModelBase
 
     private string Validate()
     {
+        if (SelectedProjectMachine is null || !SelectedProjectMachine.IsVerified || SelectedProjectMachine.IsArchived)
+        {
+            return Localize("Выберите проверенный профиль машины.");
+        }
+        if (IsProjectMachineChanged && !MachineSwitchConfirmed)
+        {
+            return Localize("Подтвердите смену машины проекта.");
+        }
         if (!string.IsNullOrEmpty(_buildEditorError))
         {
             return _buildEditorError;

@@ -219,6 +219,8 @@
                                         <StackPanel Spacing="3">
                                             <TextBlock Text="{Binding Tag}" FontWeight="Bold"
                                                        Foreground="{DynamicResource AppPrimaryHoverBrush}" />
+                                            <TextBlock Text="{Binding TargetArchitecture}" FontSize="11"
+                                                       Foreground="{DynamicResource AppTextMutedBrush}" />
                                             <TextBlock Text="{Binding SourceCommitDisplay}"
                                                        IsVisible="{Binding HasSourceCommit}"
                                                        FontSize="11"

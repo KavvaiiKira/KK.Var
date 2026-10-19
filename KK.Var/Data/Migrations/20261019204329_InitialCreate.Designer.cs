@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace KK.Var.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20261019111947_InitialCreate")]
+    [Migration("20261019204329_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -117,6 +117,9 @@ namespace KK.Var.Data.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid>("RemoteMachineId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("RemoteServiceName")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -134,7 +137,7 @@ namespace KK.Var.Data.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.HasIndex("RemoteServiceName")
+                    b.HasIndex("RemoteMachineId", "RemoteServiceName")
                         .IsUnique();
 
                     b.ToTable("KKProjects", null, t =>
@@ -173,9 +176,46 @@ namespace KK.Var.Data.Migrations
                     b.Property<int>("OperationType")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("RemoteArchitecture")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RemoteDirectorySnapshot")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RemoteExecutableSnapshot")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RemoteHost")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("RemoteMachineId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RemoteMachineName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("RemoteOperationId")
                         .IsRequired()
                         .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RemotePort")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("RemoteServerGeneration")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("RemoteServiceNameSnapshot")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RemoteUserName")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("SourceCommitSha")
@@ -210,6 +250,8 @@ namespace KK.Var.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("KKProjectVersionId");
+
+                    b.HasIndex("RemoteMachineId");
 
                     b.HasIndex("StartedAtUtc");
 
@@ -292,6 +334,10 @@ namespace KK.Var.Data.Migrations
                         .HasColumnType("TEXT")
                         .UseCollation("NOCASE");
 
+                    b.Property<string>("TargetArchitecture")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.HasIndex("KKProjectId", "Tag")
@@ -301,6 +347,78 @@ namespace KK.Var.Data.Migrations
                         {
                             t.HasCheckConstraint("CK_KKProjectVersions_ArtifactSize", "ArtifactSize >= 0");
                         });
+                });
+
+            modelBuilder.Entity("KK.Var.Models.RemoteMachine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Architecture")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AuthenticationMethod")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Host")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("HostKeyFingerprint")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("LastVerifiedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Port")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PrivateKeyPath")
+                        .HasMaxLength(2048)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ServerGeneration")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("RemoteMachines");
+                });
+
+            modelBuilder.Entity("KK.Var.Models.KKProject", b =>
+                {
+                    b.HasOne("KK.Var.Models.RemoteMachine", "RemoteMachine")
+                        .WithMany("Projects")
+                        .HasForeignKey("RemoteMachineId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("RemoteMachine");
                 });
 
             modelBuilder.Entity("KK.Var.Models.KKProjectDeployment", b =>
@@ -316,7 +434,15 @@ namespace KK.Var.Data.Migrations
                         .HasForeignKey("KKProjectVersionId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("KK.Var.Models.RemoteMachine", "RemoteMachine")
+                        .WithMany("Deployments")
+                        .HasForeignKey("RemoteMachineId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Project");
+
+                    b.Navigation("RemoteMachine");
 
                     b.Navigation("Version");
                 });
@@ -355,6 +481,13 @@ namespace KK.Var.Data.Migrations
             modelBuilder.Entity("KK.Var.Models.KKProjectVersion", b =>
                 {
                     b.Navigation("Deployments");
+                });
+
+            modelBuilder.Entity("KK.Var.Models.RemoteMachine", b =>
+                {
+                    b.Navigation("Deployments");
+
+                    b.Navigation("Projects");
                 });
 #pragma warning restore 612, 618
         }

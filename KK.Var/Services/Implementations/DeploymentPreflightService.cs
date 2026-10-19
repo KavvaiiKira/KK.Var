@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using KK.Var.Enums;
+using KK.Var.Configuration;
 using KK.Var.Models;
 using KK.Var.Repositories;
 
@@ -19,7 +20,7 @@ public sealed class DeploymentPreflightService(
     IKKProjectEnvironmentService environmentService,
     IGitHubService gitHubService,
     IGitHubAuthenticationService gitHubAuthenticationService,
-    IUserSettingsService userSettingsService,
+    IRemoteMachineService machineService,
     IArtifactStorageService artifactStorageService,
     IDeploymentOperationQueue operationQueue,
     IRemoteConnectionService remoteConnectionService,
@@ -36,10 +37,11 @@ public sealed class DeploymentPreflightService(
     public async Task<DeploymentPreflightResult> CheckAsync(
         DeploymentRequest request,
         bool currentOperationOwnsQueue = false,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        KKProject? operationProject = null)
     {
         var checks = new List<DeploymentPreflightCheck>();
-        var project = await projectRepository.GetByIdAsync(
+        var project = operationProject ?? await projectRepository.GetByIdAsync(
             request.ProjectId,
             cancellationToken);
 
@@ -73,7 +75,27 @@ public sealed class DeploymentPreflightService(
             checks.Add(Success("version", "Тег новой версии доступен."));
         }
 
-        var settings = await userSettingsService.LoadAsync(cancellationToken);
+        RemoteMachineSettings connection;
+        IAsyncDisposable? machineReservation = null;
+        try
+        {
+            machineReservation = await machineService.ReserveAsync(request.RemoteMachineId ?? project.RemoteMachineId, cancellationToken);
+            connection = await machineService.GetConnectionAsync(request.RemoteMachineId ?? project.RemoteMachineId, cancellationToken);
+        }
+        catch (Exception exception)
+        {
+            if (machineReservation is not null)
+            {
+                await machineReservation.DisposeAsync();
+            }
+            if (exception is OperationCanceledException)
+            {
+                throw;
+            }
+            checks.Add(Error("machine", "Профиль машины должен быть проверен и не архивирован.", exception.Message));
+            return new DeploymentPreflightResult(checks);
+        }
+        await using var reservedMachine = machineReservation;
         var source = await CheckSourceAsync(project, request, checks, cancellationToken);
         await CheckBuildConfigurationAsync(project, checks, cancellationToken);
 
@@ -106,7 +128,7 @@ public sealed class DeploymentPreflightService(
         }
 
         var remoteChecks = await remoteConnectionService.CheckDeploymentAsync(
-            settings.RemoteMachine,
+            connection,
             project.RemoteDeploymentDirectory,
             minimumFreeBytes,
             project.BuildProvider == ProjectBuildProvider.Python ||

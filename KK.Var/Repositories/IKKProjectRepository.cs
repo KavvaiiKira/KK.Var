@@ -23,7 +23,8 @@ public interface IKKProjectRepository
     Task<bool> ServiceNameExistsAsync(
         string serviceName,
         Guid? excludedProjectId = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Guid? remoteMachineId = null);
 
     Task AddAsync(
         KKProject project,

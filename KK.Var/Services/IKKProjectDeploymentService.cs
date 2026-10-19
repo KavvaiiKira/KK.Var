@@ -21,7 +21,8 @@ public interface IKKProjectDeploymentService
         DeploymentStatus? status,
         int skip,
         int take,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Guid? remoteMachineId = null);
 
     Task<IReadOnlyList<KKProjectDeployment>> GetByProjectIdAsync(
         Guid projectId,
@@ -34,7 +35,8 @@ public interface IKKProjectDeploymentService
         string variablesSnapshotJson,
         string remoteOperationId,
         string logPath,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Guid? remoteMachineId = null);
 
     Task CompleteAsync(
         Guid deploymentId,

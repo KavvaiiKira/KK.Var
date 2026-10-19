@@ -9,6 +9,8 @@ public sealed class KKProjectVersion
 
     public Guid KKProjectId { get; set; }
 
+    public string TargetArchitecture { get; set; } = string.Empty;
+
     public string Tag { get; set; } = string.Empty;
 
     public string ArtifactRelativePath { get; set; } = string.Empty;

@@ -21,7 +21,8 @@ public sealed class KKProjectDeploymentRepository(
         DeploymentStatus? status,
         int skip,
         int take,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Guid? remoteMachineId = null)
     {
         if (skip < 0)
         {
@@ -49,6 +50,11 @@ public sealed class KKProjectDeploymentRepository(
         if (status.HasValue)
         {
             query = query.Where(deployment => deployment.Status == status.Value);
+        }
+
+        if (remoteMachineId.HasValue)
+        {
+            query = query.Where(deployment => deployment.RemoteMachineId == remoteMachineId);
         }
 
         if (startedFromUtc.HasValue && startedBeforeUtc.HasValue)

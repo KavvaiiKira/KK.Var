@@ -12,6 +12,8 @@ public sealed class DeploymentHistoryItemViewModel(
 
     public string ProjectName => Deployment.Project?.Name ?? string.Empty;
 
+    public string MachineDisplay => $"{Deployment.RemoteMachineName} · {Deployment.RemoteHost}:{Deployment.RemotePort}";
+
     public string VersionTag => Deployment.Version?.Tag ?? Deployment.VersionTag;
 
     public string DateDisplay => Deployment.StartedAtUtc.ToLocalTime().ToString("g");

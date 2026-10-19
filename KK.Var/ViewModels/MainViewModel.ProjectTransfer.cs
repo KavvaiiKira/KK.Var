@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using KK.Var.Enums;
@@ -12,6 +13,9 @@ public partial class MainViewModel
     private readonly IProjectConfigurationTransferService? _projectConfigurationTransferService;
     private ProjectConfigurationDocument? _pendingProjectImport;
     private bool _isPreparingProjectImport;
+
+    [ObservableProperty]
+    public partial RemoteMachine? SelectedImportMachine { get; set; }
 
     [ObservableProperty]
     public partial bool HasPendingProjectImport { get; set; }
@@ -59,6 +63,7 @@ public partial class MainViewModel
             ImportDeploymentDirectory = data.RemoteDeploymentDirectory;
             _isPreparingProjectImport = false;
             ImportError = string.Empty;
+            SelectedImportMachine = AvailableMachines.FirstOrDefault();
             HasPendingProjectImport = true;
             OnPropertyChanged(nameof(IsImportLocalSource));
             OnPropertyChanged(nameof(ImportPreviewJson));
@@ -93,7 +98,11 @@ public partial class MainViewModel
         try
         {
             UpdateImportPreview();
-            var project = await _projectConfigurationTransferService.ImportAsync(_pendingProjectImport);
+            if (SelectedImportMachine is null)
+            {
+                throw new InvalidOperationException(Localize("Выберите проверенный профиль машины."));
+            }
+            var project = await _projectConfigurationTransferService.ImportAsync(_pendingProjectImport, SelectedImportMachine.Id);
             Projects.Add(project);
             SelectedProject = project;
             RebuildProjectTiles();

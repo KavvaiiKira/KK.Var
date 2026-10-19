@@ -9,6 +9,21 @@ public sealed class KKProjectDeployment
 
     public Guid KKProjectId { get; set; }
 
+    public Guid RemoteMachineId { get; set; }
+
+    public RemoteMachine RemoteMachine { get; set; } = null!;
+    public string RemoteMachineName { get; set; } = string.Empty;
+    public string RemoteHost { get; set; } = string.Empty;
+    public int RemotePort { get; set; }
+
+    public string RemoteUserName { get; set; } = string.Empty;
+    public string RemoteArchitecture { get; set; } = string.Empty;
+    public int RemoteServerGeneration { get; set; }
+
+    public string RemoteServiceNameSnapshot { get; set; } = string.Empty;
+    public string RemoteDirectorySnapshot { get; set; } = string.Empty;
+    public string RemoteExecutableSnapshot { get; set; } = string.Empty;
+
     public Guid? KKProjectVersionId { get; set; }
 
     public string VersionTag { get; set; } = string.Empty;

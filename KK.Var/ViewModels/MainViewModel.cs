@@ -72,6 +72,8 @@ public partial class MainViewModel : ViewModelBase
         IArtifactStorageService artifactStorageService,
         IVersionCleanupService versionCleanupService,
         IProjectConfigurationTransferService projectConfigurationTransferService,
+        IRemoteMachineService remoteMachineService,
+        ISshPasswordStore sshPasswordStore,
         IDeploymentPreflightService deploymentPreflightService,
         IDeploymentOperationQueue deploymentOperationQueue,
         ILocalizationService localizationService,
@@ -91,6 +93,8 @@ public partial class MainViewModel : ViewModelBase
         _artifactStorageService = artifactStorageService;
         _versionCleanupService = versionCleanupService;
         _projectConfigurationTransferService = projectConfigurationTransferService;
+        _remoteMachineService = remoteMachineService;
+        _profilePasswordStore = sshPasswordStore;
         _deploymentPreflightService = deploymentPreflightService;
         _deploymentOperationQueue = deploymentOperationQueue;
         _localizationService = localizationService;
@@ -296,8 +300,7 @@ public partial class MainViewModel : ViewModelBase
         Canonicalize(AuthenticationMethod) == PasswordAuthentication;
 
     public bool IsRemoteMachineConfigured =>
-        Settings.IsFirstRunCompleted &&
-        string.IsNullOrEmpty(ValidateRemoteMachineSettings());
+        MachineProfiles.Any(machine => machine.IsVerified && !machine.IsArchived);
 
     public bool HasNotification => !string.IsNullOrWhiteSpace(NotificationMessage);
 
@@ -486,6 +489,7 @@ public partial class MainViewModel : ViewModelBase
 
         Settings = await _userSettingsService.LoadAsync();
         LoadNotificationPreference();
+        await ReloadMachineProfilesAsync();
         await RefreshArtifactStorageSummaryAsync();
         RemoteMachineArchitecture = FormatArchitecture(
             Settings.RemoteMachine.Architecture);
@@ -1211,7 +1215,8 @@ public partial class MainViewModel : ViewModelBase
             ParseSelectedHistoryStatus(),
             reset ? 0 : HistoryItems.Count,
             HistoryPageSize + 1,
-            cancellationToken);
+            cancellationToken,
+            SelectedHistoryMachine?.Id);
 
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -1251,6 +1256,7 @@ public partial class MainViewModel : ViewModelBase
 
     private void ProjectEditor_OnProjectCreated(object? sender, KKProject project)
     {
+        _ = ReloadMachineProfilesAsync();
         Projects.Add(project);
         SelectedProject = project;
         _createdProjectForNavigation = project;
@@ -1271,6 +1277,7 @@ public partial class MainViewModel : ViewModelBase
 
     private void ProjectEditor_OnProjectUpdated(object? sender, KKProject project)
     {
+        _ = ReloadMachineProfilesAsync();
         InvalidateDeploymentPreflight(project.Id);
         var index = Projects
             .Select((item, itemIndex) => new { item, itemIndex })
@@ -1485,29 +1492,7 @@ public partial class MainViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private async Task SaveSettingsAsync()
-    {
-        InvalidateDeploymentPreflight();
-        if (_userSettingsService is null)
-        {
-            return;
-        }
-
-        SettingsError = ValidateRemoteMachineSettings();
-
-        if (!string.IsNullOrEmpty(SettingsError))
-        {
-            SettingsStatus = string.Empty;
-            return;
-        }
-
-        Settings.IsFirstRunCompleted = true;
-
-        await _userSettingsService.SaveAsync(Settings);
-
-        IsFirstRunSetupRequired = false;
-        SettingsStatus = Localize("Настройки сохранены");
-    }
+    private async Task SaveSettingsAsync() => await VerifyMachineProfileAsync();
 
     public async Task ToggleVersionPinnedAsync(ProjectVersionItemViewModel item)
     {
@@ -1720,90 +1705,13 @@ public partial class MainViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private async Task CheckRemoteConnectionAsync()
-    {
-        InvalidateDeploymentPreflight();
-        if (_remoteConnectionService is null ||
-            _userSettingsService is null ||
-            IsConnectionCheckRunning)
-        {
-            return;
-        }
-
-        SettingsError = ValidateRemoteMachineSettings(requireTrustedHostKey: false);
-        SettingsStatus = string.Empty;
-
-        if (!string.IsNullOrEmpty(SettingsError))
-        {
-            return;
-        }
-
-        IsConnectionCheckRunning = true;
-        RemoteMachineArchitecture = Localize("Подключение и определение архитектуры...");
-
-        try
-        {
-            var result = await _remoteConnectionService.CheckAsync(Settings.RemoteMachine);
-
-            if (result.RequiresHostKeyConfirmation)
-            {
-                PendingHostKeyFingerprint = result.HostKeyFingerprint;
-                IsHostKeyConfirmationRequired = true;
-                SettingsError = string.Empty;
-                RemoteMachineArchitecture = FormatArchitecture(
-                    Settings.RemoteMachine.Architecture);
-
-                return;
-            }
-
-            if (!result.IsSuccessful)
-            {
-                SettingsError = result.ErrorMessage;
-                RemoteMachineArchitecture = FormatArchitecture(
-                    Settings.RemoteMachine.Architecture);
-
-                return;
-            }
-
-            Settings.RemoteMachine.Architecture = result.Architecture;
-            Settings.RemoteMachine.HostKeyFingerprint = result.HostKeyFingerprint;
-            Settings.RemoteMachine.HostKeyHost = Settings.RemoteMachine.Host?.Trim();
-            Settings.RemoteMachine.HostKeyPort = Settings.RemoteMachine.Port;
-
-            await _userSettingsService.SaveAsync(Settings);
-
-            SettingsError = string.Empty;
-            SettingsStatus = Localize("Подключение успешно");
-            RemoteMachineArchitecture = FormatArchitecture(result.Architecture);
-        }
-        finally
-        {
-            IsConnectionCheckRunning = false;
-        }
-    }
+    private async Task CheckRemoteConnectionAsync() => await VerifyMachineProfileAsync();
 
     [RelayCommand]
-    private async Task ConfirmHostKeyAsync()
-    {
-        if (string.IsNullOrWhiteSpace(PendingHostKeyFingerprint))
-        {
-            return;
-        }
-
-        Settings.RemoteMachine.HostKeyFingerprint = PendingHostKeyFingerprint;
-        PendingHostKeyFingerprint = string.Empty;
-        IsHostKeyConfirmationRequired = false;
-
-        await CheckRemoteConnectionAsync();
-    }
+    private async Task ConfirmHostKeyAsync() => await ConfirmMachineIdentityAsync();
 
     [RelayCommand]
-    private void CancelHostKeyConfirmation()
-    {
-        PendingHostKeyFingerprint = string.Empty;
-        IsHostKeyConfirmationRequired = false;
-        SettingsStatus = string.Empty;
-    }
+    private void CancelHostKeyConfirmation() => InvalidatePendingMachineVerification();
 
     public void ClearSettingsStatus()
     {
@@ -2368,6 +2276,10 @@ public partial class MainViewModel : ViewModelBase
 
     partial void OnAuthenticationMethodChanged(string value)
     {
+        if (!IsMachineProfileLoading && !IsConnectionCheckRunning)
+        {
+            InvalidatePendingMachineVerification();
+        }
         InvalidateDeploymentPreflight();
         Settings.RemoteMachine.AuthenticationMethod =
             Canonicalize(value) == PasswordAuthentication ?

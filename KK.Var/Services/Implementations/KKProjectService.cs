@@ -15,6 +15,7 @@ namespace KK.Var.Services.Implementations;
 public sealed class KKProjectService(
     IKKProjectRepository repository,
     IProjectArtifactService artifactService,
+    IRemoteMachineService machineService,
     ILocalizationService localizationService)
     : IKKProjectService
 {
@@ -37,6 +38,7 @@ public sealed class KKProjectService(
     {
         ArgumentNullException.ThrowIfNull(project);
         NormalizeAndValidate(project);
+        await using var machineReservation = await machineService.ReserveAsync(project.RemoteMachineId, cancellationToken);
 
         if (await repository.NameExistsAsync(project.Name, cancellationToken: cancellationToken))
         {
@@ -46,7 +48,8 @@ public sealed class KKProjectService(
 
         if (await repository.ServiceNameExistsAsync(
                 project.RemoteServiceName,
-                cancellationToken: cancellationToken))
+                cancellationToken: cancellationToken,
+                remoteMachineId: project.RemoteMachineId))
         {
             throw new InvalidOperationException(
                 $"Systemd service '{project.RemoteServiceName}' is already assigned to another project.");
@@ -76,6 +79,7 @@ public sealed class KKProjectService(
             throw new KeyNotFoundException($"Project '{project.Id}' was not found.");
 
         NormalizeAndValidate(project);
+        await using var machineReservation = await machineService.ReserveAsync(project.RemoteMachineId, cancellationToken);
 
         if (await repository.NameExistsAsync(
                 project.Name,
@@ -89,7 +93,8 @@ public sealed class KKProjectService(
         if (await repository.ServiceNameExistsAsync(
                 project.RemoteServiceName,
                 project.Id,
-                cancellationToken))
+                cancellationToken,
+                remoteMachineId: project.RemoteMachineId))
         {
             throw new InvalidOperationException(
                 $"Systemd service '{project.RemoteServiceName}' is already assigned to another project.");

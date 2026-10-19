@@ -13,5 +13,5 @@ public interface IProjectConfigurationTransferService
 
     string Describe(ProjectConfigurationDocument document);
 
-    Task<KKProject> ImportAsync(ProjectConfigurationDocument document, CancellationToken cancellationToken = default);
+    Task<KKProject> ImportAsync(ProjectConfigurationDocument document, Guid remoteMachineId, CancellationToken cancellationToken = default);
 }

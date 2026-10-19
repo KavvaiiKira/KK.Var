@@ -17,12 +17,15 @@ public interface IDeploymentOperationQueue
 
     bool HasActiveOperations();
 
+    bool HasActiveOperationForMachine(Guid machineId);
+
     Task<TResult> EnqueueAsync<TResult>(
         Guid projectId,
         string version,
         DeploymentOperationType operationType,
         Func<CancellationToken, Task<TResult>> operation,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Guid? remoteMachineId = null);
 
     bool Cancel(Guid itemId);
 }

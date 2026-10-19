@@ -106,6 +106,24 @@
                 <StackPanel MaxWidth="1050"
                             HorizontalAlignment="Stretch"
                             Spacing="18">
+                    <Border Padding="24" Background="{DynamicResource AppSurfaceBrush}" CornerRadius="14">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="{DynamicResource 'Машина проекта'}" FontSize="19" FontWeight="Bold" />
+                            <ComboBox ItemsSource="{Binding ProjectMachines}" SelectedItem="{Binding SelectedProjectMachine}"
+                                      HorizontalAlignment="Stretch" Classes="project-field">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="models:RemoteMachine">
+                                        <TextBlock Text="{Binding Name}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <StackPanel IsVisible="{Binding IsProjectMachineChanged}" Spacing="8">
+                                <TextBlock Text="{DynamicResource 'Новые Deploy и rollback будут выполняться на выбранной машине. Сервис на прежней машине не будет остановлен или удалён автоматически.'}"
+                                           TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}" />
+                                <CheckBox IsChecked="{Binding MachineSwitchConfirmed}" Content="{DynamicResource 'Подтверждаю смену машины'}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
                     <Border Padding="24"
                             Background="{DynamicResource AppSurfaceBrush}"
                             BorderBrush="{DynamicResource AppBorderBrush}"

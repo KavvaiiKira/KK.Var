@@ -9,5 +9,6 @@ public interface IDeploymentPreflightService
     Task<DeploymentPreflightResult> CheckAsync(
         DeploymentRequest request,
         bool currentOperationOwnsQueue = false,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        KKProject? operationProject = null);
 }
