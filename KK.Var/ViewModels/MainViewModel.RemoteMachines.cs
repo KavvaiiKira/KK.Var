@@ -318,7 +318,6 @@ public partial class MainViewModel
         AddMachineProfile();
         Settings.RemoteMachine.Host = host;
         Settings.RemoteMachine.Port = port;
-        // Credentials and fingerprint must be entered and confirmed for the new identity.
         OnPropertyChanged(nameof(Settings));
     }
 

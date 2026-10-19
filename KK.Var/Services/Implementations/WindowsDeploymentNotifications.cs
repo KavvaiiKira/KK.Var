@@ -92,7 +92,6 @@ public sealed class WindowsDeploymentNotifications : IDisposable
         }
         catch
         {
-            // Unsupported shell features must not affect the deployment.
             _available = false;
         }
     }

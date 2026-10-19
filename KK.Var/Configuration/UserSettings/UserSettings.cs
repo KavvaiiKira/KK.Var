@@ -23,8 +23,4 @@ public sealed class UserSettings
 
     [JsonIgnore]
     public RemoteMachineSettings RemoteMachine { get; set; } = new RemoteMachineSettings();
-
-    [JsonPropertyName("RemoteMachine")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public RemoteMachineSettings? LegacyRemoteMachine { get; set; }
 }

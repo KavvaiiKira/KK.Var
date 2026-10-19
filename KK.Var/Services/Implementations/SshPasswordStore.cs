@@ -10,16 +10,10 @@ namespace KK.Var.Services.Implementations;
 
 public sealed class SshPasswordStore : ISshPasswordStore
 {
-    private static readonly byte[] AdditionalEntropy = Encoding.UTF8.GetBytes("KK.Var.SSH.Password.v1");
-
-    private static byte[] PasswordEntropy(Guid id) => id == Guid.Empty ? AdditionalEntropy :
+    private static byte[] PasswordEntropy(Guid id) =>
         Encoding.UTF8.GetBytes($"KK.Var.SSH.Password.v2:{id:N}");
 
-    public Task SaveAsync(string password, CancellationToken cancellationToken = default) => SaveAsync(Guid.Empty, password, cancellationToken);
-    public Task<string?> LoadAsync(CancellationToken cancellationToken = default) => LoadAsync(Guid.Empty, cancellationToken);
-    public Task DeleteAsync(CancellationToken cancellationToken = default) => DeleteAsync(Guid.Empty, cancellationToken);
-
-    private static string PasswordPath(Guid id) => id == Guid.Empty ? DatabasePaths.SshPasswordFilePath :
+    private static string PasswordPath(Guid id) =>
         Path.Combine(DatabasePaths.UserDataDirectory, $"ssh-{id:N}.dat");
 
     public async Task SaveAsync(

@@ -18,9 +18,6 @@ public static class DatabasePaths
     public static string GitHubTokenFilePath =>
         Path.Combine(UserDataDirectory, "github-token.dat");
 
-    public static string SshPasswordFilePath =>
-        Path.Combine(UserDataDirectory, "ssh-password.dat");
-
     public static string ArtifactsDirectory =>
         Path.Combine(UserDataDirectory, "artifacts");
 

@@ -30,7 +30,6 @@ public sealed class StartupRecoveryService(
             case StartupRecoveryKind.UserSettings:
                 MoveIfExists(DatabasePaths.UserSettingsFilePath, recoveryDirectory);
                 MoveIfExists(DatabasePaths.UserSettingsFilePath + ".tmp", recoveryDirectory);
-                MoveIfExists(DatabasePaths.SshPasswordFilePath, recoveryDirectory);
                 break;
             case StartupRecoveryKind.Database:
                 var databasePath = DatabasePaths.GetDatabaseFilePath(databaseOptions.FileName);

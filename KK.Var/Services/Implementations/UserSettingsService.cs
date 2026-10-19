@@ -9,9 +9,8 @@ using System.Text.Json.Serialization;
 
 namespace KK.Var.Services.Implementations;
 
-public sealed class UserSettingsService(ISshPasswordStore sshPasswordStore) : IUserSettingsService
+public sealed class UserSettingsService : IUserSettingsService
 {
-    private const string PasswordAuthentication = "Пароль";
     private static readonly JsonSerializerOptions SerializerOptions = new JsonSerializerOptions()
     {
         PropertyNameCaseInsensitive = true,
@@ -32,15 +31,7 @@ public sealed class UserSettingsService(ISshPasswordStore sshPasswordStore) : IU
 
         try
         {
-            var settings = await LoadCoreAsync(cancellationToken);
-
-            if (settings.LegacyRemoteMachine is not null)
-            {
-                settings.RemoteMachine = settings.LegacyRemoteMachine;
-                settings.RemoteMachine.Password = await sshPasswordStore.LoadAsync(cancellationToken);
-            }
-
-            return settings;
+            return await LoadCoreAsync(cancellationToken);
         }
         finally
         {
@@ -58,20 +49,6 @@ public sealed class UserSettingsService(ISshPasswordStore sshPasswordStore) : IU
 
         try
         {
-            if (settings.LegacyRemoteMachine is not null &&
-                settings.RemoteMachine.AuthenticationMethod == PasswordAuthentication &&
-                !string.IsNullOrWhiteSpace(settings.RemoteMachine.Password))
-            {
-                await sshPasswordStore.SaveAsync(
-                    settings.RemoteMachine.Password,
-                    cancellationToken);
-            }
-            else if (settings.LegacyRemoteMachine is not null)
-            {
-                await sshPasswordStore.DeleteAsync(cancellationToken);
-                settings.RemoteMachine.Password = null;
-            }
-
             await SaveCoreAsync(settings, cancellationToken);
         }
         finally
@@ -87,21 +64,6 @@ public sealed class UserSettingsService(ISshPasswordStore sshPasswordStore) : IU
         {
             var settings = await LoadCoreAsync(cancellationToken);
             settings.DeploymentNotificationsEnabled = enabled;
-            await SaveCoreAsync(settings, cancellationToken);
-        }
-        finally
-        {
-            _fileLock.Release();
-        }
-    }
-
-    public async Task ClearLegacyRemoteMachineAsync(CancellationToken cancellationToken = default)
-    {
-        await _fileLock.WaitAsync(cancellationToken);
-        try
-        {
-            var settings = await LoadCoreAsync(cancellationToken);
-            settings.LegacyRemoteMachine = null;
             await SaveCoreAsync(settings, cancellationToken);
         }
         finally
