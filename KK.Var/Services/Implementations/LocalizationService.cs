@@ -422,6 +422,7 @@ namespace KK.Var.Services.Implementations
                 ["Выбранный путь указывает на файл."] = "The selected path points to a file.",
                 ["Не найден архив версии «{0}» в текущем каталоге."] = "The archive for version \"{0}\" was not found in the current directory.",
                 ["Закрепить"] = "Pin",
+                ["Закрепление защищает версию от автоматической очистки. «Открепить» снимает защиту, но не удаляет версию. Версия на сервере не меняется."] = "Pinning protects a version from automatic cleanup. Unpinning removes this protection without deleting the version. The version on the server stays unchanged.",
                 ["Открепить"] = "Unpin",
                 ["Архив доступен"] = "Archive available",
                 ["Архив отсутствует"] = "Archive missing",

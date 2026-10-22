@@ -225,8 +225,16 @@
 
                 <StackPanel x:Name="VersionsPanel" IsVisible="False" Spacing="14">
                     <TextBlock Text="{DynamicResource 'Версии'}" FontSize="20" FontWeight="Bold" />
-                    <TextBlock Text="{DynamicResource 'Версия создаётся автоматически после успешной сборки. Архив и контрольная сумма неизменяемы.'}"
-                               FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="{DynamicResource 'Версия создаётся автоматически после успешной сборки. Архив и контрольная сумма неизменяемы.'}"
+                                   TextWrapping="Wrap"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource AppTextMutedBrush}" />
+                        <TextBlock Text="{DynamicResource 'Закрепление защищает версию от автоматической очистки. «Открепить» снимает защиту, но не удаляет версию. Версия на сервере не меняется.'}"
+                                   TextWrapping="Wrap"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource AppTextMutedBrush}" />
+                    </StackPanel>
                     <StackPanel Orientation="Horizontal" Spacing="16">
                         <TextBlock Foreground="{DynamicResource AppTextMutedBrush}">
                             <Run Text="{DynamicResource 'Общий размер проекта'}" />
