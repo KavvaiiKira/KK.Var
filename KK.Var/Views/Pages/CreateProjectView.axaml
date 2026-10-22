@@ -151,7 +151,14 @@
                                 <TextBlock Classes="field-label" Text="{DynamicResource 'Способ получения исходников'}" />
                                 <ComboBox Classes="project-field"
                                           ItemsSource="{Binding SourceTypes}"
-                                          SelectedItem="{Binding SelectedSourceType, Mode=TwoWay}" />
+                                          SelectedValue="{Binding SelectedSourceType, Mode=TwoWay}"
+                                          SelectedValueBinding="{CompiledBinding Value, DataType={x:Type models:EnumOption}}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="models:EnumOption">
+                                            <TextBlock Text="{Binding Label}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
                             </StackPanel>
                         </Grid>
                     </Border>
@@ -240,7 +247,7 @@
                                                     <TextBlock Text="{Binding FullName}" />
                                                     <TextBlock Grid.Column="1"
                                                                Margin="16,0,0,0"
-                                                               Text="private"
+                                                               Text="{DynamicResource 'Приватный'}"
                                                                IsVisible="{Binding IsPrivate}"
                                                                FontSize="11"
                                                                Foreground="{DynamicResource AppTextMutedBrush}" />
@@ -264,7 +271,7 @@
                                               SelectedItem="{Binding GitHubBranchSelection.SelectedBranch, Mode=TwoWay}"
                                               DropDownOpened="ProjectBranches_OnOpened">
                                         <ComboBox.ItemTemplate>
-                                            <DataTemplate x:DataType="vm:GitHubBranchOption">
+                                            <DataTemplate x:DataType="models:GitHubBranchOption">
                                                 <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
                                             </DataTemplate>
                                         </ComboBox.ItemTemplate>
@@ -302,7 +309,14 @@
                                 <TextBlock Classes="field-label" Text="{DynamicResource 'Тип проекта'}" />
                                 <ComboBox Classes="project-field"
                                           ItemsSource="{Binding BuildProviders}"
-                                          SelectedItem="{Binding SelectedBuildProvider, Mode=TwoWay}" />
+                                          SelectedValue="{Binding SelectedBuildProvider, Mode=TwoWay}"
+                                          SelectedValueBinding="{CompiledBinding Value, DataType={x:Type models:EnumOption}}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="models:EnumOption">
+                                            <TextBlock Text="{Binding Label}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
                             </StackPanel>
 
                             <StackPanel Grid.Row="1" Grid.Column="1" Spacing="7" IsVisible="{Binding !IsPythonBuild}">
@@ -451,7 +465,14 @@
                                            Text="{DynamicResource 'Тип health-check'}" />
                                 <ComboBox Classes="project-field"
                                           ItemsSource="{Binding HealthCheckTypes}"
-                                          SelectedItem="{Binding SelectedHealthCheckType, Mode=TwoWay}" />
+                                          SelectedValue="{Binding SelectedHealthCheckType, Mode=TwoWay}"
+                                          SelectedValueBinding="{CompiledBinding Value, DataType={x:Type models:EnumOption}}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="models:EnumOption">
+                                            <TextBlock Text="{Binding Label}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
                             </StackPanel>
 
                             <StackPanel IsVisible="{Binding IsStabilityDelayHealthCheck}"

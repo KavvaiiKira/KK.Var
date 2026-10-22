@@ -1,11 +1,12 @@
 using Avalonia.Controls;
 
-namespace KK.Var.Views.Controls;
-
-public partial class BrandLogo : UserControl
+namespace KK.Var.Views.Controls
 {
-    public BrandLogo()
+    public partial class BrandLogo : UserControl
     {
-        InitializeComponent();
+        public BrandLogo()
+        {
+            InitializeComponent();
+        }
     }
 }

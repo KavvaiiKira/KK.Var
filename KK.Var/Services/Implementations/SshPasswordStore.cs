@@ -4,93 +4,101 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using KK.Var.Constants;
 using KK.Var.Data;
 
-namespace KK.Var.Services.Implementations;
-
-public sealed class SshPasswordStore : ISshPasswordStore
+namespace KK.Var.Services.Implementations
 {
-    private static byte[] PasswordEntropy(Guid id) =>
-        Encoding.UTF8.GetBytes($"KK.Var.SSH.Password.v2:{id:N}");
-
-    private static string PasswordPath(Guid id) =>
-        Path.Combine(DatabasePaths.UserDataDirectory, $"ssh-{id:N}.dat");
-
-    public async Task SaveAsync(
-        Guid machineId,
-        string password,
-        CancellationToken cancellationToken = default)
+    public sealed class SshPasswordStore(ILocalizationService localizationService) : ISshPasswordStore
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(password);
+        private const string PasswordEntropyPrefix = "KK.Var.SSH.Password.v2:";
 
-        if (!OperatingSystem.IsWindows())
+        private const string PasswordFilePrefix = "ssh-";
+
+        private const string PasswordFileExtension = ".dat";
+
+        private static byte[] PasswordEntropy(Guid id) =>
+            Encoding.UTF8.GetBytes($"{PasswordEntropyPrefix}{id:N}");
+
+        private static string PasswordPath(Guid id) =>
+            Path.Combine(DatabasePaths.UserDataDirectory, $"{PasswordFilePrefix}{id:N}{PasswordFileExtension}");
+
+        public async Task SaveAsync(
+            Guid machineId,
+            string password,
+            CancellationToken cancellationToken = default)
         {
-            throw new PlatformNotSupportedException(
-                "Защищённое хранение SSH-пароля реализовано только для Windows.");
-        }
+            ArgumentException.ThrowIfNullOrWhiteSpace(password);
 
-        DatabasePaths.EnsureUserDataDirectory();
+            if (!OperatingSystem.IsWindows())
+            {
+                throw new PlatformNotSupportedException(
+                    localizationService.Get("Защищённое хранение SSH-пароля доступно только в Windows."));
+            }
 
-        var encryptedPassword = ProtectedData.Protect(
-            Encoding.UTF8.GetBytes(password),
-            PasswordEntropy(machineId),
-            DataProtectionScope.CurrentUser);
+            DatabasePaths.EnsureUserDataDirectory();
 
-        var temporaryPath = PasswordPath(machineId) + ".tmp";
-
-        await File.WriteAllBytesAsync(
-            temporaryPath,
-            encryptedPassword,
-            cancellationToken);
-
-        File.Move(
-            temporaryPath,
-            PasswordPath(machineId),
-            overwrite: true);
-    }
-
-    public async Task<string?> LoadAsync(
-        Guid machineId,
-        CancellationToken cancellationToken = default)
-    {
-        if (!OperatingSystem.IsWindows())
-        {
-            throw new PlatformNotSupportedException("Защищённое хранение SSH-пароля реализовано только для Windows.");
-        }
-
-        if (!File.Exists(PasswordPath(machineId)))
-        {
-            return null;
-        }
-
-        try
-        {
-            var encryptedPassword = await File.ReadAllBytesAsync(
-                PasswordPath(machineId),
-                cancellationToken);
-
-            var password = ProtectedData.Unprotect(
-                encryptedPassword,
+            var encryptedPassword = ProtectedData.Protect(
+                Encoding.UTF8.GetBytes(password),
                 PasswordEntropy(machineId),
                 DataProtectionScope.CurrentUser);
 
-            return Encoding.UTF8.GetString(password);
+            var temporaryPath = PasswordPath(machineId) + ApplicationConstants.TemporaryFileExtension;
+
+            await File.WriteAllBytesAsync(
+                temporaryPath,
+                encryptedPassword,
+                cancellationToken);
+
+            File.Move(
+                temporaryPath,
+                PasswordPath(machineId),
+                overwrite: true);
         }
-        catch (CryptographicException)
+
+        public async Task<string?> LoadAsync(
+            Guid machineId,
+            CancellationToken cancellationToken = default)
         {
-            return null;
+            if (!OperatingSystem.IsWindows())
+            {
+                throw new PlatformNotSupportedException(localizationService.Get("Защищённое хранение SSH-пароля доступно только в Windows."));
+            }
+
+            if (!File.Exists(PasswordPath(machineId)))
+            {
+                return null;
+            }
+
+            try
+            {
+                var encryptedPassword = await File.ReadAllBytesAsync(
+                    PasswordPath(machineId),
+                    cancellationToken);
+
+                var password = ProtectedData.Unprotect(
+                    encryptedPassword,
+                    PasswordEntropy(machineId),
+                    DataProtectionScope.CurrentUser);
+
+                return Encoding.UTF8.GetString(password);
+            }
+            catch (CryptographicException)
+            {
+                return null;
+            }
         }
-    }
 
-    public Task DeleteAsync(Guid machineId, CancellationToken cancellationToken = default)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-
-        if (File.Exists(PasswordPath(machineId)))
+        public Task DeleteAsync(Guid machineId, CancellationToken cancellationToken = default)
         {
-            File.Delete(PasswordPath(machineId));
-        }
+            cancellationToken.ThrowIfCancellationRequested();
 
-        return Task.CompletedTask;
+            if (File.Exists(PasswordPath(machineId)))
+            {
+                File.Delete(PasswordPath(machineId));
+            }
+
+            return Task.CompletedTask;
+        }
     }
 }

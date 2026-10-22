@@ -5,41 +5,42 @@ using System.Threading.Tasks;
 using KK.Var.Enums;
 using KK.Var.Models;
 
-namespace KK.Var.Repositories;
-
-public interface IKKProjectDeploymentRepository
+namespace KK.Var.Repositories
 {
-    Task<IReadOnlyList<KKProjectDeployment>> SearchAsync(
-        string? projectName,
-        string? searchText,
-        DateTime? startedFromUtc,
-        DateTime? startedBeforeUtc,
-        DeploymentStatus? status,
-        int skip,
-        int take,
-        CancellationToken cancellationToken = default,
-        Guid? remoteMachineId = null);
+    public interface IKKProjectDeploymentRepository
+    {
+        Task<IReadOnlyList<KKProjectDeployment>> SearchAsync(
+            string? projectName,
+            string? searchText,
+            DateTime? startedFromUtc,
+            DateTime? startedBeforeUtc,
+            DeploymentStatus? status,
+            int skip,
+            int take,
+            CancellationToken cancellationToken = default,
+            Guid? remoteMachineId = null);
 
-    Task<IReadOnlyList<KKProjectDeployment>> GetByProjectIdAsync(
-        Guid projectId,
-        CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<KKProjectDeployment>> GetByProjectIdAsync(
+            Guid projectId,
+            CancellationToken cancellationToken = default);
 
-    Task<KKProjectDeployment?> GetByIdAsync(
-        Guid id,
-        CancellationToken cancellationToken = default);
+        Task<KKProjectDeployment?> GetByIdAsync(
+            Guid id,
+            CancellationToken cancellationToken = default);
 
-    Task<KKProjectDeployment?> GetLatestSuccessfulAsync(
-        Guid projectId,
-        CancellationToken cancellationToken = default);
+        Task<KKProjectDeployment?> GetLatestSuccessfulAsync(
+            Guid projectId,
+            CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<KKProjectDeployment>> GetRunningAsync(
-        CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<KKProjectDeployment>> GetRunningAsync(
+            CancellationToken cancellationToken = default);
 
-    Task AddAsync(
-        KKProjectDeployment deployment,
-        CancellationToken cancellationToken = default);
+        Task AddAsync(
+            KKProjectDeployment deployment,
+            CancellationToken cancellationToken = default);
 
-    Task UpdateAsync(
-        KKProjectDeployment deployment,
-        CancellationToken cancellationToken = default);
+        Task UpdateAsync(
+            KKProjectDeployment deployment,
+            CancellationToken cancellationToken = default);
+    }
 }

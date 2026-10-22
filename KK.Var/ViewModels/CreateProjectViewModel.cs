@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
@@ -10,834 +9,465 @@ using KK.Var.Enums;
 using KK.Var.Models;
 using KK.Var.Services;
 
-namespace KK.Var.ViewModels;
-
-public partial class CreateProjectViewModel : ViewModelBase
+namespace KK.Var.ViewModels
 {
-    public const string LocalSource = "Локальная папка";
-    public const string GitHubSource = "Репозиторий GitHub";
-    public const string AutomaticBuild = "Определить автоматически";
-    public const string NoHealthCheck = "Без проверки";
-    public const string StabilityDelayHealthCheck = "Задержка стабильности";
-    public const string HttpHealthCheck = "HTTP-запрос";
-    public const string TcpHealthCheck = "TCP-порт";
-    public const string CommandHealthCheck = "Команда";
-
-    private readonly IKKProjectService? _projectService;
-    private readonly IGitHubService? _gitHubService;
-    private readonly IGitHubAuthenticationService? _gitHubAuthenticationService;
-    private readonly ILocalizationService? _localizationService;
-    private readonly IRemoteMachineService? _remoteMachineService;
-    private bool _isResetting;
-    private Guid? _editingProjectId;
-    private KKProject? _editingProject;
-
-    public CreateProjectViewModel()
+    public partial class CreateProjectViewModel : ViewModelBase
     {
-        RefreshLocalization();
-    }
+        private const string DefaultToolchainPath = "toolchains/linux-{architecture}.cmake";
 
-    public CreateProjectViewModel(
-        IKKProjectService projectService,
-        IGitHubService gitHubService,
-        IGitHubAuthenticationService gitHubAuthenticationService,
-        IRemoteMachineService remoteMachineService,
-        ILocalizationService localizationService)
-    {
-        _projectService = projectService;
-        _gitHubService = gitHubService;
-        _gitHubAuthenticationService = gitHubAuthenticationService;
-        _localizationService = localizationService;
-        _remoteMachineService = remoteMachineService;
-        GitHubBranchSelection = new GitHubSourceSelectionViewModel(gitHubService, gitHubAuthenticationService, localizationService);
-        GitHubBranchSelection.BranchChanged += (_, _) => MarkDirty();
-        RefreshLocalization();
-    }
+        private const string DefaultCustomBuildArguments = "{output}\r\n{runtime}";
 
-    public event EventHandler<KKProject>? ProjectCreated;
+        private readonly IBuildConfigurationService _buildConfigurationService;
 
-    public event EventHandler<KKProject>? ProjectUpdated;
+        private readonly IKKProjectService _projectService;
 
-    public ObservableCollection<string> SourceTypes { get; } = [];
+        private readonly IGitHubService _gitHubService;
 
-    public ObservableCollection<string> BuildProviders { get; } = [];
+        private readonly IGitHubAuthenticationService _gitHubAuthenticationService;
 
-    public ObservableCollection<string> HealthCheckTypes { get; } = [];
+        private readonly ILocalizationService _localizationService;
 
-    public ObservableCollection<GitHubRepository> GitHubRepositories { get; } = [];
+        private readonly IRemoteMachineService _remoteMachineService;
 
-    public GitHubSourceSelectionViewModel GitHubBranchSelection { get; } = new GitHubSourceSelectionViewModel();
+        private bool _isResetting;
 
-    [ObservableProperty]
-    public partial string Name { get; set; } = string.Empty;
+        private Guid? _editingProjectId;
 
-    [ObservableProperty]
-    public partial string Description { get; set; } = string.Empty;
+        private KKProject? _editingProject;
 
-    [ObservableProperty]
-    public partial string SelectedSourceType { get; set; } = LocalSource;
-
-    [ObservableProperty]
-    public partial string LocalDirectoryPath { get; set; } = string.Empty;
-
-    [ObservableProperty]
-    public partial GitHubRepository? SelectedGitHubRepository { get; set; }
-
-    [ObservableProperty]
-    public partial string SelectedBuildProvider { get; set; } = AutomaticBuild;
-
-    [ObservableProperty]
-    public partial string RemoteServiceName { get; set; } = string.Empty;
-
-    [ObservableProperty]
-    public partial string RemoteExecutableFileName { get; set; } = string.Empty;
-
-    [ObservableProperty]
-    public partial string RemoteDeploymentDirectory { get; set; } = string.Empty;
-
-    [ObservableProperty]
-    public partial string ProjectEnvironmentFilePath { get; set; } = string.Empty;
-
-    [ObservableProperty]
-    public partial string BuildConfigurationJson { get; set; } = "{}";
-
-    [ObservableProperty]
-    public partial string SelectedHealthCheckType { get; set; } = NoHealthCheck;
-
-    [ObservableProperty]
-    public partial int HealthCheckTimeoutSeconds { get; set; } = 30;
-
-    [ObservableProperty]
-    public partial int HealthCheckIntervalSeconds { get; set; } = 5;
-
-    [ObservableProperty]
-    public partial int HealthCheckAttempts { get; set; } = 3;
-
-    [ObservableProperty]
-    public partial int HealthCheckStabilityDelaySeconds { get; set; } = 10;
-
-    [ObservableProperty]
-    public partial string HealthCheckHttpUrl { get; set; } = string.Empty;
-
-    [ObservableProperty]
-    public partial int HealthCheckTcpPort { get; set; } = 8080;
-
-    [ObservableProperty]
-    public partial string HealthCheckCommand { get; set; } = string.Empty;
-
-    [ObservableProperty]
-    public partial int MaxStoredVersions { get; set; } = 10;
-
-    [ObservableProperty]
-    public partial string MaxStoredVersionSizeMb { get; set; } = string.Empty;
-
-    [ObservableProperty]
-    public partial bool HasUnsavedChanges { get; set; }
-
-    [ObservableProperty]
-    public partial bool IsSaving { get; set; }
-
-    [ObservableProperty]
-    public partial bool IsLoadingRepositories { get; set; }
-
-    [ObservableProperty]
-    public partial string ErrorMessage { get; set; } = string.Empty;
-
-    public bool IsLocalSource => Canonicalize(SelectedSourceType) == LocalSource;
-
-    public bool IsGitHubSource => Canonicalize(SelectedSourceType) == GitHubSource;
-
-    public bool IsHealthCheckEnabled =>
-        MapHealthCheckType() != ProjectHealthCheckType.None;
-
-    public bool IsStabilityDelayHealthCheck =>
-        MapHealthCheckType() == ProjectHealthCheckType.StabilityDelay;
-
-    public bool IsHttpHealthCheck =>
-        MapHealthCheckType() == ProjectHealthCheckType.Http;
-
-    public bool IsTcpHealthCheck =>
-        MapHealthCheckType() == ProjectHealthCheckType.Tcp;
-
-    public bool IsCommandHealthCheck =>
-        MapHealthCheckType() == ProjectHealthCheckType.Command;
-
-    public bool HasHealthCheckRetrySettings =>
-        MapHealthCheckType() is ProjectHealthCheckType.Http or
-            ProjectHealthCheckType.Tcp or
-            ProjectHealthCheckType.Command;
-
-    public bool IsEditing => _editingProjectId.HasValue;
-
-    public string EditorTitle => IsEditing ?
-        Localize("Редактирование проекта") :
-        Localize("Новый проект");
-
-    public string SaveButtonText => IsEditing ?
-        Localize("Сохранить изменения") :
-        Localize("Сохранить проект");
-
-    public void Reset()
-    {
-        _isResetting = true;
-        _editingProjectId = null;
-        _editingProject = null;
-
-        Name = string.Empty;
-        Description = string.Empty;
-        SelectedSourceType = Localize(LocalSource);
-        LocalDirectoryPath = string.Empty;
-        SelectedGitHubRepository = null;
-        SelectedProjectMachine = ProjectMachines.FirstOrDefault();
-        MachineSwitchConfirmed = false;
-        GitHubBranchSelection.Configure(null, null);
-        SelectedBuildProvider = Localize(AutomaticBuild);
-        RemoteServiceName = string.Empty;
-        RemoteExecutableFileName = string.Empty;
-        RemoteDeploymentDirectory = string.Empty;
-        ProjectEnvironmentFilePath = string.Empty;
-        BuildConfigurationJson = "{}";
-        LoadBuildFields();
-        SelectedHealthCheckType = Localize(NoHealthCheck);
-        HealthCheckTimeoutSeconds = 30;
-        HealthCheckIntervalSeconds = 5;
-        HealthCheckAttempts = 3;
-        HealthCheckStabilityDelaySeconds = 10;
-        HealthCheckHttpUrl = string.Empty;
-        HealthCheckTcpPort = 8080;
-        HealthCheckCommand = string.Empty;
-        MaxStoredVersions = 10;
-        MaxStoredVersionSizeMb = string.Empty;
-        ErrorMessage = string.Empty;
-        HasUnsavedChanges = false;
-
-        OnPropertyChanged(nameof(IsEditing));
-        OnPropertyChanged(nameof(EditorTitle));
-        OnPropertyChanged(nameof(SaveButtonText));
-
-        _isResetting = false;
-    }
-
-    public void LoadProject(KKProject project)
-    {
-        ArgumentNullException.ThrowIfNull(project);
-
-        _isResetting = true;
-        _editingProjectId = project.Id;
-        _editingProject = project;
-        SelectedProjectMachine = ProjectMachines.FirstOrDefault(machine => machine.Id == project.RemoteMachineId);
-        MachineSwitchConfirmed = false;
-
-        Name = project.Name;
-        Description = project.Description ?? string.Empty;
-        SelectedSourceType = Localize(
-            project.SourceType == ProjectSourceType.GitHubRepository ?
-                GitHubSource :
-                LocalSource);
-
-        LocalDirectoryPath = project.LocalDirectoryPath ?? string.Empty;
-
-        SelectedGitHubRepository =
-            project.SourceType == ProjectSourceType.GitHubRepository &&
-            project.GitHubRepositoryId.HasValue &&
-            project.GitHubRepositoryFullName is not null &&
-            project.GitHubCloneUrl is not null ?
-                new GitHubRepository(
-                    project.GitHubRepositoryId.Value,
-                    project.GitHubRepositoryFullName.Split('/')[^1],
-                    project.GitHubRepositoryFullName,
-                    project.GitHubCloneUrl,
-                    string.Empty,
-                    false) :
-                null;
-
-        SelectedBuildProvider = MapBuildProvider(project.BuildProvider);
-        GitHubBranchSelection.Configure(project.GitHubRepositoryFullName, project.GitHubBranch);
-        RemoteServiceName = project.RemoteServiceName;
-        RemoteExecutableFileName = project.RemoteExecutableFileName;
-        RemoteDeploymentDirectory = project.RemoteDeploymentDirectory;
-        ProjectEnvironmentFilePath = project.ProjectEnvironmentFilePath;
-        BuildConfigurationJson = project.BuildConfigurationJson;
-        LoadBuildFields();
-        SelectedHealthCheckType = MapHealthCheckType(project.HealthCheckType);
-        HealthCheckTimeoutSeconds = project.HealthCheckTimeoutSeconds ?? 30;
-        HealthCheckIntervalSeconds = project.HealthCheckIntervalSeconds ?? 5;
-        HealthCheckAttempts = project.HealthCheckAttempts ?? 3;
-        HealthCheckStabilityDelaySeconds =
-            project.HealthCheckStabilityDelaySeconds ?? 10;
-        HealthCheckHttpUrl = project.HealthCheckHttpUrl ?? string.Empty;
-        HealthCheckTcpPort = project.HealthCheckTcpPort ?? 8080;
-        HealthCheckCommand = project.HealthCheckCommand ?? string.Empty;
-        MaxStoredVersions = project.MaxStoredVersions;
-        MaxStoredVersionSizeMb = project.MaxStoredVersionBytes.HasValue ?
-            (project.MaxStoredVersionBytes.Value / 1_048_576d).ToString(
-                "0.##",
-                CultureInfo.CurrentCulture) :
-            string.Empty;
-        ErrorMessage = string.Empty;
-        HasUnsavedChanges = false;
-
-        OnPropertyChanged(nameof(IsEditing));
-        OnPropertyChanged(nameof(EditorTitle));
-        OnPropertyChanged(nameof(SaveButtonText));
-
-        _isResetting = false;
-    }
-
-    public async Task<bool> SaveAsync()
-    {
-        if (_projectService is null || IsSaving)
+        public CreateProjectViewModel(
+            IBuildConfigurationService buildConfigurationService,
+            IKKProjectService projectService,
+            IGitHubService gitHubService,
+            IGitHubAuthenticationService gitHubAuthenticationService,
+            IRemoteMachineService remoteMachineService,
+            ILocalizationService localizationService)
         {
-            return false;
+            _buildConfigurationService = buildConfigurationService;
+            _projectService = projectService;
+            _gitHubService = gitHubService;
+            _gitHubAuthenticationService = gitHubAuthenticationService;
+            _localizationService = localizationService;
+            HealthCheckEditor = new ProjectHealthCheckEditorViewModel(localizationService);
+            HealthCheckEditor.Changed += (_, _) => MarkDirty();
+            HealthCheckEditor.PropertyChanged += (_, e) => OnPropertyChanged(e.PropertyName);
+            BuildEditor = new ProjectBuildEditorViewModel(buildConfigurationService, localizationService);
+            BuildEditor.Changed += (_, _) => MarkDirty();
+            BuildEditor.PropertyChanged += (_, e) => OnPropertyChanged(e.PropertyName);
+            _remoteMachineService = remoteMachineService;
+            GitHubBranchSelection = new GitHubSourceSelectionViewModel(
+                gitHubService,
+                gitHubAuthenticationService,
+                localizationService);
+            GitHubBranchSelection.BranchChanged += (_, _) => MarkDirty();
+            RefreshLocalization();
         }
 
-        UpdateBuildConfiguration();
-        ErrorMessage = Validate();
+        public event EventHandler<KKProject>? ProjectCreated;
 
-        if (!string.IsNullOrEmpty(ErrorMessage))
+        public event EventHandler<KKProject>? ProjectUpdated;
+
+        public ObservableCollection<EnumOption> SourceTypes { get; } = [];
+
+        public ObservableCollection<EnumOption> BuildProviders { get; } = [];
+
+        public ObservableCollection<EnumOption> HealthCheckTypes { get; } = [];
+
+        public ObservableCollection<GitHubRepository> GitHubRepositories { get; } = [];
+
+        public GitHubSourceSelectionViewModel GitHubBranchSelection { get; }
+
+        [ObservableProperty]
+        public partial string Name { get; set; } = string.Empty;
+
+        [ObservableProperty]
+        public partial string Description { get; set; } = string.Empty;
+
+        [ObservableProperty]
+        public partial ProjectSourceType SelectedSourceType { get; set; } = ProjectSourceType.LocalDirectory;
+
+        [ObservableProperty]
+        public partial string LocalDirectoryPath { get; set; } = string.Empty;
+
+        [ObservableProperty]
+        public partial GitHubRepository? SelectedGitHubRepository { get; set; }
+
+        [ObservableProperty]
+        public partial ProjectBuildProvider SelectedBuildProvider { get; set; } = ProjectBuildProvider.Unknown;
+
+        [ObservableProperty]
+        public partial string RemoteServiceName { get; set; } = string.Empty;
+
+        [ObservableProperty]
+        public partial string RemoteExecutableFileName { get; set; } = string.Empty;
+
+        [ObservableProperty]
+        public partial string RemoteDeploymentDirectory { get; set; } = string.Empty;
+
+        [ObservableProperty]
+        public partial string ProjectEnvironmentFilePath { get; set; } = string.Empty;
+
+        public string BuildConfigurationJson
         {
-            return false;
+            get => BuildEditor.BuildConfigurationJson;
+            set => BuildEditor.BuildConfigurationJson = value;
         }
 
-        var project = new KKProject
+        [ObservableProperty]
+        public partial int MaxStoredVersions { get; set; } = 10;
+
+        [ObservableProperty]
+        public partial string MaxStoredVersionSizeMb { get; set; } = string.Empty;
+
+        [ObservableProperty]
+        public partial bool HasUnsavedChanges { get; private set; }
+
+        [ObservableProperty]
+        public partial bool IsSaving { get; private set; }
+
+        [ObservableProperty]
+        public partial bool IsLoadingRepositories { get; private set; }
+
+        [ObservableProperty]
+        public partial string ErrorMessage { get; private set; } = string.Empty;
+
+        public bool IsLocalSource => SelectedSourceType == ProjectSourceType.LocalDirectory;
+
+        public bool IsGitHubSource => SelectedSourceType == ProjectSourceType.GitHubRepository;
+
+        public bool IsEditing => _editingProjectId.HasValue;
+
+        public string EditorTitle => IsEditing ?
+            Localize("Редактирование проекта") :
+            Localize("Новый проект");
+
+        public string SaveButtonText => IsEditing ?
+            Localize("Сохранить изменения") :
+            Localize("Сохранить проект");
+
+        public void Reset()
         {
-            Id = _editingProjectId ?? Guid.NewGuid(),
-            RemoteMachineId = SelectedProjectMachine!.Id,
-            Name = Name,
-            Description = Description,
+            _isResetting = true;
+            BuildEditor.IsResetting = true;
+            _editingProjectId = null;
+            _editingProject = null;
 
-            SourceType = IsLocalSource ?
-                ProjectSourceType.LocalDirectory :
-                ProjectSourceType.GitHubRepository,
+            Name = string.Empty;
+            Description = string.Empty;
+            SelectedSourceType = ProjectSourceType.LocalDirectory;
+            LocalDirectoryPath = string.Empty;
+            SelectedGitHubRepository = null;
+            SelectedProjectMachine = ProjectMachines.FirstOrDefault();
+            MachineSwitchConfirmed = false;
+            GitHubBranchSelection.Configure(null, null);
+            SelectedBuildProvider = ProjectBuildProvider.Unknown;
+            RemoteServiceName = string.Empty;
+            RemoteExecutableFileName = string.Empty;
+            RemoteDeploymentDirectory = string.Empty;
+            ProjectEnvironmentFilePath = string.Empty;
+            BuildConfigurationJson = "{}";
+            LoadBuildFields();
+            SelectedHealthCheckType = ProjectHealthCheckType.None;
+            HealthCheckTimeoutSeconds = 30;
+            HealthCheckIntervalSeconds = 5;
+            HealthCheckAttempts = 3;
+            HealthCheckStabilityDelaySeconds = 10;
+            HealthCheckHttpUrl = string.Empty;
+            HealthCheckTcpPort = 8080;
+            HealthCheckCommand = string.Empty;
+            MaxStoredVersions = 10;
+            MaxStoredVersionSizeMb = string.Empty;
+            ErrorMessage = string.Empty;
+            HasUnsavedChanges = false;
 
-            LocalDirectoryPath = IsLocalSource ? LocalDirectoryPath : null,
-            GitHubRepositoryId = IsGitHubSource ? SelectedGitHubRepository?.Id : null,
+            OnPropertyChanged(nameof(IsEditing));
+            OnPropertyChanged(nameof(EditorTitle));
+            OnPropertyChanged(nameof(SaveButtonText));
 
-            GitHubRepositoryFullName = IsGitHubSource ?
-                SelectedGitHubRepository?.FullName :
-                null,
+            _isResetting = false;
+            BuildEditor.IsResetting = false;
+        }
 
-            GitHubCloneUrl = IsGitHubSource ? SelectedGitHubRepository?.CloneUrl : null,
-            GitHubBranch = IsGitHubSource ? GitHubBranchSelection.BranchName : null,
-            BuildProvider = MapBuildProvider(),
-            BuildConfigurationJson = BuildConfigurationJson,
-            RemoteServiceName = RemoteServiceName,
-            RemoteExecutableFileName = RemoteExecutableFileName,
-            RemoteDeploymentDirectory = RemoteDeploymentDirectory,
-            ProjectEnvironmentFilePath = ProjectEnvironmentFilePath,
-            EnvironmentFileFormat = _editingProject?.EnvironmentFileFormat ?? EnvironmentFileFormat.Json,
-            HealthCheckType = MapHealthCheckType(),
-            HealthCheckTimeoutSeconds = HasHealthCheckRetrySettings ?
-                HealthCheckTimeoutSeconds :
-                null,
-            HealthCheckIntervalSeconds = HasHealthCheckRetrySettings ?
-                HealthCheckIntervalSeconds :
-                null,
-            HealthCheckAttempts = HasHealthCheckRetrySettings ?
-                HealthCheckAttempts :
-                null,
-            HealthCheckStabilityDelaySeconds = IsStabilityDelayHealthCheck ?
-                HealthCheckStabilityDelaySeconds :
-                null,
-            HealthCheckHttpUrl = IsHttpHealthCheck ? HealthCheckHttpUrl : null,
-            HealthCheckTcpPort = IsTcpHealthCheck ? HealthCheckTcpPort : null,
-            HealthCheckCommand = IsCommandHealthCheck ? HealthCheckCommand : null,
-            MaxStoredVersions = MaxStoredVersions,
-            MaxStoredVersionBytes = ParseStorageLimitBytes(),
-            EnvironmentVariables = _editingProject?.EnvironmentVariables ?? [],
-            Versions = _editingProject?.Versions ?? [],
-            Deployments = _editingProject?.Deployments ?? [],
-        };
-
-        IsSaving = true;
-
-        try
+        public void LoadProject(KKProject project)
         {
-            if (IsEditing)
-            {
-                await _projectService.UpdateAsync(project);
+            ArgumentNullException.ThrowIfNull(project);
 
-                Reset();
-                ProjectUpdated?.Invoke(this, project);
-            }
-            else
-            {
-                var createdProject = await _projectService.CreateAsync(project);
+            _isResetting = true;
+            BuildEditor.IsResetting = true;
+            _editingProjectId = project.Id;
+            _editingProject = project;
+            SelectedProjectMachine = ProjectMachines.FirstOrDefault(machine => machine.Id == project.RemoteMachineId);
+            MachineSwitchConfirmed = false;
 
-                Reset();
-                ProjectCreated?.Invoke(this, createdProject);
+            Name = project.Name;
+            Description = project.Description ?? string.Empty;
+            SelectedSourceType = project.SourceType;
+
+            LocalDirectoryPath = project.LocalDirectoryPath ?? string.Empty;
+
+            SelectedGitHubRepository =
+                project.SourceType == ProjectSourceType.GitHubRepository &&
+                project.GitHubRepositoryId.HasValue &&
+                project.GitHubRepositoryFullName is not null &&
+                project.GitHubCloneUrl is not null ?
+                    new GitHubRepository(
+                        project.GitHubRepositoryId.Value,
+                        project.GitHubRepositoryFullName.Split('/')[^1],
+                        project.GitHubRepositoryFullName,
+                        project.GitHubCloneUrl,
+                        string.Empty,
+                        false) :
+                    null;
+
+            SelectedBuildProvider = project.BuildProvider;
+            GitHubBranchSelection.Configure(project.GitHubRepositoryFullName, project.GitHubBranch);
+            RemoteServiceName = project.RemoteServiceName;
+            RemoteExecutableFileName = project.RemoteExecutableFileName;
+            RemoteDeploymentDirectory = project.RemoteDeploymentDirectory;
+            ProjectEnvironmentFilePath = project.ProjectEnvironmentFilePath;
+            BuildConfigurationJson = project.BuildConfigurationJson;
+            LoadBuildFields();
+            SelectedHealthCheckType = project.HealthCheckType;
+            HealthCheckTimeoutSeconds = project.HealthCheckTimeoutSeconds ?? 30;
+            HealthCheckIntervalSeconds = project.HealthCheckIntervalSeconds ?? 5;
+            HealthCheckAttempts = project.HealthCheckAttempts ?? 3;
+            HealthCheckStabilityDelaySeconds =
+                project.HealthCheckStabilityDelaySeconds ?? 10;
+            HealthCheckHttpUrl = project.HealthCheckHttpUrl ?? string.Empty;
+            HealthCheckTcpPort = project.HealthCheckTcpPort ?? 8080;
+            HealthCheckCommand = project.HealthCheckCommand ?? string.Empty;
+            MaxStoredVersions = project.MaxStoredVersions;
+            MaxStoredVersionSizeMb = project.MaxStoredVersionBytes.HasValue ?
+                (project.MaxStoredVersionBytes.Value / 1_048_576d).ToString(
+                    "0.##",
+                    CultureInfo.CurrentCulture) :
+                string.Empty;
+            ErrorMessage = string.Empty;
+            HasUnsavedChanges = false;
+
+            OnPropertyChanged(nameof(IsEditing));
+            OnPropertyChanged(nameof(EditorTitle));
+            OnPropertyChanged(nameof(SaveButtonText));
+
+            _isResetting = false;
+            BuildEditor.IsResetting = false;
+        }
+
+        public async Task<bool> SaveAsync()
+        {
+            if (IsSaving)
+            {
+                return false;
             }
 
-            return true;
-        }
-        catch (Exception exception)
-        {
-            ErrorMessage = exception.Message;
-            return false;
-        }
-        finally
-        {
-            IsSaving = false;
-        }
-    }
+            UpdateBuildConfiguration();
+            ErrorMessage = Validate();
 
-    [RelayCommand]
-    private async Task RefreshGitHubRepositoriesAsync()
-    {
-        if (_gitHubService is null ||
-            _gitHubAuthenticationService is null ||
-            IsLoadingRepositories)
-        {
-            return;
-        }
-
-        IsLoadingRepositories = true;
-        ErrorMessage = string.Empty;
-
-        try
-        {
-            var token = await _gitHubAuthenticationService.GetTokenAsync();
-            if (token is null)
+            if (!string.IsNullOrEmpty(ErrorMessage))
             {
-                ErrorMessage = Localize("Сначала подключите GitHub на странице настроек.");
+                return false;
+            }
+
+            var project = new KKProject
+            {
+                Id = _editingProjectId ?? Guid.NewGuid(),
+                RemoteMachineId = SelectedProjectMachine!.Id,
+                Name = Name,
+                Description = Description,
+                SourceType = IsLocalSource ?
+                    ProjectSourceType.LocalDirectory :
+                    ProjectSourceType.GitHubRepository,
+                LocalDirectoryPath = IsLocalSource ? LocalDirectoryPath : null,
+                GitHubRepositoryId = IsGitHubSource ? SelectedGitHubRepository?.Id : null,
+                GitHubRepositoryFullName = IsGitHubSource ?
+                    SelectedGitHubRepository?.FullName :
+                    null,
+                GitHubCloneUrl = IsGitHubSource ? SelectedGitHubRepository?.CloneUrl : null,
+                GitHubBranch = IsGitHubSource ? GitHubBranchSelection.BranchName : null,
+                BuildProvider = SelectedBuildProvider,
+                BuildConfigurationJson = BuildConfigurationJson,
+                RemoteServiceName = RemoteServiceName,
+                RemoteExecutableFileName = RemoteExecutableFileName,
+                RemoteDeploymentDirectory = RemoteDeploymentDirectory,
+                ProjectEnvironmentFilePath = ProjectEnvironmentFilePath,
+                EnvironmentFileFormat = _editingProject?.EnvironmentFileFormat ?? EnvironmentFileFormat.Json,
+                HealthCheckType = SelectedHealthCheckType,
+                HealthCheckTimeoutSeconds = HasHealthCheckRetrySettings ?
+                    HealthCheckTimeoutSeconds :
+                    null,
+                HealthCheckIntervalSeconds = HasHealthCheckRetrySettings ?
+                    HealthCheckIntervalSeconds :
+                    null,
+                HealthCheckAttempts = HasHealthCheckRetrySettings ?
+                    HealthCheckAttempts :
+                    null,
+                HealthCheckStabilityDelaySeconds = IsStabilityDelayHealthCheck ?
+                    HealthCheckStabilityDelaySeconds :
+                    null,
+                HealthCheckHttpUrl = IsHttpHealthCheck ? HealthCheckHttpUrl : null,
+                HealthCheckTcpPort = IsTcpHealthCheck ? HealthCheckTcpPort : null,
+                HealthCheckCommand = IsCommandHealthCheck ? HealthCheckCommand : null,
+                MaxStoredVersions = MaxStoredVersions,
+                MaxStoredVersionBytes = ParseStorageLimitBytes(),
+                EnvironmentVariables = _editingProject?.EnvironmentVariables ?? [],
+                Versions = _editingProject?.Versions ?? [],
+                Deployments = _editingProject?.Deployments ?? [],
+            };
+
+            IsSaving = true;
+
+            try
+            {
+                if (IsEditing)
+                {
+                    await _projectService.UpdateAsync(project);
+
+                    Reset();
+                    ProjectUpdated?.Invoke(this, project);
+                }
+                else
+                {
+                    var createdProject = await _projectService.CreateAsync(project);
+
+                    Reset();
+                    ProjectCreated?.Invoke(this, createdProject);
+                }
+
+                return true;
+            }
+            catch (Exception exception)
+            {
+                ErrorMessage = Localize(exception.Message);
+                return false;
+            }
+            finally
+            {
+                IsSaving = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task RefreshGitHubRepositoriesAsync()
+        {
+            if (IsLoadingRepositories)
+            {
                 return;
             }
 
-            var repositories = await _gitHubService.GetRepositoriesAsync(token.AccessToken);
-
-            var selectedRepositoryId = SelectedGitHubRepository?.Id;
-            var selectedBranch = GitHubBranchSelection.BranchName;
-            _isResetting = true;
-
-            GitHubRepositories.Clear();
-
-            foreach (var repository in repositories)
-            {
-                GitHubRepositories.Add(repository);
-            }
-
-            if (selectedRepositoryId.HasValue)
-            {
-                _isResetting = true;
-                SelectedGitHubRepository = GitHubRepositories.FirstOrDefault(
-                    repository => repository.Id == selectedRepositoryId.Value);
-                GitHubBranchSelection.Configure(SelectedGitHubRepository?.FullName, selectedBranch);
-                _isResetting = false;
-            }
-        }
-        catch (Exception exception)
-        {
-            ErrorMessage = exception.Message;
-        }
-        finally
-        {
-            IsLoadingRepositories = false;
-            _isResetting = false;
-        }
-    }
-
-    partial void OnNameChanged(string value) => MarkDirty();
-
-    partial void OnDescriptionChanged(string value) => MarkDirty();
-
-    partial void OnSelectedSourceTypeChanged(string value)
-    {
-        MarkDirty();
-        OnPropertyChanged(nameof(IsLocalSource));
-        OnPropertyChanged(nameof(IsGitHubSource));
-
-        if (Canonicalize(value) == GitHubSource && GitHubRepositories.Count == 0)
-        {
-            _ = RefreshGitHubRepositoriesAsync();
-        }
-    }
-
-    partial void OnLocalDirectoryPathChanged(string value) => MarkDirty();
-
-    partial void OnSelectedGitHubRepositoryChanged(GitHubRepository? value)
-    {
-        if (value?.FullName != GitHubBranchSelection.Repository)
-        {
-            GitHubBranchSelection.Configure(value?.FullName, null);
-        }
-        MarkDirty();
-    }
-
-    partial void OnSelectedBuildProviderChanged(string value)
-    {
-        NotifyBuildFields();
-        if (_isResetting)
-        {
-            return;
-        }
-        if (IsCppBuild && string.IsNullOrWhiteSpace(ToolchainFile))
-        {
-            ToolchainFile = "toolchains/linux-{architecture}.cmake";
-        }
-        if (IsCustomBuild && string.IsNullOrWhiteSpace(BuildArgumentsText))
-        {
-            BuildArgumentsText = "{output}\r\n{runtime}";
-        }
-        UpdateBuildConfiguration();
-        MarkDirty();
-    }
-
-    partial void OnRemoteServiceNameChanged(string value) => MarkDirty();
-
-    partial void OnRemoteExecutableFileNameChanged(string value) => MarkDirty();
-
-    partial void OnRemoteDeploymentDirectoryChanged(string value) => MarkDirty();
-
-    partial void OnBuildConfigurationJsonChanged(string value)
-    {
-        LoadBuildFields();
-        MarkDirty();
-    }
-
-    partial void OnProjectEnvironmentFilePathChanged(string value) => MarkDirty();
-
-    partial void OnSelectedHealthCheckTypeChanged(string value)
-    {
-        MarkDirty();
-        OnPropertyChanged(nameof(IsHealthCheckEnabled));
-        OnPropertyChanged(nameof(IsStabilityDelayHealthCheck));
-        OnPropertyChanged(nameof(IsHttpHealthCheck));
-        OnPropertyChanged(nameof(IsTcpHealthCheck));
-        OnPropertyChanged(nameof(IsCommandHealthCheck));
-        OnPropertyChanged(nameof(HasHealthCheckRetrySettings));
-    }
-
-    partial void OnHealthCheckTimeoutSecondsChanged(int value) => MarkDirty();
-
-    partial void OnHealthCheckIntervalSecondsChanged(int value) => MarkDirty();
-
-    partial void OnHealthCheckAttemptsChanged(int value) => MarkDirty();
-
-    partial void OnHealthCheckStabilityDelaySecondsChanged(int value) => MarkDirty();
-
-    partial void OnHealthCheckHttpUrlChanged(string value) => MarkDirty();
-
-    partial void OnHealthCheckTcpPortChanged(int value) => MarkDirty();
-
-    partial void OnHealthCheckCommandChanged(string value) => MarkDirty();
-
-    partial void OnMaxStoredVersionsChanged(int value) => MarkDirty();
-
-    partial void OnMaxStoredVersionSizeMbChanged(string value) => MarkDirty();
-
-    private void MarkDirty()
-    {
-        if (!_isResetting)
-        {
-            HasUnsavedChanges = true;
+            IsLoadingRepositories = true;
             ErrorMessage = string.Empty;
-        }
-    }
 
-    private string Validate()
-    {
-        if (SelectedProjectMachine is null || !SelectedProjectMachine.IsVerified || SelectedProjectMachine.IsArchived)
-        {
-            return Localize("Выберите проверенный профиль машины.");
-        }
-        if (IsProjectMachineChanged && !MachineSwitchConfirmed)
-        {
-            return Localize("Подтвердите смену машины проекта.");
-        }
-        if (!string.IsNullOrEmpty(_buildEditorError))
-        {
-            return _buildEditorError;
-        }
-        if (string.IsNullOrWhiteSpace(Name))
-        {
-            return Localize("Укажите название проекта.");
-        }
-
-        if (IsLocalSource && string.IsNullOrWhiteSpace(LocalDirectoryPath))
-        {
-            return Localize("Выберите локальную папку проекта.");
-        }
-
-        if (IsGitHubSource && SelectedGitHubRepository is null)
-        {
-            return Localize("Выберите репозиторий GitHub.");
-        }
-
-        if (string.IsNullOrWhiteSpace(RemoteServiceName))
-        {
-            return Localize("Укажите название systemd-сервиса.");
-        }
-
-        if (string.IsNullOrWhiteSpace(RemoteExecutableFileName))
-        {
-            return Localize("Укажите исполняемый файл или точку входа.");
-        }
-
-        if (string.IsNullOrWhiteSpace(RemoteDeploymentDirectory))
-        {
-            return Localize(
-                "Укажите директорию развёртывания на удалённой машине.");
-        }
-
-        if (string.IsNullOrWhiteSpace(ProjectEnvironmentFilePath))
-        {
-            return Localize(
-                "Укажите путь к файлу переменных окружения внутри проекта.");
-        }
-
-        if (MaxStoredVersions is < 1 or > 10000)
-        {
-            return Localize(
-                "Максимальное количество версий должно быть от 1 до 10000.");
-        }
-
-        if (!TryParseStorageLimitBytes(out _))
-        {
-            return Localize(
-                "Лимит размера версий должен быть положительным числом в МБ.");
-        }
-
-        var healthCheckError = ValidateHealthCheck();
-        if (!string.IsNullOrEmpty(healthCheckError))
-        {
-            return healthCheckError;
-        }
-
-        try
-        {
-            var configurationJson =
-                string.IsNullOrWhiteSpace(BuildConfigurationJson) ?
-                    "{}" :
-                    BuildConfigurationJson;
-
-            using var document = System.Text.Json.JsonDocument.Parse(configurationJson);
-
-            if (document.RootElement.ValueKind != System.Text.Json.JsonValueKind.Object)
+            try
             {
-                return Localize("Параметры сборки должны быть JSON-объектом.");
+                var token = await _gitHubAuthenticationService.GetTokenAsync();
+                if (token is null)
+                {
+                    ErrorMessage = Localize("Сначала подключите GitHub на странице настроек.");
+                    return;
+                }
+
+                var repositories = await _gitHubService.GetRepositoriesAsync(token.AccessToken);
+
+                var selectedRepositoryId = SelectedGitHubRepository?.Id;
+                var selectedBranch = GitHubBranchSelection.BranchName;
+                _isResetting = true;
+                BuildEditor.IsResetting = true;
+
+                GitHubRepositories.Clear();
+
+                foreach (var repository in repositories)
+                {
+                    GitHubRepositories.Add(repository);
+                }
+
+                if (selectedRepositoryId.HasValue)
+                {
+                    _isResetting = true;
+                    BuildEditor.IsResetting = true;
+                    SelectedGitHubRepository = GitHubRepositories.FirstOrDefault(
+                        repository => repository.Id == selectedRepositoryId.Value);
+                    GitHubBranchSelection.Configure(SelectedGitHubRepository?.FullName, selectedBranch);
+                    _isResetting = false;
+                    BuildEditor.IsResetting = false;
+                }
             }
-
-            var configuration = System.Text.Json.JsonSerializer
-                .Deserialize<ProjectBuildConfiguration>(
-                    configurationJson,
-                    new System.Text.Json.JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true,
-                    }) ?? new ProjectBuildConfiguration();
-
-            var provider = MapBuildProvider();
-            BuildConfigurationHelper.Validate(configuration, provider,
-                IsLocalSource ? LocalDirectoryPath : null);
-            if (provider == ProjectBuildProvider.Custom &&
-                string.IsNullOrWhiteSpace(configuration.Command))
+            catch (Exception exception)
             {
-                return Localize("Укажите command для пользовательской сборки.");
+                ErrorMessage = Localize(exception.Message);
             }
-
-            if (provider == ProjectBuildProvider.Cpp &&
-                string.IsNullOrWhiteSpace(configuration.ToolchainFile))
+            finally
             {
-                return Localize("Укажите toolchainFile для сборки C++ под Linux.");
+                IsLoadingRepositories = false;
+                _isResetting = false;
+                BuildEditor.IsResetting = false;
             }
         }
-        catch (System.IO.IOException exception)
+
+        partial void OnNameChanged(string value) => MarkDirty();
+
+        partial void OnDescriptionChanged(string value) => MarkDirty();
+
+        partial void OnSelectedSourceTypeChanged(ProjectSourceType value)
         {
-            return Localize(exception.Message);
-        }
-        catch (ArgumentException)
-        {
-            return Localize("Проверьте пути в параметрах сборки.");
-        }
-        catch (System.Text.Json.JsonException)
-        {
-            return Localize("Параметры сборки содержат некорректный JSON.");
+            MarkDirty();
+            OnPropertyChanged(nameof(IsLocalSource));
+            OnPropertyChanged(nameof(IsGitHubSource));
+
+            if (value == ProjectSourceType.GitHubRepository && GitHubRepositories.Count == 0)
+            {
+                _ = RefreshGitHubRepositoriesAsync();
+            }
         }
 
-        return string.Empty;
+        partial void OnLocalDirectoryPathChanged(string value) => MarkDirty();
+
+        partial void OnSelectedGitHubRepositoryChanged(GitHubRepository? value)
+        {
+            if (value?.FullName != GitHubBranchSelection.Repository)
+            {
+                GitHubBranchSelection.Configure(value?.FullName, null);
+            }
+            MarkDirty();
+        }
+
+        partial void OnSelectedBuildProviderChanged(ProjectBuildProvider value)
+        {
+            NotifyBuildFields();
+            if (_isResetting)
+            {
+                return;
+            }
+            if (IsCppBuild && string.IsNullOrWhiteSpace(ToolchainFile))
+            {
+                ToolchainFile = DefaultToolchainPath;
+            }
+            if (IsCustomBuild && string.IsNullOrWhiteSpace(BuildArgumentsText))
+            {
+                BuildArgumentsText = DefaultCustomBuildArguments;
+            }
+            UpdateBuildConfiguration();
+            MarkDirty();
+        }
+
+        partial void OnRemoteServiceNameChanged(string value) => MarkDirty();
+
+        partial void OnRemoteExecutableFileNameChanged(string value) => MarkDirty();
+
+        partial void OnRemoteDeploymentDirectoryChanged(string value) => MarkDirty();
+
+        partial void OnProjectEnvironmentFilePathChanged(string value) => MarkDirty();
+
+        partial void OnMaxStoredVersionsChanged(int value) => MarkDirty();
+
+        partial void OnMaxStoredVersionSizeMbChanged(string value) => MarkDirty();
+
+        private void MarkDirty()
+        {
+            if (!_isResetting)
+            {
+                HasUnsavedChanges = true;
+                ErrorMessage = string.Empty;
+            }
+        }
     }
-
-    private long? ParseStorageLimitBytes()
-    {
-        _ = TryParseStorageLimitBytes(out var bytes);
-        return bytes;
-    }
-
-    private bool TryParseStorageLimitBytes(out long? bytes)
-    {
-        bytes = null;
-
-        if (string.IsNullOrWhiteSpace(MaxStoredVersionSizeMb))
-        {
-            return true;
-        }
-
-        if (!decimal.TryParse(
-                MaxStoredVersionSizeMb,
-                NumberStyles.Number,
-                CultureInfo.CurrentCulture,
-                out var megabytes) ||
-            megabytes <= 0 ||
-            megabytes > long.MaxValue / 1_048_576m)
-        {
-            return false;
-        }
-
-        bytes = decimal.ToInt64(decimal.Ceiling(megabytes * 1_048_576m));
-        return true;
-    }
-
-    private string ValidateHealthCheck()
-    {
-        if (IsStabilityDelayHealthCheck &&
-            HealthCheckStabilityDelaySeconds is < 1 or > 3600)
-        {
-            return Localize(
-                "Задержка стабильности должна быть от 1 до 3600 секунд.");
-        }
-
-        if (!HasHealthCheckRetrySettings)
-        {
-            return string.Empty;
-        }
-
-        if (HealthCheckTimeoutSeconds is < 1 or > 3600)
-        {
-            return Localize(
-                "Timeout health-check должен быть от 1 до 3600 секунд.");
-        }
-
-        if (HealthCheckIntervalSeconds is < 1 or > 3600)
-        {
-            return Localize(
-                "Интервал health-check должен быть от 1 до 3600 секунд.");
-        }
-
-        if (HealthCheckAttempts is < 1 or > 100)
-        {
-            return Localize(
-                "Количество попыток health-check должно быть от 1 до 100.");
-        }
-
-        if (IsHttpHealthCheck &&
-            (!Uri.TryCreate(HealthCheckHttpUrl.Trim(), UriKind.Absolute, out var uri) ||
-                (!string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) &&
-                    !string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))))
-        {
-            return Localize(
-                "Укажите абсолютный HTTP- или HTTPS-адрес health-check.");
-        }
-
-        if (IsTcpHealthCheck && HealthCheckTcpPort is < 1 or > 65535)
-        {
-            return Localize("TCP-порт должен быть от 1 до 65535.");
-        }
-
-        if (IsCommandHealthCheck && string.IsNullOrWhiteSpace(HealthCheckCommand))
-        {
-            return Localize("Укажите команду health-check.");
-        }
-
-        return string.Empty;
-    }
-
-    private ProjectBuildProvider MapBuildProvider() => SelectedBuildProvider switch
-    {
-        var value when Canonicalize(value) == ".NET" => ProjectBuildProvider.DotNet,
-        var value when Canonicalize(value) == "Python" => ProjectBuildProvider.Python,
-        var value when Canonicalize(value) == "Go" => ProjectBuildProvider.Go,
-        var value when Canonicalize(value) == "C++" => ProjectBuildProvider.Cpp,
-        var value when Canonicalize(value) == "Свой сценарий" => ProjectBuildProvider.Custom,
-        _ => ProjectBuildProvider.Unknown,
-    };
-
-    private string MapBuildProvider(ProjectBuildProvider provider) => provider switch
-    {
-        ProjectBuildProvider.DotNet => ".NET",
-        ProjectBuildProvider.Python => "Python",
-        ProjectBuildProvider.Go => "Go",
-        ProjectBuildProvider.Cpp => "C++",
-        ProjectBuildProvider.Custom => Localize("Свой сценарий"),
-        _ => Localize(AutomaticBuild),
-    };
-
-    private ProjectHealthCheckType MapHealthCheckType() =>
-        Canonicalize(SelectedHealthCheckType) switch
-        {
-            StabilityDelayHealthCheck => ProjectHealthCheckType.StabilityDelay,
-            HttpHealthCheck => ProjectHealthCheckType.Http,
-            TcpHealthCheck => ProjectHealthCheckType.Tcp,
-            CommandHealthCheck => ProjectHealthCheckType.Command,
-            _ => ProjectHealthCheckType.None,
-        };
-
-    private string MapHealthCheckType(ProjectHealthCheckType type) => type switch
-    {
-        ProjectHealthCheckType.StabilityDelay => Localize(StabilityDelayHealthCheck),
-        ProjectHealthCheckType.Http => Localize(HttpHealthCheck),
-        ProjectHealthCheckType.Tcp => Localize(TcpHealthCheck),
-        ProjectHealthCheckType.Command => Localize(CommandHealthCheck),
-        _ => Localize(NoHealthCheck),
-    };
-
-    public void RefreshLocalization()
-    {
-        GitHubBranchSelection.RefreshLocalization();
-        var sourceKey = Canonicalize(SelectedSourceType);
-        var providerKey = Canonicalize(SelectedBuildProvider);
-        var healthCheckKey = Canonicalize(SelectedHealthCheckType);
-
-        if (string.IsNullOrWhiteSpace(sourceKey))
-        {
-            sourceKey = LocalSource;
-        }
-
-        if (string.IsNullOrWhiteSpace(providerKey))
-        {
-            providerKey = AutomaticBuild;
-        }
-
-        if (string.IsNullOrWhiteSpace(healthCheckKey))
-        {
-            healthCheckKey = NoHealthCheck;
-        }
-
-        _isResetting = true;
-
-        SourceTypes.Clear();
-        SourceTypes.Add(Localize(LocalSource));
-        SourceTypes.Add(Localize(GitHubSource));
-        BuildProviders.Clear();
-        BuildProviders.Add(Localize(AutomaticBuild));
-        BuildProviders.Add(".NET");
-        BuildProviders.Add("Python");
-        BuildProviders.Add("Go");
-        BuildProviders.Add("C++");
-        BuildProviders.Add(Localize("Свой сценарий"));
-        HealthCheckTypes.Clear();
-        HealthCheckTypes.Add(Localize(NoHealthCheck));
-        HealthCheckTypes.Add(Localize(StabilityDelayHealthCheck));
-        HealthCheckTypes.Add(Localize(HttpHealthCheck));
-        HealthCheckTypes.Add(Localize(TcpHealthCheck));
-        HealthCheckTypes.Add(Localize(CommandHealthCheck));
-        SelectedSourceType = Localize(sourceKey);
-        SelectedBuildProvider = Localize(providerKey);
-        SelectedHealthCheckType = Localize(healthCheckKey);
-
-        _isResetting = false;
-
-        OnPropertyChanged(nameof(IsLocalSource));
-        OnPropertyChanged(nameof(IsGitHubSource));
-        OnPropertyChanged(nameof(IsHealthCheckEnabled));
-        OnPropertyChanged(nameof(IsStabilityDelayHealthCheck));
-        OnPropertyChanged(nameof(IsHttpHealthCheck));
-        OnPropertyChanged(nameof(IsTcpHealthCheck));
-        OnPropertyChanged(nameof(IsCommandHealthCheck));
-        OnPropertyChanged(nameof(HasHealthCheckRetrySettings));
-        OnPropertyChanged(nameof(EditorTitle));
-        OnPropertyChanged(nameof(SaveButtonText));
-    }
-
-    private string Localize(string key) => _localizationService?.Get(key) ?? key;
-
-    private string Canonicalize(string value) => _localizationService?.GetKey(value) ?? value;
 }

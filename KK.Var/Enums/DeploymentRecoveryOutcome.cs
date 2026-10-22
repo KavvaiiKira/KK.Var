@@ -1,8 +1,9 @@
-namespace KK.Var.Enums;
-
-public enum DeploymentRecoveryOutcome
+namespace KK.Var.Enums
 {
-    NewVersionActive = 1,
-    PreviousVersionRestored = 2,
-    StagingCleaned = 3,
+    public enum DeploymentRecoveryOutcome
+    {
+        NewVersionActive = 1,
+        PreviousVersionRestored = 2,
+        StagingCleaned = 3,
+    }
 }

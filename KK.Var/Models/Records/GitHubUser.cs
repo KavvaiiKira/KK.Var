@@ -1,6 +1,7 @@
-namespace KK.Var.Models;
-
-public sealed record GitHubUser(
-    long Id,
-    string Login,
-    string? AvatarUrl);
+namespace KK.Var.Models
+{
+    public sealed record GitHubUser(
+        long Id,
+        string Login,
+        string? AvatarUrl);
+}

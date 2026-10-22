@@ -1,8 +1,9 @@
-namespace KK.Var.Enums;
-
-public enum PreflightStatus
+namespace KK.Var.Enums
 {
-    Success,
-    Warning,
-    Error,
+    public enum PreflightStatus
+    {
+        Success,
+        Warning,
+        Error,
+    }
 }

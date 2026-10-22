@@ -1,26 +1,27 @@
-using KK.Var.Enums;
 using System.Globalization;
-using System.Text.Json.Serialization;
+using KK.Var.Enums;
 
-namespace KK.Var.Configuration;
-
-public sealed class UserSettings
+namespace KK.Var.Configuration
 {
-    public bool IsFirstRunCompleted { get; set; }
+    public sealed class UserSettings
+    {
+        private const string SystemThemeName = "System";
 
-    public string Theme { get; set; } = "System";
+        private const string RussianCultureCode = "ru";
 
-    public bool DeploymentNotificationsEnabled { get; set; } = true;
+        public bool IsFirstRunCompleted { get; set; }
 
-    public string? ArtifactsDirectoryPath { get; set; }
+        public string Theme { get; set; } = SystemThemeName;
 
-    public ApplicationLanguage Language { get; set; } =
-        CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ru" ?
-            ApplicationLanguage.Russian :
-            ApplicationLanguage.English;
+        public bool DeploymentNotificationsEnabled { get; set; } = true;
 
-    public GitHubSettings GitHub { get; set; } = new GitHubSettings();
+        public string? ArtifactsDirectoryPath { get; set; }
 
-    [JsonIgnore]
-    public RemoteMachineSettings RemoteMachine { get; set; } = new RemoteMachineSettings();
+        public ApplicationLanguage Language { get; set; } =
+            CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == RussianCultureCode ?
+                ApplicationLanguage.Russian :
+                ApplicationLanguage.English;
+
+        public GitHubSettings GitHub { get; set; } = new GitHubSettings();
+    }
 }

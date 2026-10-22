@@ -1,7 +1,8 @@
-namespace KK.Var.Enums;
-
-public enum ProjectSourceType
+namespace KK.Var.Enums
 {
-    LocalDirectory = 1,
-    GitHubRepository = 2,
+    public enum ProjectSourceType
+    {
+        LocalDirectory = 1,
+        GitHubRepository = 2,
+    }
 }

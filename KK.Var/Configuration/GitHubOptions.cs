@@ -1,14 +1,17 @@
-namespace KK.Var.Configuration;
+using KK.Var.Constants;
 
-public sealed class GitHubOptions
+namespace KK.Var.Configuration
 {
-    public const string SectionName = "GitHub";
+    public sealed class GitHubOptions
+    {
+        public const string SectionName = "GitHub";
 
-    public string ClientId { get; set; } = string.Empty;
+        public string ClientId { get; set; } = string.Empty;
 
-    public string Scope { get; set; } = "repo read:user";
+        public string Scope { get; set; } = GitHubProtocol.DefaultScope;
 
-    public bool IsConfigured =>
-        !string.IsNullOrWhiteSpace(ClientId) &&
-        ClientId != "PASTE_YOUR_GITHUB_CLIENT_ID_HERE";
+        public bool IsConfigured =>
+            !string.IsNullOrWhiteSpace(ClientId) &&
+            ClientId != GitHubProtocol.ClientIdPlaceholder;
+    }
 }

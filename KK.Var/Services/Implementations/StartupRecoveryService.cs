@@ -4,76 +4,85 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using KK.Var.Configuration;
+using KK.Var.Constants;
 using KK.Var.Data;
 using KK.Var.Enums;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 
-namespace KK.Var.Services.Implementations;
-
-public sealed class StartupRecoveryService(
-    DatabaseOptions databaseOptions,
-    IDbContextFactory<AppDbContext> contextFactory) : IStartupRecoveryService
+namespace KK.Var.Services.Implementations
 {
-    public async Task<string> BackupAndResetAsync(
-        StartupRecoveryKind kind,
-        CancellationToken cancellationToken = default)
+    public sealed class StartupRecoveryService(
+        DatabaseOptions databaseOptions,
+        IDbContextFactory<AppDbContext> contextFactory,
+        ILocalizationService localizationService) : IStartupRecoveryService
     {
-        cancellationToken.ThrowIfCancellationRequested();
-        var recoveryDirectory = Path.Combine(
-            DatabasePaths.RecoveryDirectory,
-            DateTime.UtcNow.ToString("yyyyMMdd-HHmmss-fff"));
-        Directory.CreateDirectory(recoveryDirectory);
+        private const string BackupTimestampFormat = "yyyyMMdd-HHmmss-fff";
 
-        switch (kind)
+        private const string WalFileSuffix = "-wal";
+
+        private const string SharedMemoryFileSuffix = "-shm";
+
+        public async Task<string> BackupAndResetAsync(
+            StartupRecoveryKind kind,
+            CancellationToken cancellationToken = default)
         {
-            case StartupRecoveryKind.UserSettings:
-                MoveIfExists(DatabasePaths.UserSettingsFilePath, recoveryDirectory);
-                MoveIfExists(DatabasePaths.UserSettingsFilePath + ".tmp", recoveryDirectory);
-                break;
-            case StartupRecoveryKind.Database:
-                var databasePath = DatabasePaths.GetDatabaseFilePath(databaseOptions.FileName);
-                SqliteConnection.ClearAllPools();
-                MoveIfExists(databasePath, recoveryDirectory);
-                MoveIfExists(databasePath + "-wal", recoveryDirectory);
-                MoveIfExists(databasePath + "-shm", recoveryDirectory);
-                await using (var db = await contextFactory.CreateDbContextAsync(cancellationToken))
-                {
-                    await db.Database.MigrateAsync(cancellationToken);
-                }
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
+            cancellationToken.ThrowIfCancellationRequested();
+            var recoveryDirectory = Path.Combine(
+                DatabasePaths.RecoveryDirectory,
+                DateTime.UtcNow.ToString(BackupTimestampFormat));
+            Directory.CreateDirectory(recoveryDirectory);
+
+            switch (kind)
+            {
+                case StartupRecoveryKind.UserSettings:
+                    MoveIfExists(DatabasePaths.UserSettingsFilePath, recoveryDirectory);
+                    MoveIfExists(DatabasePaths.UserSettingsFilePath + ApplicationConstants.TemporaryFileExtension, recoveryDirectory);
+                    break;
+                case StartupRecoveryKind.Database:
+                    var databasePath = DatabasePaths.GetDatabaseFilePath(databaseOptions.FileName);
+                    SqliteConnection.ClearAllPools();
+                    MoveIfExists(databasePath, recoveryDirectory);
+                    MoveIfExists(databasePath + WalFileSuffix, recoveryDirectory);
+                    MoveIfExists(databasePath + SharedMemoryFileSuffix, recoveryDirectory);
+                    await using (var db = await contextFactory.CreateDbContextAsync(cancellationToken))
+                    {
+                        await db.Database.MigrateAsync(cancellationToken);
+                    }
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
+            }
+
+            return recoveryDirectory;
         }
 
-        return recoveryDirectory;
-    }
-
-    public void OpenUserDataDirectory()
-    {
-        DatabasePaths.EnsureUserDataDirectory();
-        Process.Start(new ProcessStartInfo
+        public void OpenUserDataDirectory()
         {
-            FileName = DatabasePaths.UserDataDirectory,
-            UseShellExecute = true,
-        });
-    }
-
-    private static void MoveIfExists(string sourcePath, string recoveryDirectory)
-    {
-        if (!File.Exists(sourcePath))
-        {
-            return;
+            DatabasePaths.EnsureUserDataDirectory();
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = DatabasePaths.UserDataDirectory,
+                UseShellExecute = true,
+            });
         }
 
-        var source = new FileInfo(sourcePath);
-        if ((source.Attributes & FileAttributes.ReparsePoint) != 0)
+        private void MoveIfExists(string sourcePath, string recoveryDirectory)
         {
-            throw new InvalidOperationException(
-                $"Recovery source cannot be a reparse point: {sourcePath}");
-        }
+            if (!File.Exists(sourcePath))
+            {
+                return;
+            }
 
-        var destination = Path.Combine(recoveryDirectory, source.Name);
-        File.Move(source.FullName, destination);
+            var source = new FileInfo(sourcePath);
+            if ((source.Attributes & FileAttributes.ReparsePoint) != 0)
+            {
+                throw new InvalidOperationException(
+                    localizationService.Format("Источник восстановления не может быть reparse point: {0}", sourcePath));
+            }
+
+            var destination = Path.Combine(recoveryDirectory, source.Name);
+            File.Move(source.FullName, destination);
+        }
     }
 }

@@ -1,97 +1,104 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using KK.Var.Constants;
 using KK.Var.Enums;
 using KK.Var.Services;
 using KK.Var.ViewModels;
-using Microsoft.Extensions.DependencyInjection;
+using KK.Var.Views.Design;
 
-namespace KK.Var.Views;
-
-public partial class FirstRunWindow : Window
+namespace KK.Var.Views
 {
-    private const int LastSlideIndex = 2;
-    private int _currentSlideIndex;
-    private readonly ILocalizationService _localizationService =
-        Program.Services.GetRequiredService<ILocalizationService>();
-
-    public FirstRunWindow()
+    public partial class FirstRunWindow : Window
     {
-        InitializeComponent();
-        UpdateLanguageButton();
-        UpdateSlide();
-    }
+        private const int LastSlideIndex = 2;
 
-    private void TitleBar_OnPointerPressed(object? sender, PointerPressedEventArgs e)
-    {
-        if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+        private int _currentSlideIndex;
+
+        private readonly ILocalizationService _localizationService;
+
+        public FirstRunWindow()
+            : this(DesignServices.Localization)
         {
-            BeginMoveDrag(e);
         }
-    }
 
-    private void BackButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (_currentSlideIndex > 0)
+        public FirstRunWindow(ILocalizationService localizationService)
         {
-            _currentSlideIndex--;
+            _localizationService = localizationService;
+            InitializeComponent();
+            UpdateLanguageButton();
             UpdateSlide();
         }
-    }
 
-    private void NextButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (_currentSlideIndex == LastSlideIndex)
+        private void TitleBar_OnPointerPressed(object? sender, PointerPressedEventArgs e)
         {
-            Close(true);
-            return;
+            if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+            {
+                BeginMoveDrag(e);
+            }
         }
 
-        _currentSlideIndex++;
-        UpdateSlide();
-    }
-
-    private void CloseButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        Close(false);
-    }
-
-    private async void LanguageButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (Owner?.DataContext is not MainViewModel viewModel)
+        private void BackButton_OnClick(object? sender, RoutedEventArgs e)
         {
-            return;
+            if (_currentSlideIndex > 0)
+            {
+                _currentSlideIndex--;
+                UpdateSlide();
+            }
         }
 
-        await viewModel.SwitchLanguageAsync();
-        UpdateLanguageButton();
-        UpdateSlide();
-    }
+        private void NextButton_OnClick(object? sender, RoutedEventArgs e)
+        {
+            if (_currentSlideIndex == LastSlideIndex)
+            {
+                Close(true);
+                return;
+            }
 
-    private void UpdateLanguageButton()
-    {
-        var isEnglish = _localizationService.CurrentLanguage == ApplicationLanguage.English;
-        LanguageButton.Content = isEnglish ? "EN" : "RU";
-        ToolTip.SetTip(
-            LanguageButton,
-            _localizationService.Get(
-                isEnglish ? "Переключить на русский" : "Переключить на английский"));
-    }
+            _currentSlideIndex++;
+            UpdateSlide();
+        }
 
-    private void UpdateSlide()
-    {
-        WelcomeSlide.IsVisible = _currentSlideIndex == 0;
-        WorkflowSlide.IsVisible = _currentSlideIndex == 1;
-        SetupSlide.IsVisible = _currentSlideIndex == 2;
+        private void CloseButton_OnClick(object? sender, RoutedEventArgs e) =>
+            Close(false);
 
-        FirstIndicator.Opacity = _currentSlideIndex == 0 ? 1 : 0.25;
-        SecondIndicator.Opacity = _currentSlideIndex == 1 ? 1 : 0.25;
-        ThirdIndicator.Opacity = _currentSlideIndex == 2 ? 1 : 0.25;
+        private async void LanguageButton_OnClick(object? sender, RoutedEventArgs e)
+        {
+            if (Owner?.DataContext is not MainViewModel viewModel)
+            {
+                return;
+            }
 
-        BackButton.IsEnabled = _currentSlideIndex > 0;
+            await viewModel.SwitchLanguageAsync();
+            UpdateLanguageButton();
+            UpdateSlide();
+        }
 
-        NextButton.Content = _currentSlideIndex == LastSlideIndex ?
-            _localizationService.Get("Открыть настройки") :
-            _localizationService.Get("Далее");
+        private void UpdateLanguageButton()
+        {
+            var isEnglish = _localizationService.CurrentLanguage == ApplicationLanguage.English;
+            LanguageButton.Content = isEnglish ? UiConstants.EnglishLanguageCode : UiConstants.RussianLanguageCode;
+            ToolTip.SetTip(
+                LanguageButton,
+                _localizationService.Get(
+                                isEnglish ? "Переключить на русский" : "Переключить на английский"));
+        }
+
+        private void UpdateSlide()
+        {
+            WelcomeSlide.IsVisible = _currentSlideIndex == 0;
+            WorkflowSlide.IsVisible = _currentSlideIndex == 1;
+            SetupSlide.IsVisible = _currentSlideIndex == 2;
+
+            FirstIndicator.Opacity = _currentSlideIndex == 0 ? 1 : 0.25;
+            SecondIndicator.Opacity = _currentSlideIndex == 1 ? 1 : 0.25;
+            ThirdIndicator.Opacity = _currentSlideIndex == 2 ? 1 : 0.25;
+
+            BackButton.IsEnabled = _currentSlideIndex > 0;
+
+            NextButton.Content = _currentSlideIndex == LastSlideIndex ?
+                _localizationService.Get("Открыть настройки") :
+                _localizationService.Get("Далее");
+        }
     }
 }

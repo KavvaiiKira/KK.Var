@@ -20,7 +20,7 @@ namespace KK.Var.Data.Migrations
                     Host = table.Column<string>(type: "TEXT", maxLength: 1024, nullable: false),
                     Port = table.Column<int>(type: "INTEGER", nullable: false),
                     UserName = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
-                    AuthenticationMethod = table.Column<string>(type: "TEXT", nullable: false),
+                    AuthenticationMethod = table.Column<int>(type: "INTEGER", nullable: false),
                     PrivateKeyPath = table.Column<string>(type: "TEXT", maxLength: 2048, nullable: true),
                     HostKeyFingerprint = table.Column<string>(type: "TEXT", nullable: true),
                     Architecture = table.Column<string>(type: "TEXT", nullable: true),

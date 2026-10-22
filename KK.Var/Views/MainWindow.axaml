@@ -25,10 +25,6 @@
         Background="Transparent"
         Title="KK.Var">
 
-    <Design.DataContext>
-        <vm:MainViewModel />
-    </Design.DataContext>
-
     <Window.Resources>
         <StreamGeometry x:Key="ProjectsIconData">M3,13H11V3H3V13 M3,21H11V15H3V21 M13,21H21V11H13V21 M13,3V9H21V3H13Z</StreamGeometry>
         <StreamGeometry x:Key="SettingsIconData">M3,17V19H9V17H3 M3,5V7H13V5H3 M13,21V19H21V17H13V15H11V21H13 M7,9V11H3V13H7V15H9V9H7 M21,13V11H11V13H21 M15,9H17V7H21V5H17V3H15V9Z</StreamGeometry>
@@ -237,7 +233,7 @@
                                   Margin="30,0,20,24"
                                   HorizontalScrollBarVisibility="Disabled"
                                   VerticalScrollBarVisibility="Auto">
-                        <ItemsControl ItemsSource="{Binding ProjectTiles}">
+                        <ItemsControl ItemsSource="{Binding ProjectList.ProjectTiles}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <WrapPanel Orientation="Horizontal" />
@@ -297,7 +293,7 @@
                                                     <StackPanel Grid.Row="1"
                                                                 MinWidth="0"
                                                                 Spacing="3">
-                                                        <TextBlock Text="Systemd service"
+                                                        <TextBlock Text="{DynamicResource 'Systemd-сервис'}"
                                                                    FontSize="11"
                                                                    Foreground="{DynamicResource AppTextMutedBrush}" />
                                                         <TextBlock Text="{Binding Project.RemoteServiceName}"
@@ -311,7 +307,7 @@
                                                                 Grid.Column="1"
                                                                 MinWidth="0"
                                                                 Spacing="3">
-                                                        <TextBlock Text="Service file"
+                                                        <TextBlock Text="{DynamicResource 'Файл сервиса'}"
                                                                    FontSize="11"
                                                                    Foreground="{DynamicResource AppTextMutedBrush}" />
                                                         <TextBlock Text="{Binding Project.RemoteExecutablePath}"
@@ -328,7 +324,7 @@
                                                       ColumnDefinitions="Auto,*,Auto,Auto,Auto"
                                                       ColumnSpacing="8">
                                                     <Button Classes="deploy"
-                                                            Content="Deploy"
+                                                            Content="{DynamicResource 'Развернуть'}"
                                                             Click="DeployProjectButton_OnClick" />
                                                     <Button Grid.Column="2"
                                                             Classes="icon"
@@ -545,7 +541,7 @@
                             <StackPanel Spacing="10" IsEnabled="{Binding !IsProjectTransferBusy}">
                                 <TextBlock Text="{DynamicResource 'Название проекта'}" />
                                 <TextBlock Text="{DynamicResource 'Машина проекта'}" />
-                                <ComboBox ItemsSource="{Binding AvailableMachines}" SelectedItem="{Binding SelectedImportMachine}" HorizontalAlignment="Stretch">
+                                <ComboBox ItemsSource="{Binding MachineEditor.AvailableMachines}" SelectedItem="{Binding SelectedImportMachine}" HorizontalAlignment="Stretch">
                                     <ComboBox.ItemTemplate>
                                         <DataTemplate x:DataType="models:RemoteMachine">
                                             <TextBlock Text="{Binding Name}" />

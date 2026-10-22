@@ -1,7 +1,8 @@
-namespace KK.Var.Enums;
-
-public enum ApplicationLanguage
+namespace KK.Var.Enums
 {
-    Russian = 1,
-    English = 2,
+    public enum ApplicationLanguage
+    {
+        Russian = 1,
+        English = 2,
+    }
 }

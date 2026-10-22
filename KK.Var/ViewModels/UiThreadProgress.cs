@@ -1,18 +1,19 @@
 using System;
 using Avalonia.Threading;
 
-namespace KK.Var.ViewModels;
-
-internal sealed class UiThreadProgress<T>(Action<T> handler) : IProgress<T>
+namespace KK.Var.ViewModels
 {
-    public void Report(T value)
+    internal sealed class UiThreadProgress<T>(Action<T> handler) : IProgress<T>
     {
-        if (Dispatcher.UIThread.CheckAccess())
+        public void Report(T value)
         {
-            handler(value);
-            return;
-        }
+            if (Dispatcher.UIThread.CheckAccess())
+            {
+                handler(value);
+                return;
+            }
 
-        Dispatcher.UIThread.Post(() => handler(value));
+            Dispatcher.UIThread.Post(() => handler(value));
+        }
     }
 }

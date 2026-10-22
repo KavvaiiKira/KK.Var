@@ -4,18 +4,19 @@ using System.Threading.Tasks;
 using KK.Var.Configuration;
 using KK.Var.Models;
 
-namespace KK.Var.Services;
-
-public interface IRemoteConnectionService
+namespace KK.Var.Services
 {
-    Task<RemoteConnectionCheckResult> CheckAsync(
-        RemoteMachineSettings settings,
-        CancellationToken cancellationToken = default);
+    public interface IRemoteConnectionService
+    {
+        Task<RemoteConnectionCheckResult> CheckAsync(
+            RemoteMachineSettings settings,
+            CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<DeploymentPreflightCheck>> CheckDeploymentAsync(
-        RemoteMachineSettings settings,
-        string deploymentDirectory,
-        long minimumFreeBytes,
-        bool requiresPython,
-        CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<DeploymentPreflightCheck>> CheckDeploymentAsync(
+            RemoteMachineSettings settings,
+            string deploymentDirectory,
+            long minimumFreeBytes,
+            bool requiresPython,
+            CancellationToken cancellationToken = default);
+    }
 }

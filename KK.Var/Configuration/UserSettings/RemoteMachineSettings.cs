@@ -1,29 +1,32 @@
 using System.Text.Json.Serialization;
+using KK.Var.Enums;
 
-namespace KK.Var.Configuration;
-
-public sealed class RemoteMachineSettings
+namespace KK.Var.Configuration
 {
-    [JsonIgnore]
-    public bool CleanDeployment { get; set; }
-    public string? Host { get; set; }
+    public sealed class RemoteMachineSettings
+    {
+        [JsonIgnore]
+        public bool CleanDeployment { get; set; }
 
-    public int Port { get; set; } = 22;
+        public string? Host { get; set; }
 
-    public string? UserName { get; set; }
+        public int Port { get; set; } = 22;
 
-    public string AuthenticationMethod { get; set; } = "SSH-ключ";
+        public string? UserName { get; set; }
 
-    public string? PrivateKeyPath { get; set; }
+        public SshAuthenticationMethod AuthenticationMethod { get; set; } = SshAuthenticationMethod.PrivateKey;
 
-    [JsonIgnore]
-    public string? Password { get; set; }
+        public string? PrivateKeyPath { get; set; }
 
-    public string? HostKeyFingerprint { get; set; }
+        [JsonIgnore]
+        public string? Password { get; set; }
 
-    public string? HostKeyHost { get; set; }
+        public string? HostKeyFingerprint { get; set; }
 
-    public int? HostKeyPort { get; set; }
+        public string? HostKeyHost { get; set; }
 
-    public string? Architecture { get; set; }
+        public int? HostKeyPort { get; set; }
+
+        public string? Architecture { get; set; }
+    }
 }

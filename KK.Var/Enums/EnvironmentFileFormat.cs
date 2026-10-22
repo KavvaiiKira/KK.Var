@@ -1,9 +1,10 @@
-namespace KK.Var.Enums;
-
-public enum EnvironmentFileFormat
+namespace KK.Var.Enums
 {
-    Json = 1,
-    DotEnv = 2,
-    Shell = 3,
-    Yaml = 4,
+    public enum EnvironmentFileFormat
+    {
+        Json = 1,
+        DotEnv = 2,
+        Shell = 3,
+        Yaml = 4,
+    }
 }

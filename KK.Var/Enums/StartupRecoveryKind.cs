@@ -1,7 +1,8 @@
-namespace KK.Var.Enums;
-
-public enum StartupRecoveryKind
+namespace KK.Var.Enums
 {
-    UserSettings,
-    Database,
+    public enum StartupRecoveryKind
+    {
+        UserSettings,
+        Database,
+    }
 }

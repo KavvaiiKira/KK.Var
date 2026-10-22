@@ -1,8 +1,11 @@
-namespace KK.Var.Configuration;
+using KK.Var.Constants;
 
-public sealed class DatabaseOptions
+namespace KK.Var.Configuration
 {
-    public const string SectionName = "Database";
+    public sealed class DatabaseOptions
+    {
+        public const string SectionName = "Database";
 
-    public string FileName { get; init; } = "kk-var.db";
+        public string FileName { get; init; } = ApplicationConstants.DefaultDatabaseFileName;
+    }
 }

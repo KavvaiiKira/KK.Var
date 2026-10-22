@@ -1,29 +1,31 @@
+using KK.Var.Constants;
 using KK.Var.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace KK.Var.Data.Configurations;
-
-public sealed class KKProjectEnvironmentVariableConfiguration
-    : IEntityTypeConfiguration<KKProjectEnvironmentVariable>
+namespace KK.Var.Data.Configurations
 {
-    public void Configure(EntityTypeBuilder<KKProjectEnvironmentVariable> builder)
+    public sealed class KKProjectEnvironmentVariableConfiguration
+        : IEntityTypeConfiguration<KKProjectEnvironmentVariable>
     {
-        builder.ToTable("KKProjectEnvironmentVariables");
+        public void Configure(EntityTypeBuilder<KKProjectEnvironmentVariable> builder)
+        {
+            builder.ToTable(DatabaseSchema.EnvironmentVariablesTable);
 
-        builder.HasKey(variable => variable.Id);
+            builder.HasKey(variable => variable.Id);
 
-        builder.Property(variable => variable.Name)
-            .IsRequired()
-            .HasMaxLength(255);
+            builder.Property(variable => variable.Name)
+                .IsRequired()
+                .HasMaxLength(255);
 
-        builder.Property(variable => variable.Value)
-            .IsRequired();
+            builder.Property(variable => variable.Value)
+                .IsRequired();
 
-        builder.HasIndex(variable => new { variable.KKProjectId, variable.SortOrder })
-            .IsUnique();
+            builder.HasIndex(variable => new { variable.KKProjectId, variable.SortOrder })
+                .IsUnique();
 
-        builder.HasIndex(variable => new { variable.KKProjectId, variable.Name })
-            .IsUnique();
+            builder.HasIndex(variable => new { variable.KKProjectId, variable.Name })
+                .IsUnique();
+        }
     }
 }

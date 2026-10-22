@@ -1,27 +1,29 @@
 using System.IO;
 using KK.Var.Configuration;
+using KK.Var.Constants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 
-namespace KK.Var.Data;
-
-public sealed class AppDbContextDesignFactory
-    : IDesignTimeDbContextFactory<AppDbContext>
+namespace KK.Var.Data
 {
-    public AppDbContext CreateDbContext(string[] args)
+    public sealed class AppDbContextDesignFactory
+        : IDesignTimeDbContextFactory<AppDbContext>
     {
-        var configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json", optional: true)
-            .Build();
+        public AppDbContext CreateDbContext(string[] args)
+        {
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile(ApplicationConstants.SettingsConfigurationFileName, optional: true)
+                .Build();
 
-        var fileName = configuration[$"{DatabaseOptions.SectionName}:FileName"] ?? "kk-var.db";
+            var fileName = configuration[$"{DatabaseOptions.SectionName}:FileName"] ?? ApplicationConstants.DefaultDatabaseFileName;
 
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseSqlite($"Data Source={DatabasePaths.GetDatabaseFilePath(fileName)}")
-            .Options;
+            var options = new DbContextOptionsBuilder<AppDbContext>()
+                .UseSqlite($"Data Source={DatabasePaths.GetDatabaseFilePath(fileName)}")
+                .Options;
 
-        return new AppDbContext(options);
+            return new AppDbContext(options);
+        }
     }
 }

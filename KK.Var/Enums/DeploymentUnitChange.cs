@@ -1,8 +1,9 @@
-namespace KK.Var.Enums;
-
-public enum DeploymentUnitChange
+namespace KK.Var.Enums
 {
-    Unchanged = 1,
-    Created = 2,
-    Changed = 3,
+    public enum DeploymentUnitChange
+    {
+        Unchanged = 1,
+        Created = 2,
+        Changed = 3,
+    }
 }

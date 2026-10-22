@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:KK.Var.ViewModels"
+             xmlns:models="using:KK.Var.Models"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
@@ -73,7 +74,7 @@
             <StackPanel Grid.Column="2" VerticalAlignment="Center" Orientation="Horizontal" Spacing="10">
                 <Button Classes="deploy"
                         Padding="16,10"
-                        Content="Deploy"
+                        Content="{DynamicResource 'Развернуть'}"
                         Click="DeployButton_OnClick" />
                 <Button Classes="details-secondary" Content="{DynamicResource 'Редактировать'}" Click="EditButton_OnClick" />
                 <Button Classes="details-secondary" Content="{DynamicResource 'Экспорт'}"
@@ -122,12 +123,12 @@
                             BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="14">
                         <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="20" RowSpacing="20">
                             <StackPanel>
-                                <TextBlock Classes="details-label" Text="Systemd service" />
+                                <TextBlock Classes="details-label" Text="{DynamicResource 'Systemd-сервис'}" />
                                 <TextBlock Classes="details-value" FontFamily="Consolas"
                                            Text="{Binding SelectedProject.RemoteServiceName}" />
                             </StackPanel>
                             <StackPanel Grid.Column="1">
-                                <TextBlock Classes="details-label" Text="Service file" />
+                                <TextBlock Classes="details-label" Text="{DynamicResource 'Файл сервиса'}" />
                                 <TextBlock Classes="details-value" FontFamily="Consolas"
                                            Text="{Binding SelectedProject.RemoteExecutablePath}" />
                             </StackPanel>
@@ -150,13 +151,13 @@
                         <ComboBox Grid.Column="1"
                                   Classes="environment-input"
                                   VerticalAlignment="Center"
-                                  ItemsSource="{Binding EnvironmentFileFormats}"
-                                  SelectedItem="{Binding SelectedEnvironmentFileFormat}" />
+                                  ItemsSource="{Binding EnvironmentEditor.EnvironmentFileFormats}"
+                                  SelectedItem="{Binding EnvironmentEditor.SelectedEnvironmentFileFormat}" />
                         <Button Grid.Column="2" Classes="details-secondary" Content="{DynamicResource '＋ Добавить'}"
                                 Click="AddVariableButton_OnClick" />
                     </Grid>
 
-                    <ItemsControl ItemsSource="{Binding EnvironmentVariables}">
+                    <ItemsControl ItemsSource="{Binding EnvironmentEditor.EnvironmentVariables}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:EnvironmentVariableRowViewModel">
                                 <Grid Margin="0,0,0,9" ColumnDefinitions="280,*,42" ColumnSpacing="10">
@@ -182,7 +183,7 @@
                                 Click="SaveVariablesButton_OnClick" />
                         <TextBlock Grid.Column="1"
                                    VerticalAlignment="Center"
-                                   Text="{Binding EnvironmentSaveStatus}"
+                                   Text="{Binding EnvironmentEditor.EnvironmentSaveStatus}"
                                    FontSize="12"
                                    Foreground="{DynamicResource AppTextMutedBrush}" />
                     </Grid>
@@ -196,21 +197,21 @@
                         <TextBlock Foreground="{DynamicResource AppTextMutedBrush}">
                             <Run Text="{DynamicResource 'Общий размер проекта'}" />
                             <Run Text=": " />
-                            <Run Text="{Binding ProjectArtifactsSizeDisplay}" />
+                            <Run Text="{Binding ProjectDetails.ProjectArtifactsSizeDisplay}" />
                         </TextBlock>
-                        <TextBlock IsVisible="{Binding HasMissingProjectArtifacts}"
-                                   Text="{Binding MissingProjectArtifactsDisplay}"
+                        <TextBlock IsVisible="{Binding ProjectDetails.HasMissingProjectArtifacts}"
+                                   Text="{Binding ProjectDetails.MissingProjectArtifactsDisplay}"
                                    Foreground="{DynamicResource AppDangerBrush}" />
                     </StackPanel>
                     <Button Classes="details-secondary"
                             HorizontalAlignment="Left"
-                            IsEnabled="{Binding !IsVersionCleanupBusy}"
+                            IsEnabled="{Binding !ProjectDetails.IsVersionCleanupBusy}"
                             Content="{DynamicResource 'Очистить версии'}"
                             Click="PrepareVersionCleanupButton_OnClick" />
-                    <TextBlock IsVisible="{Binding HasNoProjectVersions}" Margin="0,36,0,0"
+                    <TextBlock IsVisible="{Binding ProjectDetails.HasNoProjectVersions}" Margin="0,36,0,0"
                                HorizontalAlignment="Center" Text="{DynamicResource 'У проекта пока нет собранных версий'}"
                                Foreground="{DynamicResource AppTextMutedBrush}" />
-                    <ItemsControl ItemsSource="{Binding ProjectVersions}">
+                    <ItemsControl ItemsSource="{Binding ProjectDetails.ProjectVersions}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:ProjectVersionItemViewModel">
                                 <Border Margin="0,0,0,10" Padding="18" Background="{DynamicResource AppSurfaceBrush}"
@@ -246,7 +247,7 @@
                                                 Content="{Binding PinActionText}"
                                                 Click="PinVersionButton_OnClick" />
                                         <Button Grid.Column="5" Classes="details-secondary"
-                                                Padding="12,8" Content="Rollback"
+                                                Padding="12,8" Content="{DynamicResource 'Откатить'}"
                                                 IsEnabled="{Binding ArtifactExists}"
                                                 Click="RollbackButton_OnClick" />
                                         <Button Grid.Column="6" Classes="details-secondary"
@@ -264,10 +265,10 @@
 
                 <StackPanel x:Name="HistoryPanel" IsVisible="False" Spacing="14">
                     <TextBlock Text="{DynamicResource 'История проекта'}" FontSize="20" FontWeight="Bold" />
-                    <TextBlock IsVisible="{Binding HasNoProjectHistory}" Margin="0,36,0,0"
+                    <TextBlock IsVisible="{Binding ProjectDetails.HasNoProjectHistory}" Margin="0,36,0,0"
                                HorizontalAlignment="Center" Text="{DynamicResource 'Deploy и rollback ещё не выполнялись'}"
                                Foreground="{DynamicResource AppTextMutedBrush}" />
-                    <ItemsControl ItemsSource="{Binding ProjectHistory}">
+                    <ItemsControl ItemsSource="{Binding ProjectDetails.ProjectHistory}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:DeploymentHistoryItemViewModel">
                                 <Border Margin="0,0,0,10" Padding="18" Background="{DynamicResource AppSurfaceBrush}"
@@ -284,7 +285,7 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                    <Button IsVisible="{Binding HasMoreProjectHistoryItems}"
+                    <Button IsVisible="{Binding ProjectDetails.HasMoreProjectHistoryItems}"
                             Padding="18,9"
                             HorizontalAlignment="Center"
                             Background="{DynamicResource AppSurfaceRaisedBrush}"
@@ -304,18 +305,18 @@
                                    Foreground="{DynamicResource AppTextMutedBrush}" />
                                 <StackPanel IsVisible="{Binding IsSelectedProjectGitHub}" Spacing="8">
                                     <TextBlock Text="{DynamicResource 'Ветка для этого Deploy'}" Foreground="{DynamicResource AppTextMutedBrush}" />
-                                    <ComboBox IsEnabled="{Binding !IsSelectedProjectDeploymentActive}"
+                                    <ComboBox IsEnabled="{Binding !DeploymentWorkspace.IsSelectedProjectDeploymentActive}"
                                               HorizontalAlignment="Stretch"
                                               ItemsSource="{Binding DeploymentGitHubSource.Branches}"
                                               SelectedItem="{Binding DeploymentGitHubSource.SelectedBranch, Mode=TwoWay}"
                                               DropDownOpened="DeploymentBranches_OnOpened">
                                         <ComboBox.ItemTemplate>
-                                            <DataTemplate x:DataType="vm:GitHubBranchOption">
+                                            <DataTemplate x:DataType="models:GitHubBranchOption">
                                                 <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
                                             </DataTemplate>
                                         </ComboBox.ItemTemplate>
                                     </ComboBox>
-                                    <Button IsEnabled="{Binding !IsSelectedProjectDeploymentActive}"
+                                    <Button IsEnabled="{Binding !DeploymentWorkspace.IsSelectedProjectDeploymentActive}"
                                             Classes="details-secondary" HorizontalAlignment="Left"
                                             Content="{DynamicResource 'Обновить коммит'}" Click="DeploymentCommit_OnClick" />
                                     <TextBlock IsVisible="{Binding DeploymentGitHubSource.IsLoadingBranches}" Text="{DynamicResource 'Загрузка веток…'}" />
@@ -329,42 +330,42 @@
                         <Grid Margin="0,12,0,0" ColumnDefinitions="220,*" RowDefinitions="Auto,Auto" RowSpacing="12">
                             <TextBlock Text="{DynamicResource 'Следующая версия'}" Foreground="{DynamicResource AppTextMutedBrush}" />
                             <TextBox x:Name="DeploymentTagInput" Grid.Column="1" PlaceholderText="{DynamicResource 'Например, release-1'}"
-                                     IsReadOnly="{Binding IsSelectedProjectDeploymentActive}"
+                                     IsReadOnly="{Binding DeploymentWorkspace.IsSelectedProjectDeploymentActive}"
                                      Text="{Binding DeploymentVersionTag}" />
                             <TextBlock Grid.Row="1" Text="{DynamicResource 'Описание'}" Foreground="{DynamicResource AppTextMutedBrush}" />
                             <TextBox Grid.Row="1" Grid.Column="1" PlaceholderText="{DynamicResource 'Что изменилось в этой версии'}"
-                                     IsReadOnly="{Binding IsSelectedProjectDeploymentActive}"
+                                     IsReadOnly="{Binding DeploymentWorkspace.IsSelectedProjectDeploymentActive}"
                                      Text="{Binding DeploymentDescription}" />
                         </Grid>
-                        <Grid IsVisible="{Binding IsSelectedProjectDeploymentActive}"
+                        <Grid IsVisible="{Binding DeploymentWorkspace.IsSelectedProjectDeploymentActive}"
                               ColumnDefinitions="*,Auto"
                               ColumnSpacing="12">
                             <TextBlock VerticalAlignment="Center"
-                                       Text="{Binding SelectedProjectQueueStatusText}"
+                                       Text="{Binding DeploymentWorkspace.SelectedProjectQueueStatusText}"
                                        FontSize="12"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource AppPrimaryHoverBrush}" />
                             <Button Grid.Column="1"
                                     Classes="details-secondary"
                                     Padding="12,7"
-                                    IsVisible="{Binding IsSelectedProjectDeploymentWaiting}"
+                                    IsVisible="{Binding DeploymentWorkspace.IsSelectedProjectDeploymentWaiting}"
                                     Content="{DynamicResource 'Отменить операцию'}"
                                     Click="CancelDeploymentButton_OnClick" />
                         </Grid>
                         <ProgressBar Height="4" Minimum="0" Maximum="100"
-                                     IsVisible="{Binding IsSelectedProjectDeploymentRunning}"
-                                     Value="{Binding DeploymentProgressPercentage}" />
+                                     IsVisible="{Binding DeploymentWorkspace.IsSelectedProjectDeploymentRunning}"
+                                     Value="{Binding DeploymentWorkspace.DeploymentProgressPercentage}" />
                         <TextBlock IsVisible="{Binding IsPreflightChecking}"
                                    Text="{DynamicResource 'Выполняется предварительная проверка…'}"
                                    Foreground="{DynamicResource AppTextMutedBrush}" />
-                        <Border IsVisible="{Binding HasDeploymentPreflightResult}"
+                        <Border IsVisible="{Binding DeploymentWorkspace.HasDeploymentPreflightResult}"
                                 Padding="12"
                                 Background="{DynamicResource AppSurfaceRaisedBrush}"
                                 BorderBrush="{DynamicResource AppBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="8">
                             <StackPanel Spacing="8">
-                                <TextBlock Text="{Binding DeploymentPreflightSummary}"
+                                <TextBlock Text="{Binding DeploymentWorkspace.DeploymentPreflightSummary}"
                                            TextWrapping="Wrap"
                                            Foreground="{DynamicResource AppTextMutedBrush}" />
                                 <ListBox x:Name="PreflightResults"
@@ -406,13 +407,13 @@
                                 </ListBox>
                             </StackPanel>
                         </Border>
-                        <Border IsVisible="{Binding HasVisibleDeploymentLog}"
+                        <Border IsVisible="{Binding DeploymentWorkspace.HasVisibleDeploymentLog}"
                                 Height="210" Padding="12"
                                 Background="{DynamicResource AppBackgroundBrush}"
                                 BorderBrush="{DynamicResource AppBorderBrush}"
                                 BorderThickness="1" CornerRadius="8">
                             <TextBox x:Name="DeploymentLog"
-                                     Text="{Binding VisibleDeploymentLogText}"
+                                     Text="{Binding DeploymentWorkspace.VisibleDeploymentLogText}"
                                      IsReadOnly="True"
                                      AcceptsReturn="True"
                                      TextWrapping="NoWrap"
@@ -479,7 +480,7 @@
             </Border>
         </Border>
 
-        <Border IsVisible="{Binding HasPendingVersionCleanup}"
+        <Border IsVisible="{Binding ProjectDetails.HasPendingVersionCleanup}"
                 Grid.RowSpan="3"
                 Background="#C9080510">
             <Border Width="500"
@@ -494,7 +495,7 @@
                     <TextBlock Text="{DynamicResource 'Очистить версии?'}"
                                FontSize="20"
                                FontWeight="Bold" />
-                    <TextBlock Text="{Binding VersionCleanupPreview}"
+                    <TextBlock Text="{Binding ProjectDetails.VersionCleanupPreview}"
                                TextWrapping="Wrap"
                                FontSize="13"
                                Foreground="{DynamicResource AppTextMutedBrush}" />

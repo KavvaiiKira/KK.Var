@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 
-namespace KK.Var.Models;
-
-public sealed record VersionCleanupPlan(
-    Guid ProjectId,
-    string ArtifactRoot,
-    IReadOnlyList<VersionCleanupItem> Items,
-    long BytesToDelete)
+namespace KK.Var.Models
 {
-    public int VersionCount => Items.Count;
+    public sealed record VersionCleanupPlan(
+        Guid ProjectId,
+        string ArtifactRoot,
+        IReadOnlyList<VersionCleanupItem> Items,
+        long BytesToDelete)
+    {
+        public int VersionCount => Items.Count;
+    }
 }

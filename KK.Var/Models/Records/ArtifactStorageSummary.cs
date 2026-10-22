@@ -1,5 +1,6 @@
-namespace KK.Var.Models;
-
-public sealed record ArtifactStorageSummary(
-    string EffectiveRoot,
-    long UsedBytes);
+namespace KK.Var.Models
+{
+    public sealed record ArtifactStorageSummary(
+        string EffectiveRoot,
+        long UsedBytes);
+}

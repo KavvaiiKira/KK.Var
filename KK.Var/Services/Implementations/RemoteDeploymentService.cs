@@ -2,1188 +2,455 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using KK.Var.Configuration;
+using KK.Var.Constants;
 using KK.Var.Enums;
 using KK.Var.Models;
-using Renci.SshNet;
+using static KK.Var.Services.ProjectRuntime;
+using static KK.Var.Services.RemoteShell;
 
-namespace KK.Var.Services.Implementations;
-
-public sealed class RemoteDeploymentService(ILocalizationService localizationService) : IRemoteDeploymentService
+namespace KK.Var.Services.Implementations
 {
-    private const string PasswordAuthentication = "Пароль";
-
-    public Task DeployAsync(
-        KKProject project,
-        string artifactPath,
-        RemoteMachineSettings settings,
-        string operationId,
-        TextWriter log,
-        Func<DeploymentCheckpoint, Task> checkpoint,
-        IProgress<DeploymentProgress>? progress = null,
-        CancellationToken cancellationToken = default) => Task.Run(
-        () => Deploy(
-            project,
-            artifactPath,
-            settings,
-            operationId,
-            log,
-            checkpoint,
-            progress,
-            cancellationToken),
-        cancellationToken);
-
-    public Task<DeploymentRecoveryResult> RecoverAsync(
-        KKProject project,
-        RemoteMachineSettings settings,
-        string operationId,
-        DeploymentStage stage,
-        DeploymentUnitChange unitChange,
-        TextWriter log,
-        CancellationToken cancellationToken = default) => Task.Run(
-        () => Recover(
-            project,
-            settings,
-            operationId,
-            stage,
-            unitChange,
-            log,
-            cancellationToken),
-        cancellationToken);
-
-    private void Deploy(
-        KKProject project,
-        string artifactPath,
-        RemoteMachineSettings settings,
-        string operationId,
-        TextWriter log,
-        Func<DeploymentCheckpoint, Task> checkpoint,
-        IProgress<DeploymentProgress>? progress,
-        CancellationToken cancellationToken)
+    public sealed class RemoteDeploymentService(
+        IBuildConfigurationService buildConfigurationService,
+        IRemoteClientFactory clientFactory,
+        IRemoteCommandRunner commandRunner,
+        IRemoteDeploymentValidator validator,
+        ISystemdUnitBuilder unitBuilder,
+        IRemoteHealthCheckService healthCheckService,
+        IRemoteRecoveryService recoveryService,
+        ILocalizationService localizationService) : IRemoteDeploymentService
     {
-        Validate(settings, project, artifactPath);
-        ValidateOperationId(operationId);
+        private const string FreeSpaceProbeScript = "while ! sudo test -d \"$check_path\"; do parent=$(dirname -- \"$check_path\"); if test \"$parent\" = \"$check_path\"; then break; fi; check_path=\"$parent\"; done; available=$(df -Pk -- \"$check_path\" | awk 'NR==2 {print $4}'); ";
 
-        var remoteArchive = $"/tmp/kk-var-{operationId}.tar.gz";
-        var remoteUnit = $"/tmp/kk-var-{operationId}.service";
-        var target = project.RemoteDeploymentDirectory.TrimEnd('/');
-        var staging = $"{target}.staging-{operationId}";
-        var backup = $"{target}.previous-{operationId}";
-        var unitPath = $"/etc/systemd/system/{project.RemoteServiceName}";
-        var unitBackup = $"/tmp/kk-var-{operationId}.service.backup";
-        var unitContent = CreateUnit(project, settings.UserName!);
-        var unitState = DeploymentUnitChange.Unchanged;
-        var targetMoved = false;
-        var healthCheckInProgress = false;
+        public Task DeployAsync(
+            KKProject project,
+            string artifactPath,
+            RemoteMachineSettings settings,
+            string operationId,
+            TextWriter log,
+            Func<DeploymentCheckpoint, Task> checkpoint,
+            IProgress<DeploymentProgress>? progress = null,
+            CancellationToken cancellationToken = default) => Task.Run(
+            () => Deploy(
+                project,
+                artifactPath,
+                settings,
+                operationId,
+                log,
+                checkpoint,
+                progress,
+                cancellationToken),
+            cancellationToken);
 
-        using var ssh = CreateSshClient(settings);
-        using var sftp = CreateSftpClient(settings);
+        public Task<DeploymentRecoveryResult> RecoverAsync(
+            KKProject project,
+            RemoteMachineSettings settings,
+            string operationId,
+            DeploymentStage stage,
+            DeploymentUnitChange unitChange,
+            TextWriter log,
+            CancellationToken cancellationToken = default) =>
+            recoveryService.RecoverAsync(
+                project,
+                settings,
+                operationId,
+                stage,
+                unitChange,
+                log,
+                cancellationToken);
 
-        var sshHostKeyValidator = new SshHostKeyValidator(settings.HostKeyFingerprint);
-        var sftpHostKeyValidator = new SshHostKeyValidator(settings.HostKeyFingerprint);
-
-        sshHostKeyValidator.Attach(ssh);
-        sftpHostKeyValidator.Attach(sftp);
-
-        ssh.ConnectionInfo.Timeout = TimeSpan.FromSeconds(15);
-        sftp.ConnectionInfo.Timeout = TimeSpan.FromSeconds(15);
-
-        try
+        private void Deploy(
+            KKProject project,
+            string artifactPath,
+            RemoteMachineSettings settings,
+            string operationId,
+            TextWriter log,
+            Func<DeploymentCheckpoint, Task> checkpoint,
+            IProgress<DeploymentProgress>? progress,
+            CancellationToken cancellationToken)
         {
-            ssh.Connect();
-            sftp.Connect();
-        }
-        catch (Renci.SshNet.Common.SshConnectionException) when (
-            sshHostKeyValidator.RequiresConfirmation ||
-            sftpHostKeyValidator.RequiresConfirmation)
-        {
-            throw new InvalidOperationException(localizationService.Get(
-                "Ключ SSH-сервера не совпадает с подтверждённым отпечатком. Проверьте подключение в настройках."));
-        }
+            validator.Validate(settings, project, artifactPath);
+            validator.ValidateOperationId(operationId);
 
-        try
-        {
-            cancellationToken.ThrowIfCancellationRequested();
+            var remoteArchive = $"{DeploymentConstants.RemoteTemporaryPrefix}{operationId}{ArtifactConstants.ArchiveExtension}";
+            var remoteUnit = $"{DeploymentConstants.RemoteTemporaryPrefix}{operationId}{DeploymentConstants.ServiceExtension}";
+            var target = project.RemoteDeploymentDirectory.TrimEnd('/');
+            var staging = $"{target}.staging-{operationId}";
+            var backup = $"{target}.previous-{operationId}";
+            var unitPath = $"{DeploymentConstants.SystemdDirectory}{project.RemoteServiceName}";
+            var unitBackup = $"{DeploymentConstants.RemoteTemporaryPrefix}{operationId}{DeploymentConstants.ServiceBackupExtension}";
+            var unitContent = unitBuilder.CreateUnit(project, settings.UserName!);
+            var unitState = DeploymentUnitChange.Unchanged;
+            var targetMoved = false;
+            var healthCheckInProgress = false;
 
-            progress?.Report(new DeploymentProgress(
-                55,
-                localizationService.Get("Проверка удалённой машины")));
+            using var ssh = clientFactory.CreateSshClient(settings);
+            using var sftp = clientFactory.CreateSftpClient(settings);
 
-            RunChecked(ssh, "sudo -n true", log);
-            RunChecked(ssh, "command -v systemctl >/dev/null && command -v tar >/dev/null", log);
+            var sshHostKeyValidator = new SshHostKeyValidator(settings.HostKeyFingerprint);
+            var sftpHostKeyValidator = new SshHostKeyValidator(settings.HostKeyFingerprint);
 
-            var actualArchitecture = RunCheckedWithOutput(ssh, "uname -m", log);
+            sshHostKeyValidator.Attach(ssh);
+            sftpHostKeyValidator.Attach(sftp);
 
-            if (!string.Equals(
+            ssh.ConnectionInfo.Timeout = TimeSpan.FromSeconds(15);
+            sftp.ConnectionInfo.Timeout = TimeSpan.FromSeconds(15);
+
+            try
+            {
+                ssh.Connect();
+                sftp.Connect();
+            }
+            catch (Renci.SshNet.Common.SshConnectionException) when (
+                sshHostKeyValidator.RequiresConfirmation ||
+                sftpHostKeyValidator.RequiresConfirmation)
+            {
+                throw new InvalidOperationException(localizationService.Get(
+                    "Ключ SSH-сервера не совпадает с подтверждённым отпечатком. Проверьте подключение в настройках."));
+            }
+
+            try
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                progress?.Report(new DeploymentProgress(
+                    55,
+                    localizationService.Get("Проверка удалённой машины")));
+
+                commandRunner.RunChecked(ssh, RemoteCommands.CheckSudo, log);
+                commandRunner.RunChecked(ssh, RemoteCommands.CheckDeploymentTools, log);
+
+                var actualArchitecture = commandRunner.RunCheckedWithOutput(ssh, RemoteCommands.Architecture, log);
+
+                if (!string.Equals(
                     ArchitectureCompatibility.Normalize(actualArchitecture),
                     ArchitectureCompatibility.Normalize(settings.Architecture),
                     StringComparison.OrdinalIgnoreCase))
-            {
-                throw new InvalidOperationException(localizationService.Format(
-                    "Архитектура удалённой машины изменилась: ожидалась {0}, получена {1}. Выполните проверку подключения ещё раз.",
-                    ArchitectureCompatibility.Normalize(settings.Architecture),
-                    actualArchitecture));
-            }
-
-            var requiredKilobytes = Math.Max(1024, new FileInfo(artifactPath).Length / 1024 * 3);
-
-            RunChecked(
-                ssh,
-                $"check_path=$(dirname -- {Q(target)}); " +
-                "while ! sudo test -d \"$check_path\"; do " +
-                "parent=$(dirname -- \"$check_path\"); " +
-                "if test \"$parent\" = \"$check_path\"; then break; fi; " +
-                "check_path=\"$parent\"; done; " +
-                "available=$(df -Pk -- \"$check_path\" | awk 'NR==2 {print $4}'); " +
-                $"test -n \"$available\" && test \"$available\" -ge {requiredKilobytes}",
-                log);
-
-            progress?.Report(new DeploymentProgress(
-                58,
-                localizationService.Get("Удалённая машина готова к Deploy")));
-            progress?.Report(new DeploymentProgress(
-                60,
-                localizationService.Get("Загрузка архива на удалённую машину")));
-
-            using (var archive = File.OpenRead(artifactPath))
-            {
-                sftp.UploadFile(archive, remoteArchive);
-            }
-
-            using (var unit = new MemoryStream(Encoding.UTF8.GetBytes(unitContent)))
-            {
-                sftp.UploadFile(unit, remoteUnit);
-            }
-
-            progress?.Report(new DeploymentProgress(
-                65,
-                localizationService.Get("Распаковка новой версии")));
-
-            RunChecked(
-                ssh,
-                $"sudo rm -rf -- {Q(staging)} && sudo mkdir -p -- {Q(staging)} && " +
-                $"sudo tar -xzf {Q(remoteArchive)} -C {Q(staging)} && " +
-                $"printf '%s' {Q(operationId)} | sudo tee {Q(staging + "/.kk-var-deployment")} >/dev/null && " +
-                $"sudo chown -R {Q(settings.UserName!)} -- {Q(staging)}",
-                log);
-
-            if (IsPythonProject(project))
-            {
-                var buildConfiguration = JsonSerializer.Deserialize<ProjectBuildConfiguration>(
-                    project.BuildConfigurationJson,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new ProjectBuildConfiguration();
-
-                var pipArguments = string.Join(
-                    ' ',
-                    (buildConfiguration.BuildArguments ?? []).Select(Q));
-
-                var pipArgumentPrefix =
-                    string.IsNullOrWhiteSpace(pipArguments) ?
-                        string.Empty :
-                        pipArguments + " ";
-
-                BuildConfigurationHelper.Validate(buildConfiguration, ProjectBuildProvider.Python);
-                var dependency = buildConfiguration.PythonDependencyFilePath;
-                var installCommand = string.IsNullOrWhiteSpace(dependency) ?
-                    $"if test -f {Q(staging + "/requirements.txt")}; then " +
-                    $"sudo -u {Q(settings.UserName!)} {Q(staging + "/.venv/bin/pip")} install {pipArgumentPrefix}-r {Q(staging + "/requirements.txt")}; " +
-                    $"elif test -f {Q(staging + "/pyproject.toml")}; then " +
-                    $"sudo -u {Q(settings.UserName!)} {Q(staging + "/.venv/bin/pip")} install {pipArgumentPrefix}{Q(staging)}; fi" :
-                    $"test -f {Q(staging + "/" + dependency.Replace('\\', '/'))} && " +
-                    $"sudo -u {Q(settings.UserName!)} {Q(staging + "/.venv/bin/pip")} install {pipArgumentPrefix}" +
-                    (dependency.EndsWith(".txt", StringComparison.OrdinalIgnoreCase) ?
-                        $"-r {Q(staging + "/" + dependency.Replace('\\', '/'))}" :
-                        Q(staging + "/" + (Path.GetDirectoryName(dependency)?.Replace('\\', '/') ?? ".")));
-
-                RunChecked(ssh, "command -v python3 >/dev/null", log);
-                RunChecked(
-                    ssh,
-                    $"sudo -u {Q(settings.UserName!)} python3 -m venv {Q(staging + "/.venv")} && " +
-                    installCommand,
-                    log);
-            }
-            else
-            {
-                RunChecked(
-                    ssh,
-                    $"sudo chmod u+x -- {Q(staging + "/" + GetExecutableRelativePath(project))}",
-                    log);
-            }
-
-            var unitExists = !settings.CleanDeployment && Run(ssh, $"sudo test -f {Q(unitPath)}", log).ExitStatus == 0;
-            if (!unitExists)
-            {
-                unitState = DeploymentUnitChange.Created;
-                progress?.Report(new DeploymentProgress(
-                    70,
-                    localizationService.Get("Systemd unit будет создан")));
-            }
-            else if (Run(ssh, $"sudo cmp -s -- {Q(remoteUnit)} {Q(unitPath)}", log).ExitStatus != 0)
-            {
-                unitState = DeploymentUnitChange.Changed;
-                RunChecked(ssh, $"sudo cp -- {Q(unitPath)} {Q(unitBackup)}", log);
-                progress?.Report(new DeploymentProgress(
-                    70,
-                    localizationService.Get("Systemd unit будет обновлён")));
-            }
-            else
-            {
-                progress?.Report(new DeploymentProgress(
-                    70,
-                    localizationService.Get("Systemd unit не изменился")));
-            }
-
-            SaveCheckpoint(checkpoint, DeploymentStage.ReadyToSwitch, unitState);
-
-            progress?.Report(new DeploymentProgress(
-                75,
-                localizationService.Get("Переключение версии")));
-
-            SaveCheckpoint(checkpoint, DeploymentStage.SwitchingVersion, unitState);
-
-            Run(ssh, $"sudo systemctl stop {Q(project.RemoteServiceName)}", log);
-            RunChecked(
-                ssh,
-                (settings.CleanDeployment ? $"sudo rm -rf -- {Q(target)} && " :
-                    $"if sudo test -e {Q(target)}; then sudo mv -- {Q(target)} {Q(backup)}; fi && ") +
-                $"sudo mv -- {Q(staging)} {Q(target)}",
-                log);
-
-            targetMoved = true;
-            SaveCheckpoint(checkpoint, DeploymentStage.VersionSwitched, unitState);
-
-            SaveCheckpoint(checkpoint, DeploymentStage.UpdatingUnit, unitState);
-
-            if (unitState != DeploymentUnitChange.Unchanged)
-            {
-                RunChecked(ssh, $"sudo systemd-analyze verify {Q(remoteUnit)}", log);
-                RunChecked(
-                    ssh,
-                    $"sudo install -o root -g root -m 0644 {Q(remoteUnit)} {Q(unitPath)} && sudo systemctl daemon-reload",
-                    log);
-                progress?.Report(new DeploymentProgress(
-                    82,
-                    localizationService.Get("Systemd перечитал изменённый unit")));
-            }
-
-            SaveCheckpoint(checkpoint, DeploymentStage.UnitUpdated, unitState);
-
-            if (Run(ssh, $"sudo systemctl is-enabled {Q(project.RemoteServiceName)}", log).ExitStatus != 0)
-            {
-                RunChecked(ssh, $"sudo systemctl enable {Q(project.RemoteServiceName)}", log);
-            }
-
-            progress?.Report(new DeploymentProgress(88, localizationService.Get("Запуск systemd-сервиса")));
-
-            SaveCheckpoint(checkpoint, DeploymentStage.StartingService, unitState);
-
-            RunChecked(ssh, $"sudo systemctl restart {Q(project.RemoteServiceName)}", log);
-            RunChecked(ssh, $"sudo systemctl is-active --quiet {Q(project.RemoteServiceName)}", log);
-
-            SaveCheckpoint(checkpoint, DeploymentStage.ServiceStarted, unitState);
-
-            if (project.HealthCheckType == ProjectHealthCheckType.None)
-            {
-                progress?.Report(new DeploymentProgress(
-                    96,
-                    localizationService.Get("Systemd-сервис успешно запущен")));
-            }
-            else
-            {
-                SaveCheckpoint(checkpoint, DeploymentStage.HealthChecking, unitState);
-                healthCheckInProgress = true;
-
-                progress?.Report(new DeploymentProgress(
-                    92,
-                    localizationService.Get("Проверка health-check")));
-
-                RunHealthCheck(
-                    ssh,
-                    project,
-                    settings.UserName!,
-                    target,
-                    log,
-                    progress,
-                    cancellationToken);
-
-                healthCheckInProgress = false;
-                progress?.Report(new DeploymentProgress(
-                    96,
-                    localizationService.Get("Health-check пройден")));
-            }
-
-            SaveCheckpoint(checkpoint, DeploymentStage.Committed, unitState);
-
-            CleanupCommittedDeploymentFiles(
-                ssh,
-                backup,
-                remoteArchive,
-                remoteUnit,
-                unitBackup,
-                target + "/.kk-var-deployment",
-                log);
-
-            progress?.Report(new DeploymentProgress(
-                100,
-                localizationService.Get("Deploy завершён")));
-        }
-        catch (Exception exception)
-        {
-            progress?.Report(new DeploymentProgress(
-                0,
-                localizationService.Get(healthCheckInProgress ?
-                    "Health-check не пройден, восстановление предыдущей версии" :
-                    "Ошибка Deploy, восстановление предыдущей версии")));
-
-            log.WriteLine(localizationService.Format(
-                "Удалённая операция завершилась ошибкой: {0}",
-                exception));
-
-            string? rollbackResult = null;
-            Exception? rollbackException = null;
-
-            try
-            {
-                if (targetMoved)
                 {
-                    CaptureFailureDiagnostics(ssh, project, log);
+                    throw new InvalidOperationException(localizationService.Format(
+                        "Архитектура удалённой машины изменилась: ожидалась {0}, получена {1}. Выполните проверку подключения ещё раз.",
+                        ArchitectureCompatibility.Normalize(settings.Architecture),
+                        actualArchitecture));
+                }
 
-                    rollbackResult = RestorePreviousVersion(
+                var requiredKilobytes = Math.Max(1024, new FileInfo(artifactPath).Length / 1024 * 3);
+
+                commandRunner.RunChecked(
+                    ssh,
+                    $"check_path=$(dirname -- {Q(target)}); " +
+                                    FreeSpaceProbeScript +
+                                    $"test -n \"$available\" && test \"$available\" -ge {requiredKilobytes}",
+                    log);
+
+                progress?.Report(new DeploymentProgress(
+                    58,
+                    localizationService.Get("Удалённая машина готова к Deploy")));
+                progress?.Report(new DeploymentProgress(
+                    60,
+                    localizationService.Get("Загрузка архива на удалённую машину")));
+
+                using (var archive = File.OpenRead(artifactPath))
+                {
+                    sftp.UploadFile(archive, remoteArchive);
+                }
+
+                using (var unit = new MemoryStream(Encoding.UTF8.GetBytes(unitContent)))
+                {
+                    sftp.UploadFile(unit, remoteUnit);
+                }
+
+                progress?.Report(new DeploymentProgress(
+                    65,
+                    localizationService.Get("Распаковка новой версии")));
+
+                commandRunner.RunChecked(
+                    ssh,
+                    $"sudo rm -rf -- {Q(staging)} && sudo mkdir -p -- {Q(staging)} && " +
+                                    $"sudo tar -xzf {Q(remoteArchive)} -C {Q(staging)} && " +
+                                    $"printf '%s' {Q(operationId)} | sudo tee {Q(staging + DeploymentConstants.MarkerRelativePath)} >/dev/null && " +
+                                    $"sudo chown -R {Q(settings.UserName!)} -- {Q(staging)}",
+                    log);
+
+                if (IsPythonProject(project))
+                {
+                    var buildConfiguration = buildConfigurationService.ReadAndValidate(
+                        project.BuildConfigurationJson,
+                        ProjectBuildProvider.Python);
+
+                    var pipArguments = string.Join(
+                        ' ',
+                        (buildConfiguration.BuildArguments ?? []).Select(Q));
+
+                    var pipArgumentPrefix =
+                        string.IsNullOrWhiteSpace(pipArguments) ?
+                            string.Empty :
+                            pipArguments + " ";
+
+                    var dependency = buildConfiguration.PythonDependencyFilePath;
+                    var installCommand = string.IsNullOrWhiteSpace(dependency) ?
+                        $"if test -f {Q(staging + "/" + BuildConstants.PythonRequirementsFileName)}; then " +
+                        $"sudo -u {Q(settings.UserName!)} {Q(staging + BuildConstants.PythonPipRelativePath)} install {pipArgumentPrefix}-r {Q(staging + "/" + BuildConstants.PythonRequirementsFileName)}; " +
+                        $"elif test -f {Q(staging + "/" + BuildConstants.PythonProjectFileName)}; then " +
+                        $"sudo -u {Q(settings.UserName!)} {Q(staging + BuildConstants.PythonPipRelativePath)} install {pipArgumentPrefix}{Q(staging)}; fi" :
+                        $"test -f {Q(staging + "/" + dependency.Replace('\\', '/'))} && " +
+                        $"sudo -u {Q(settings.UserName!)} {Q(staging + BuildConstants.PythonPipRelativePath)} install {pipArgumentPrefix}" +
+                        (dependency.EndsWith(BuildConstants.TextFileExtension, StringComparison.OrdinalIgnoreCase) ?
+                            $"-r {Q(staging + "/" + dependency.Replace('\\', '/'))}" :
+                            Q(staging + "/" + (Path.GetDirectoryName(dependency)?.Replace('\\', '/') ?? ".")));
+
+                    commandRunner.RunChecked(ssh, RemoteCommands.CheckPython, log);
+                    commandRunner.RunChecked(
                         ssh,
-                        project,
-                        target,
-                        backup,
-                        unitPath,
-                        unitBackup,
-                        unitState,
-                        log,
-                        progress);
+                        $"sudo -u {Q(settings.UserName!)} python3 -m venv {Q(staging + "/" + BuildConstants.PythonVirtualEnvironmentDirectory)} && " +
+                                            installCommand,
+                        log);
                 }
-            }
-            catch (Exception caughtRollbackException)
-            {
-                rollbackException = caughtRollbackException;
-                log.WriteLine(localizationService.Format(
-                    "Автоматический rollback завершился ошибкой: {0}",
-                    caughtRollbackException));
-            }
-
-            if (!targetMoved || rollbackException is null)
-            {
-                CleanupRemoteOperationFiles(
-                    ssh,
-                    staging,
-                    remoteArchive,
-                    remoteUnit,
-                    unitBackup,
-                    log);
-            }
-            else
-            {
-                log.WriteLine(localizationService.Get(
-                    "Временные файлы сохранены на удалённой машине для восстановления."));
-            }
-
-            if (!targetMoved)
-            {
-                throw;
-            }
-
-            if (rollbackException is not null)
-            {
-                throw new RemoteDeploymentFailureException(localizationService.Format(
-                    "Удалённая операция завершилась ошибкой: {0} Автоматический rollback завершился ошибкой: {1}",
-                    exception.Message,
-                    rollbackException.Message),
-                    new AggregateException(exception, rollbackException), automaticRollbackCompleted: false);
-            }
-
-            log.WriteLine(localizationService.Format(
-                "Результат автоматического rollback: {0}",
-                rollbackResult));
-
-            if (exception is OperationCanceledException)
-            {
-                throw new OperationCanceledException(localizationService.Format(
-                    "Удалённая операция отменена: {0} Результат автоматического rollback: {1}",
-                    exception.Message,
-                    rollbackResult),
-                    exception,
-                    cancellationToken);
-            }
-
-            throw new RemoteDeploymentFailureException(localizationService.Format(
-                "Удалённая операция завершилась ошибкой: {0} Результат автоматического rollback: {1}",
-                exception.Message,
-                rollbackResult),
-                exception, automaticRollbackCompleted: true);
-        }
-        finally
-        {
-            if (sftp.IsConnected)
-            {
-                sftp.Disconnect();
-            }
-
-            if (ssh.IsConnected)
-            {
-                ssh.Disconnect();
-            }
-        }
-    }
-
-    private void CaptureFailureDiagnostics(
-        SshClient ssh,
-        KKProject project,
-        TextWriter log)
-    {
-        log.WriteLine(localizationService.Get(
-            "Диагностика новой версии перед автоматическим rollback:"));
-
-        try
-        {
-            Run(
-                ssh,
-                $"sudo systemctl status --no-pager --full {Q(project.RemoteServiceName)}",
-                log);
-            Run(
-                ssh,
-                $"sudo journalctl --unit {Q(project.RemoteServiceName)} --lines 200 " +
-                "--no-pager --output=short-iso",
-                log);
-        }
-        catch (Exception exception)
-        {
-            log.WriteLine(localizationService.Format(
-                "Не удалось полностью собрать диагностику: {0}",
-                exception));
-        }
-    }
-
-    private void CleanupRemoteOperationFiles(
-        SshClient ssh,
-        string staging,
-        string remoteArchive,
-        string remoteUnit,
-        string unitBackup,
-        TextWriter log)
-    {
-        try
-        {
-            Run(
-                ssh,
-                $"sudo rm -rf -- {Q(staging)} {Q(remoteArchive)} {Q(remoteUnit)} {Q(unitBackup)}",
-                log);
-        }
-        catch (Exception exception)
-        {
-            log.WriteLine(localizationService.Format(
-                "Не удалось удалить временные файлы удалённой операции: {0}",
-                exception));
-        }
-    }
-
-    private void CleanupCommittedDeploymentFiles(
-        SshClient ssh,
-        string backup,
-        string remoteArchive,
-        string remoteUnit,
-        string unitBackup,
-        string marker,
-        TextWriter log)
-    {
-        try
-        {
-            Run(
-                ssh,
-                $"sudo rm -rf -- {Q(backup)} {Q(remoteArchive)} {Q(remoteUnit)} " +
-                $"{Q(unitBackup)} {Q(marker)}",
-                log);
-        }
-        catch (Exception exception)
-        {
-            log.WriteLine(localizationService.Format(
-                "Не удалось удалить временные файлы завершённого Deploy: {0}",
-                exception));
-        }
-    }
-
-    private void RunHealthCheck(
-        SshClient ssh,
-        KKProject project,
-        string userName,
-        string target,
-        TextWriter log,
-        IProgress<DeploymentProgress>? progress,
-        CancellationToken cancellationToken)
-    {
-        log.WriteLine(localizationService.Format(
-            "Запущен health-check типа {0}.",
-            project.HealthCheckType));
-
-        if (project.HealthCheckType == ProjectHealthCheckType.StabilityDelay)
-        {
-            RunStabilityHealthCheck(ssh, project, log, cancellationToken);
-            return;
-        }
-
-        RunRetryHealthCheck(
-            ssh,
-            project,
-            userName,
-            target,
-            log,
-            progress,
-            cancellationToken);
-    }
-
-    private void RunStabilityHealthCheck(
-        SshClient ssh,
-        KKProject project,
-        TextWriter log,
-        CancellationToken cancellationToken)
-    {
-        var delaySeconds = project.HealthCheckStabilityDelaySeconds ??
-            throw new InvalidOperationException(localizationService.Get(
-                "Настройки health-check проекта неполны."));
-        var initialRestartCount = RunCheckedWithOutput(
-            ssh,
-            $"sudo systemctl show --property=NRestarts --value {Q(project.RemoteServiceName)}",
-            log);
-        var deadline = DateTime.UtcNow.AddSeconds(delaySeconds);
-
-        while (DateTime.UtcNow < deadline)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var remaining = deadline - DateTime.UtcNow;
-            WaitForDelay(
-                remaining < TimeSpan.FromSeconds(1) ?
-                    remaining :
-                    TimeSpan.FromSeconds(1),
-                cancellationToken);
-
-            using var activeResult = Run(
-                ssh,
-                $"sudo systemctl is-active --quiet {Q(project.RemoteServiceName)}",
-                log);
-
-            if (activeResult.ExitStatus != 0)
-            {
-                throw new HealthCheckFailedException(localizationService.Format(
-                    "Сервис не оставался активным в течение {0} секунд.",
-                    delaySeconds));
-            }
-        }
-
-        var finalRestartCount = RunCheckedWithOutput(
-            ssh,
-            $"sudo systemctl show --property=NRestarts --value {Q(project.RemoteServiceName)}",
-            log);
-
-        if (!string.Equals(
-                initialRestartCount,
-                finalRestartCount,
-                StringComparison.Ordinal))
-        {
-            throw new HealthCheckFailedException(localizationService.Format(
-                "Сервис не оставался активным в течение {0} секунд.",
-                delaySeconds));
-        }
-    }
-
-    private void RunRetryHealthCheck(
-        SshClient ssh,
-        KKProject project,
-        string userName,
-        string target,
-        TextWriter log,
-        IProgress<DeploymentProgress>? progress,
-        CancellationToken cancellationToken)
-    {
-        var timeoutSeconds = project.HealthCheckTimeoutSeconds ??
-            throw new InvalidOperationException(localizationService.Get(
-                "Настройки health-check проекта неполны."));
-        var intervalSeconds = project.HealthCheckIntervalSeconds ??
-            throw new InvalidOperationException(localizationService.Get(
-                "Настройки health-check проекта неполны."));
-        var attempts = project.HealthCheckAttempts ??
-            throw new InvalidOperationException(localizationService.Get(
-                "Настройки health-check проекта неполны."));
-        var command = CreateHealthCheckCommand(
-            project,
-            userName,
-            target,
-            timeoutSeconds);
-
-        for (var attempt = 1; attempt <= attempts; attempt++)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var attemptMessage = localizationService.Format(
-                "Health-check: попытка {0} из {1}",
-                attempt,
-                attempts);
-            progress?.Report(new DeploymentProgress(92, attemptMessage));
-            log.WriteLine(attemptMessage);
-
-            try
-            {
-                using var result = Run(
-                    ssh,
-                    command,
-                    log,
-                    TimeSpan.FromSeconds(timeoutSeconds + 5));
-
-                cancellationToken.ThrowIfCancellationRequested();
-
-                if (result.ExitStatus == 0)
+                else
                 {
-                    log.WriteLine(localizationService.Get("Health-check пройден."));
-                    return;
+                    commandRunner.RunChecked(
+                        ssh,
+                        $"sudo chmod u+x -- {Q(staging + "/" + GetExecutableRelativePath(project))}",
+                        log);
                 }
 
-                log.WriteLine(localizationService.Format(
-                    "Попытка health-check завершилась с кодом {0}.",
-                    result.ExitStatus));
-            }
-            catch (Exception exception) when (exception is not OperationCanceledException)
-            {
-                log.WriteLine(localizationService.Format(
-                    "Попытка health-check завершилась ошибкой: {0}",
-                    exception));
-            }
-
-            if (attempt < attempts)
-            {
-                WaitForDelay(TimeSpan.FromSeconds(intervalSeconds), cancellationToken);
-            }
-        }
-
-        throw new HealthCheckFailedException(GetHealthCheckFailureMessage(
-            project.HealthCheckType,
-            attempts));
-    }
-
-    private string CreateHealthCheckCommand(
-        KKProject project,
-        string userName,
-        string target,
-        int timeoutSeconds)
-    {
-        return project.HealthCheckType switch
-        {
-            ProjectHealthCheckType.Http =>
-                "command -v curl >/dev/null && " +
-                $"curl --fail --silent --show-error --location --output /dev/null --max-time {timeoutSeconds} " +
-                Q(project.HealthCheckHttpUrl ?? string.Empty),
-            ProjectHealthCheckType.Tcp =>
-                "command -v timeout >/dev/null && command -v bash >/dev/null && " +
-                $"timeout {timeoutSeconds}s bash -c " +
-                Q($"exec 3<>/dev/tcp/127.0.0.1/{project.HealthCheckTcpPort}"),
-            ProjectHealthCheckType.Command =>
-                "command -v timeout >/dev/null && " +
-                $"sudo -u {Q(userName)} timeout {timeoutSeconds}s sh -lc " +
-                Q($"cd -- {Q(target)} && {project.HealthCheckCommand}"),
-            _ => throw new InvalidOperationException(localizationService.Get(
-                "Выбран неподдерживаемый тип health-check.")),
-        };
-    }
-
-    private string GetHealthCheckFailureMessage(
-        ProjectHealthCheckType healthCheckType,
-        int attempts)
-    {
-        return healthCheckType switch
-        {
-            ProjectHealthCheckType.Http => localizationService.Format(
-                "HTTP health-check не пройден после {0} попыток.",
-                attempts),
-            ProjectHealthCheckType.Tcp => localizationService.Format(
-                "TCP health-check не пройден после {0} попыток.",
-                attempts),
-            ProjectHealthCheckType.Command => localizationService.Format(
-                "Командный health-check не пройден после {0} попыток.",
-                attempts),
-            _ => localizationService.Get("Health-check не пройден."),
-        };
-    }
-
-    private string RestorePreviousVersion(
-        SshClient ssh,
-        KKProject project,
-        string target,
-        string backup,
-        string unitPath,
-        string unitBackup,
-        DeploymentUnitChange unitState,
-        TextWriter log,
-        IProgress<DeploymentProgress>? progress)
-    {
-        var previousVersionExists = Run(
-            ssh,
-            $"sudo test -e {Q(backup)}",
-            log).ExitStatus == 0;
-
-        Run(ssh, $"sudo systemctl stop {Q(project.RemoteServiceName)}", log);
-        RunChecked(ssh, $"sudo rm -rf -- {Q(target)}", log);
-
-        if (previousVersionExists)
-        {
-            RunChecked(ssh, $"sudo mv -- {Q(backup)} {Q(target)}", log);
-        }
-
-        if (unitState == DeploymentUnitChange.Created)
-        {
-            RunChecked(
-                ssh,
-                $"sudo rm -f -- {Q(unitPath)} && sudo systemctl daemon-reload",
-                log);
-        }
-        else if (unitState == DeploymentUnitChange.Changed)
-        {
-            RunChecked(ssh, $"sudo test -f {Q(unitBackup)}", log);
-            RunChecked(
-                ssh,
-                $"sudo install -o root -g root -m 0644 {Q(unitBackup)} {Q(unitPath)} && " +
-                "sudo systemctl daemon-reload",
-                log);
-        }
-
-        if (previousVersionExists && unitState != DeploymentUnitChange.Created)
-        {
-            RunChecked(
-                ssh,
-                $"sudo systemctl restart {Q(project.RemoteServiceName)}",
-                log);
-            RunChecked(
-                ssh,
-                $"sudo systemctl is-active --quiet {Q(project.RemoteServiceName)}",
-                log);
-
-            progress?.Report(new DeploymentProgress(
-                0,
-                localizationService.Get("Предыдущая версия восстановлена и запущена")));
-
-            return localizationService.Get(
-                "Предыдущая версия восстановлена и успешно запущена.");
-        }
-
-        if (previousVersionExists)
-        {
-            progress?.Report(new DeploymentProgress(
-                0,
-                localizationService.Get("Предыдущая версия восстановлена без запуска сервиса")));
-
-            return localizationService.Get(
-                "Предыдущая версия восстановлена, но прежний systemd unit отсутствовал.");
-        }
-
-        progress?.Report(new DeploymentProgress(
-            0,
-            localizationService.Get("Предыдущая версия отсутствует; новая версия удалена")));
-
-        return localizationService.Get(
-            "Предыдущая версия отсутствовала; новая версия остановлена и удалена.");
-    }
-
-    private static void WaitForDelay(
-        TimeSpan delay,
-        CancellationToken cancellationToken)
-    {
-        if (delay <= TimeSpan.Zero)
-        {
-            return;
-        }
-
-        if (cancellationToken.WaitHandle.WaitOne(delay))
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-        }
-    }
-
-    private DeploymentRecoveryResult Recover(
-        KKProject project,
-        RemoteMachineSettings settings,
-        string operationId,
-        DeploymentStage stage,
-        DeploymentUnitChange unitChange,
-        TextWriter log,
-        CancellationToken cancellationToken)
-    {
-        ValidateConnection(settings, project);
-        ValidateOperationId(operationId);
-        cancellationToken.ThrowIfCancellationRequested();
-
-        var target = project.RemoteDeploymentDirectory.TrimEnd('/');
-        var staging = $"{target}.staging-{operationId}";
-        var backup = $"{target}.previous-{operationId}";
-        var remoteArchive = $"/tmp/kk-var-{operationId}.tar.gz";
-        var remoteUnit = $"/tmp/kk-var-{operationId}.service";
-        var unitPath = $"/etc/systemd/system/{project.RemoteServiceName}";
-        var unitBackup = $"/tmp/kk-var-{operationId}.service.backup";
-        var marker = target + "/.kk-var-deployment";
-
-        using var ssh = CreateSshClient(settings);
-
-        var hostKeyValidator = new SshHostKeyValidator(settings.HostKeyFingerprint);
-
-        hostKeyValidator.Attach(ssh);
-        ssh.ConnectionInfo.Timeout = TimeSpan.FromSeconds(15);
-
-        try
-        {
-            ssh.Connect();
-        }
-        catch (Renci.SshNet.Common.SshConnectionException) when (
-            hostKeyValidator.RequiresConfirmation)
-        {
-            throw new InvalidOperationException(localizationService.Get(
-                "Ключ SSH-сервера не совпадает с подтверждённым отпечатком. Проверьте подключение в настройках."));
-        }
-
-        try
-        {
-            RunChecked(ssh, "sudo -n true", log);
-
-            var markerMatches = Run(
-                ssh,
-                $"sudo test -f {Q(marker)} && test \"$(sudo cat {Q(marker)})\" = {Q(operationId)}",
-                log).ExitStatus == 0;
-
-            var serviceIsActive = Run(
-                ssh,
-                $"sudo systemctl is-active --quiet {Q(project.RemoteServiceName)}",
-                log).ExitStatus == 0;
-
-            if (stage == DeploymentStage.Committed && serviceIsActive)
-            {
-                RunChecked(
+                var unitExists = !settings.CleanDeployment && commandRunner.Run(
                     ssh,
-                    $"sudo rm -rf -- {Q(backup)} {Q(staging)} {Q(remoteArchive)} {Q(remoteUnit)} " +
-                    $"{Q(unitBackup)} {Q(marker)}",
-                    log);
-                return new DeploymentRecoveryResult(
-                    DeploymentRecoveryOutcome.NewVersionActive);
-            }
+                    $"sudo test -f {Q(unitPath)}",
+                    log).ExitStatus == 0;
+                if (!unitExists)
+                {
+                    unitState = DeploymentUnitChange.Created;
+                    progress?.Report(new DeploymentProgress(
+                        70,
+                        localizationService.Get("Systemd unit будет создан")));
+                }
+                else if (commandRunner.Run(ssh, $"sudo cmp -s -- {Q(remoteUnit)} {Q(unitPath)}", log).ExitStatus != 0)
+                {
+                    unitState = DeploymentUnitChange.Changed;
+                    commandRunner.RunChecked(ssh, $"sudo cp -- {Q(unitPath)} {Q(unitBackup)}", log);
+                    progress?.Report(new DeploymentProgress(
+                        70,
+                        localizationService.Get("Systemd unit будет обновлён")));
+                }
+                else
+                {
+                    progress?.Report(new DeploymentProgress(
+                        70,
+                        localizationService.Get("Systemd unit не изменился")));
+                }
 
-            if (stage is DeploymentStage.StartingService or
-                DeploymentStage.ServiceStarted or
-                DeploymentStage.HealthChecking)
-            {
-                CaptureFailureDiagnostics(ssh, project, log);
-            }
+                SaveCheckpoint(checkpoint, DeploymentStage.ReadyToSwitch, unitState);
 
-            if (stage < DeploymentStage.SwitchingVersion)
-            {
-                RunChecked(
+                progress?.Report(new DeploymentProgress(
+                    75,
+                    localizationService.Get("Переключение версии")));
+
+                SaveCheckpoint(checkpoint, DeploymentStage.SwitchingVersion, unitState);
+
+                commandRunner.Run(ssh, $"sudo systemctl stop {Q(project.RemoteServiceName)}", log);
+                commandRunner.RunChecked(
                     ssh,
-                    $"sudo rm -rf -- {Q(staging)} {Q(remoteArchive)} {Q(remoteUnit)} {Q(unitBackup)}",
+                    (settings.CleanDeployment ?
+                        $"sudo rm -rf -- {Q(target)} && " :
+                        $"if sudo test -e {Q(target)}; then sudo mv -- {Q(target)} {Q(backup)}; fi && ") +
+                                    $"sudo mv -- {Q(staging)} {Q(target)}",
                     log);
-                return new DeploymentRecoveryResult(
-                    DeploymentRecoveryOutcome.StagingCleaned);
-            }
 
-            var backupExists = Run(
-                ssh,
-                $"sudo test -e {Q(backup)}",
-                log).ExitStatus == 0;
+                targetMoved = true;
+                SaveCheckpoint(checkpoint, DeploymentStage.VersionSwitched, unitState);
 
-            var targetExists = Run(
-                ssh,
-                $"sudo test -e {Q(target)}",
-                log).ExitStatus == 0;
+                SaveCheckpoint(checkpoint, DeploymentStage.UpdatingUnit, unitState);
 
-            var hasPreviousVersion = backupExists || (targetExists && !markerMatches);
+                if (unitState != DeploymentUnitChange.Unchanged)
+                {
+                    commandRunner.RunChecked(ssh, $"sudo systemd-analyze verify {Q(remoteUnit)}", log);
+                    commandRunner.RunChecked(
+                        ssh,
+                        $"sudo install -o root -g root -m 0644 {Q(remoteUnit)} {Q(unitPath)} && sudo systemctl daemon-reload",
+                        log);
+                    progress?.Report(new DeploymentProgress(
+                        82,
+                        localizationService.Get("Systemd перечитал изменённый unit")));
+                }
 
-            Run(
-                ssh,
-                $"sudo systemctl stop {Q(project.RemoteServiceName)}; " +
-                $"if sudo test -f {Q(marker)}; then sudo rm -rf -- {Q(target)}; fi; " +
-                $"if sudo test -e {Q(backup)}; then sudo mv -- {Q(backup)} {Q(target)}; fi",
-                log);
+                SaveCheckpoint(checkpoint, DeploymentStage.UnitUpdated, unitState);
 
-            if (unitChange == DeploymentUnitChange.Created)
-            {
-                RunChecked(
-                    ssh,
-                    $"sudo rm -f -- {Q(unitPath)} && sudo systemctl daemon-reload",
-                    log);
-            }
-            else if (unitChange == DeploymentUnitChange.Changed)
-            {
-                RunChecked(
-                    ssh,
-                    $"if sudo test -f {Q(unitBackup)}; then " +
-                    $"sudo install -o root -g root -m 0644 {Q(unitBackup)} {Q(unitPath)} && " +
-                    "sudo systemctl daemon-reload; fi",
-                    log);
-            }
+                if (commandRunner.Run(ssh, $"sudo systemctl is-enabled {Q(project.RemoteServiceName)}", log).ExitStatus != 0)
+                {
+                    commandRunner.RunChecked(ssh, $"sudo systemctl enable {Q(project.RemoteServiceName)}", log);
+                }
 
-            if (hasPreviousVersion && unitChange != DeploymentUnitChange.Created)
-            {
-                RunChecked(
-                    ssh,
-                    $"sudo systemctl restart {Q(project.RemoteServiceName)}",
-                    log);
-                RunChecked(
+                progress?.Report(new DeploymentProgress(88, localizationService.Get("Запуск systemd-сервиса")));
+
+                SaveCheckpoint(checkpoint, DeploymentStage.StartingService, unitState);
+
+                commandRunner.RunChecked(ssh, $"sudo systemctl restart {Q(project.RemoteServiceName)}", log);
+                commandRunner.RunChecked(
                     ssh,
                     $"sudo systemctl is-active --quiet {Q(project.RemoteServiceName)}",
                     log);
+
+                SaveCheckpoint(checkpoint, DeploymentStage.ServiceStarted, unitState);
+
+                if (project.HealthCheckType == ProjectHealthCheckType.None)
+                {
+                    progress?.Report(new DeploymentProgress(
+                        96,
+                        localizationService.Get("Systemd-сервис успешно запущен")));
+                }
+                else
+                {
+                    SaveCheckpoint(checkpoint, DeploymentStage.HealthChecking, unitState);
+                    healthCheckInProgress = true;
+
+                    progress?.Report(new DeploymentProgress(
+                        92,
+                        localizationService.Get("Проверка health-check")));
+
+                    healthCheckService.RunHealthCheck(
+                        ssh,
+                        project,
+                        settings.UserName!,
+                        target,
+                        log,
+                        progress,
+                        cancellationToken);
+
+                    healthCheckInProgress = false;
+                    progress?.Report(new DeploymentProgress(
+                        96,
+                        localizationService.Get("Health-check пройден")));
+                }
+
+                SaveCheckpoint(checkpoint, DeploymentStage.Committed, unitState);
+
+                recoveryService.CleanupCommittedDeploymentFiles(
+                    ssh,
+                    backup,
+                    remoteArchive,
+                    remoteUnit,
+                    unitBackup,
+                    target + DeploymentConstants.MarkerRelativePath,
+                    log);
+
+                progress?.Report(new DeploymentProgress(
+                    100,
+                    localizationService.Get("Deploy завершён")));
             }
-
-            RunChecked(
-                ssh,
-                $"sudo rm -rf -- {Q(staging)} {Q(remoteArchive)} {Q(remoteUnit)} {Q(unitBackup)}",
-                log);
-
-            return new DeploymentRecoveryResult(
-                hasPreviousVersion && unitChange != DeploymentUnitChange.Created ?
-                    DeploymentRecoveryOutcome.PreviousVersionRestored :
-                    DeploymentRecoveryOutcome.StagingCleaned);
-        }
-        finally
-        {
-            if (ssh.IsConnected)
+            catch (Exception exception)
             {
-                ssh.Disconnect();
+                progress?.Report(new DeploymentProgress(
+                    0,
+                    localizationService.Get(healthCheckInProgress ?
+                        "Health-check не пройден, восстановление предыдущей версии" :
+                        "Ошибка Deploy, восстановление предыдущей версии")));
+
+                log.WriteLine(localizationService.Format(
+                    "Удалённая операция завершилась ошибкой: {0}",
+                    exception));
+
+                string? rollbackResult = null;
+                Exception? rollbackException = null;
+
+                try
+                {
+                    if (targetMoved)
+                    {
+                        commandRunner.CaptureFailureDiagnostics(ssh, project, log);
+
+                        rollbackResult = recoveryService.RestorePreviousVersion(
+                            ssh,
+                            project,
+                            target,
+                            backup,
+                            unitPath,
+                            unitBackup,
+                            unitState,
+                            log,
+                            progress);
+                    }
+                }
+                catch (Exception caughtRollbackException)
+                {
+                    rollbackException = caughtRollbackException;
+                    log.WriteLine(localizationService.Format(
+                        "Автоматический rollback завершился ошибкой: {0}",
+                        caughtRollbackException));
+                }
+
+                if (!targetMoved || rollbackException is null)
+                {
+                    recoveryService.CleanupRemoteOperationFiles(
+                        ssh,
+                        staging,
+                        remoteArchive,
+                        remoteUnit,
+                        unitBackup,
+                        log);
+                }
+                else
+                {
+                    log.WriteLine(localizationService.Get(
+                        "Временные файлы сохранены на удалённой машине для восстановления."));
+                }
+
+                if (!targetMoved)
+                {
+                    throw;
+                }
+
+                if (rollbackException is not null)
+                {
+                    throw new RemoteDeploymentFailureException(localizationService.Format(
+                        "Удалённая операция завершилась ошибкой: {0} Автоматический rollback завершился ошибкой: {1}",
+                        exception.Message,
+                        rollbackException.Message),
+                        new AggregateException(exception, rollbackException), automaticRollbackCompleted: false);
+                }
+
+                log.WriteLine(localizationService.Format(
+                    "Результат автоматического rollback: {0}",
+                    rollbackResult));
+
+                if (exception is OperationCanceledException)
+                {
+                    throw new OperationCanceledException(localizationService.Format(
+                        "Удалённая операция отменена: {0} Результат автоматического rollback: {1}",
+                        exception.Message,
+                        rollbackResult),
+                        exception,
+                        cancellationToken);
+                }
+
+                throw new RemoteDeploymentFailureException(localizationService.Format(
+                    "Удалённая операция завершилась ошибкой: {0} Результат автоматического rollback: {1}",
+                    exception.Message,
+                    rollbackResult),
+                    exception, automaticRollbackCompleted: true);
+            }
+            finally
+            {
+                if (sftp.IsConnected)
+                {
+                    sftp.Disconnect();
+                }
+
+                if (ssh.IsConnected)
+                {
+                    ssh.Disconnect();
+                }
             }
         }
+
+        private static void SaveCheckpoint(
+            Func<DeploymentCheckpoint, Task> checkpoint,
+            DeploymentStage stage,
+            DeploymentUnitChange unitChange) =>
+            checkpoint(new DeploymentCheckpoint(stage, unitChange))
+                .GetAwaiter()
+                .GetResult();
     }
-
-    private static SshCommand Run(
-        SshClient client,
-        string command,
-        TextWriter log,
-        TimeSpan? commandTimeout = null)
-    {
-        log.WriteLine($"> {command}");
-
-        var result = client.CreateCommand(command);
-
-        if (commandTimeout.HasValue)
-        {
-            result.CommandTimeout = commandTimeout.Value;
-        }
-
-        try
-        {
-            result.Execute();
-        }
-        catch
-        {
-            result.Dispose();
-            throw;
-        }
-
-        if (!string.IsNullOrWhiteSpace(result.Result))
-        {
-            log.WriteLine(result.Result.TrimEnd());
-        }
-
-        if (!string.IsNullOrWhiteSpace(result.Error))
-        {
-            log.WriteLine(result.Error.TrimEnd());
-        }
-
-        return result;
-    }
-
-    private void RunChecked(SshClient client, string command, TextWriter log)
-    {
-        using var result = Run(client, command, log);
-
-        if (result.ExitStatus != 0)
-        {
-            var output = string.IsNullOrWhiteSpace(result.Error) ?
-                result.Result :
-                result.Error;
-
-            var message = output.Contains(
-                "ensurepip is not available",
-                StringComparison.OrdinalIgnoreCase) ?
-                    localizationService.Get(
-                        "Не удалось создать виртуальное окружение Python: на удалённой машине отсутствует venv/ensurepip. Для Debian или Ubuntu установите пакет python3-venv.") :
-                    string.IsNullOrWhiteSpace(output) ?
-                        localizationService.Format(
-                            "Удалённая команда завершилась с кодом {0}.",
-                            result.ExitStatus) :
-                        LastUsefulLine(output);
-            throw new InvalidOperationException(message);
-        }
-    }
-
-    private static string LastUsefulLine(string output) => output
-        .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-        .LastOrDefault() ?? string.Empty;
-
-    private string RunCheckedWithOutput(
-        SshClient client,
-        string command,
-        TextWriter log)
-    {
-        using var result = Run(client, command, log);
-        if (result.ExitStatus != 0)
-        {
-            throw new InvalidOperationException(
-                string.IsNullOrWhiteSpace(result.Error) ?
-                    localizationService.Format(
-                        "Удалённая команда завершилась с кодом {0}.",
-                        result.ExitStatus) :
-                    result.Error.Trim());
-        }
-        return result.Result.Trim();
-    }
-
-    private string CreateUnit(KKProject project, string userName)
-    {
-        RejectControlCharacters(userName);
-
-        var directory = project.RemoteDeploymentDirectory.TrimEnd('/');
-        var executable = $"{directory}/{GetExecutableRelativePath(project)}";
-
-        var execStart = IsPythonProject(project) ?
-            $"{UnitQuote(directory + "/.venv/bin/python")} {UnitQuote(executable)}" :
-            UnitQuote(executable);
-
-        return string.Join('\n',
-        [
-            "[Unit]",
-            $"Description={project.EffectiveDescription.Replace("\r", " ").Replace("\n", " ")}",
-            "After=network.target",
-            "",
-            "[Service]",
-            "Type=simple",
-            $"User={userName}",
-            $"WorkingDirectory={UnitPath(directory)}",
-            $"ExecStart={execStart}",
-            "Restart=on-failure",
-            "RestartSec=5",
-            "",
-            "[Install]",
-            "WantedBy=multi-user.target",
-            "",
-        ]);
-    }
-
-    private void Validate(
-        RemoteMachineSettings settings,
-        KKProject project,
-        string artifactPath)
-    {
-        if (!File.Exists(artifactPath))
-        {
-            throw new FileNotFoundException(
-                localizationService.Get("Локальный архив версии не найден."),
-                artifactPath);
-        }
-
-        ValidateConnection(settings, project);
-    }
-
-    private void ValidateConnection(
-        RemoteMachineSettings settings,
-        KKProject project)
-    {
-        if (string.IsNullOrWhiteSpace(settings.Host) ||
-            string.IsNullOrWhiteSpace(settings.UserName))
-        {
-            throw new InvalidOperationException(localizationService.Get(
-                "Удалённая машина не настроена."));
-        }
-
-        if (string.IsNullOrWhiteSpace(settings.HostKeyFingerprint) ||
-            !string.Equals(
-                settings.HostKeyHost,
-                settings.Host.Trim(),
-                StringComparison.OrdinalIgnoreCase) ||
-            settings.HostKeyPort != settings.Port)
-        {
-            throw new InvalidOperationException(localizationService.Get(
-                "Проверьте подключение и подтвердите отпечаток SSH-сервера."));
-        }
-
-        RejectControlCharacters(project.RemoteServiceName);
-        RejectControlCharacters(project.RemoteDeploymentDirectory);
-        RejectControlCharacters(project.RemoteExecutableFileName);
-    }
-
-    private static void ValidateOperationId(string operationId)
-    {
-        if (operationId.Length != 32 ||
-            !Guid.TryParseExact(operationId, "N", out _))
-        {
-            throw new ArgumentException(
-                "Invalid deployment operation identifier.",
-                nameof(operationId));
-        }
-    }
-
-    private static void SaveCheckpoint(
-        Func<DeploymentCheckpoint, Task> checkpoint,
-        DeploymentStage stage,
-        DeploymentUnitChange unitChange) =>
-        checkpoint(new DeploymentCheckpoint(stage, unitChange))
-            .GetAwaiter()
-            .GetResult();
-
-    private void RejectControlCharacters(string value)
-    {
-        if (value.IndexOfAny(['\r', '\n', '\0']) >= 0)
-        {
-            throw new InvalidOperationException(localizationService.Get(
-                "Параметр содержит недопустимые символы."));
-        }
-    }
-
-    private static string Q(string value) =>
-        $"'{value.Replace("'", "'\"'\"'")}'";
-
-    private static string UnitQuote(string value) =>
-        $"\"{value.Replace("\\", "\\\\").Replace("\"", "\\\"")}\"";
-
-    private static string UnitPath(string value) => value
-        .Replace("\\", "\\\\")
-        .Replace(" ", "\\x20")
-        .Replace("\t", "\\t")
-        .Replace("%", "%%");
-
-    private static bool IsPythonProject(KKProject project) =>
-        project.BuildProvider == ProjectBuildProvider.Python ||
-        project.RemoteExecutableFileName.EndsWith(".py", StringComparison.OrdinalIgnoreCase);
-
-    private static string GetExecutableRelativePath(KKProject project) =>
-        project.RemoteExecutableFileName.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) ?
-            project.RemoteExecutableFileName[..^4] :
-        project.RemoteExecutableFileName;
-
-    private static SshClient CreateSshClient(RemoteMachineSettings settings) =>
-        settings.AuthenticationMethod == PasswordAuthentication ?
-            new SshClient(settings.Host!, settings.Port, settings.UserName!, settings.Password!) :
-            new SshClient(
-                settings.Host!,
-                settings.Port,
-                settings.UserName!,
-                new PrivateKeyFile(settings.PrivateKeyPath!));
-
-    private static SftpClient CreateSftpClient(RemoteMachineSettings settings) =>
-        settings.AuthenticationMethod == PasswordAuthentication ?
-            new SftpClient(settings.Host!, settings.Port, settings.UserName!, settings.Password!) :
-            new SftpClient(
-                settings.Host!,
-                settings.Port,
-                settings.UserName!,
-                new PrivateKeyFile(settings.PrivateKeyPath!));
-
-    private sealed class HealthCheckFailedException : InvalidOperationException
-    {
-        public HealthCheckFailedException(string message)
-            : base(message)
-        {
-        }
-    }
-
 }

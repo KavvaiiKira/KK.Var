@@ -1,583 +1,150 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using KK.Var.Enums;
 using KK.Var.Configuration;
+using KK.Var.Constants;
+using KK.Var.Enums;
 using KK.Var.Models;
 using KK.Var.Repositories;
 
-namespace KK.Var.Services.Implementations;
-
-public sealed class DeploymentPreflightService(
-    IKKProjectRepository projectRepository,
-    IKKProjectVersionRepository versionRepository,
-    IKKProjectEnvironmentService environmentService,
-    IGitHubService gitHubService,
-    IGitHubAuthenticationService gitHubAuthenticationService,
-    IRemoteMachineService machineService,
-    IArtifactStorageService artifactStorageService,
-    IDeploymentOperationQueue operationQueue,
-    IRemoteConnectionService remoteConnectionService,
-    ILocalizationService localizationService) : IDeploymentPreflightService
+namespace KK.Var.Services.Implementations
 {
-    private static readonly Regex VersionTagPattern = new Regex(
-        "^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$",
-        RegexOptions.CultureInvariant);
-
-    private static readonly HashSet<string> IgnoredSourceDirectories = new HashSet<string>(
-        [".git", ".vs", ".idea", ".vscode", "bin", "obj", "node_modules", ".venv"],
-        StringComparer.OrdinalIgnoreCase);
-
-    public async Task<DeploymentPreflightResult> CheckAsync(
-        DeploymentRequest request,
-        bool currentOperationOwnsQueue = false,
-        CancellationToken cancellationToken = default,
-        KKProject? operationProject = null)
+    public sealed class DeploymentPreflightService(
+        IKKProjectRepository projectRepository,
+        IKKProjectVersionRepository versionRepository,
+        IKKProjectEnvironmentService environmentService,
+        ISourcePreflightService sourceChecks,
+        IBuildPreflightService buildChecks,
+        IStoragePreflightService storageChecks,
+        IRemoteMachineService machineService,
+        IDeploymentOperationQueue operationQueue,
+        IRemoteConnectionService remoteConnectionService,
+        IPreflightCheckFactory checkFactory,
+        ILocalizationService localizationService) : IDeploymentPreflightService
     {
-        var checks = new List<DeploymentPreflightCheck>();
-        var project = operationProject ?? await projectRepository.GetByIdAsync(
-            request.ProjectId,
-            cancellationToken);
+        private static readonly Regex VersionTagPattern = new Regex(
+            ArtifactConstants.VersionTagPattern,
+            RegexOptions.CultureInvariant);
 
-        if (project is null)
+        public async Task<DeploymentPreflightResult> CheckAsync(
+            DeploymentRequest request,
+            bool currentOperationOwnsQueue = false,
+            CancellationToken cancellationToken = default,
+            KKProject? operationProject = null)
         {
-            checks.Add(Error("project", "Проект не найден."));
-            return new DeploymentPreflightResult(checks);
-        }
+            var checks = new List<DeploymentPreflightCheck>();
+            var project = operationProject ?? await projectRepository.GetByIdAsync(
+                request.ProjectId,
+                cancellationToken);
 
-        checks.Add(!currentOperationOwnsQueue &&
-                   operationQueue.HasActiveOperation(project.Id) ?
-            Error("queue", "Для этого проекта уже есть активная операция.") :
-            Success("queue", "Для проекта нет конфликтующей операции."));
-
-        var tag = request.VersionTag?.Trim() ?? string.Empty;
-        if (!VersionTagPattern.IsMatch(tag))
-        {
-            checks.Add(Error(
-                "version",
-                "Тег версии может содержать только латинские буквы, цифры, точку, дефис и подчёркивание."));
-        }
-        else if (await versionRepository.TagExistsAsync(project.Id, tag, cancellationToken))
-        {
-            checks.Add(new DeploymentPreflightCheck(
-                "version",
-                PreflightStatus.Error,
-                localizationService.Format("Версия «{0}» уже существует.", tag)));
-        }
-        else
-        {
-            checks.Add(Success("version", "Тег новой версии доступен."));
-        }
-
-        RemoteMachineSettings connection;
-        IAsyncDisposable? machineReservation = null;
-        try
-        {
-            machineReservation = await machineService.ReserveAsync(request.RemoteMachineId ?? project.RemoteMachineId, cancellationToken);
-            connection = await machineService.GetConnectionAsync(request.RemoteMachineId ?? project.RemoteMachineId, cancellationToken);
-        }
-        catch (Exception exception)
-        {
-            if (machineReservation is not null)
+            if (project is null)
             {
-                await machineReservation.DisposeAsync();
+                checks.Add(checkFactory.Error(PreflightCheckKeys.Project, "Проект не найден."));
+                return new DeploymentPreflightResult(checks);
             }
-            if (exception is OperationCanceledException)
+
+            checks.Add(!currentOperationOwnsQueue &&
+                       operationQueue.HasActiveOperation(project.Id) ?
+                checkFactory.Error(PreflightCheckKeys.Queue, "Для этого проекта уже есть активная операция.") :
+                checkFactory.Success(PreflightCheckKeys.Queue, "Для проекта нет конфликтующей операции."));
+
+            var tag = request.VersionTag?.Trim() ?? string.Empty;
+            if (!VersionTagPattern.IsMatch(tag))
             {
-                throw;
+                checks.Add(checkFactory.Error(
+                    PreflightCheckKeys.Version,
+                    "Тег версии может содержать только латинские буквы, цифры, точку, дефис и подчёркивание.") with
+                {
+                    VersionError = string.IsNullOrWhiteSpace(tag) ? VersionTagError.Required : VersionTagError.InvalidFormat,
+                });
             }
-            checks.Add(Error("machine", "Профиль машины должен быть проверен и не архивирован.", exception.Message));
-            return new DeploymentPreflightResult(checks);
-        }
-        await using var reservedMachine = machineReservation;
-        var source = await CheckSourceAsync(project, request, checks, cancellationToken);
-        await CheckBuildConfigurationAsync(project, checks, cancellationToken);
+            else if (await versionRepository.TagExistsAsync(project.Id, tag, cancellationToken))
+            {
+                checks.Add(new DeploymentPreflightCheck(
+                    PreflightCheckKeys.Version,
+                    PreflightStatus.Error,
+                    localizationService.Format("Версия «{0}» уже существует.", tag),
+                    VersionError: VersionTagError.AlreadyExists));
+            }
+            else
+            {
+                checks.Add(checkFactory.Success(PreflightCheckKeys.Version, "Тег новой версии доступен."));
+            }
 
-        try
-        {
-            _ = await environmentService.GenerateAsync(project.Id, cancellationToken);
-            checks.Add(Success("environment", "Файл переменных можно сформировать."));
-        }
-        catch (Exception exception) when (exception is not OperationCanceledException)
-        {
-            checks.Add(Error("environment", "Файл переменных некорректен.",
-                exception.Message));
-        }
+            RemoteMachineSettings connection;
+            IAsyncDisposable? machineReservation = null;
+            try
+            {
+                machineReservation = await machineService.ReserveAsync(
+                    request.RemoteMachineId ?? project.RemoteMachineId,
+                    cancellationToken);
+                connection = await machineService.GetConnectionAsync(
+                    request.RemoteMachineId ?? project.RemoteMachineId,
+                    cancellationToken);
+            }
+            catch (Exception exception)
+            {
+                if (machineReservation is not null)
+                {
+                    await machineReservation.DisposeAsync();
+                }
+                if (exception is OperationCanceledException)
+                {
+                    throw;
+                }
+                checks.Add(checkFactory.Error(
+                    PreflightCheckKeys.Machine,
+                    "Профиль машины должен быть проверен и не архивирован.",
+                    exception.Message));
+                return new DeploymentPreflightResult(checks);
+            }
+            await using var reservedMachine = machineReservation;
+            var source = await sourceChecks.CheckSourceAsync(project, request, checks, cancellationToken);
+            await buildChecks.CheckBuildConfigurationAsync(project, checks, cancellationToken);
 
-        const long minimumFreeBytes = 64L * 1024 * 1024;
-        if (source.Bytes > minimumFreeBytes)
-        {
-            checks.Add(Warning(
-                "space-estimate",
-                "Итоговый размер сборки неизвестен; проверен минимальный запас места."));
-        }
+            try
+            {
+                _ = await environmentService.GenerateAsync(project.Id, cancellationToken);
+                checks.Add(checkFactory.Success(PreflightCheckKeys.Environment, "Файл переменных можно сформировать."));
+            }
+            catch (Exception exception) when (exception is not OperationCanceledException)
+            {
+                checks.Add(checkFactory.Error(
+                    PreflightCheckKeys.Environment,
+                    "Файл переменных некорректен.",
+                    exception.Message));
+            }
 
-        CheckRemotePath(project, checks);
-        await CheckLocalStorageAsync(checks, minimumFreeBytes, cancellationToken);
+            const long minimumFreeBytes = 64L * 1024 * 1024;
+            if (source.Bytes > minimumFreeBytes)
+            {
+                checks.Add(checkFactory.Warning(
+                    PreflightCheckKeys.SpaceEstimate,
+                    "Итоговый размер сборки неизвестен; проверен минимальный запас места."));
+            }
 
-        if (checks.Any(check =>
-                check.Key == "remote-path" && check.Status == PreflightStatus.Error))
-        {
+            storageChecks.CheckRemotePath(project, checks);
+            await storageChecks.CheckLocalStorageAsync(checks, minimumFreeBytes, cancellationToken);
+
+            if (checks.Any(check =>
+                    check.Key == PreflightCheckKeys.RemotePath && check.Status == PreflightStatus.Error))
+            {
+                return new DeploymentPreflightResult(checks, source.CommitSha);
+            }
+
+            var remoteChecks = await remoteConnectionService.CheckDeploymentAsync(
+                connection,
+                project.RemoteDeploymentDirectory,
+                minimumFreeBytes,
+                project.BuildProvider == ProjectBuildProvider.Python ||
+                                project.RemoteExecutableFileName.EndsWith(BuildConstants.PythonScriptExtension, StringComparison.OrdinalIgnoreCase),
+                cancellationToken);
+            checks.AddRange(remoteChecks);
+
             return new DeploymentPreflightResult(checks, source.CommitSha);
         }
-
-        var remoteChecks = await remoteConnectionService.CheckDeploymentAsync(
-            connection,
-            project.RemoteDeploymentDirectory,
-            minimumFreeBytes,
-            project.BuildProvider == ProjectBuildProvider.Python ||
-                project.RemoteExecutableFileName.EndsWith(".py", StringComparison.OrdinalIgnoreCase),
-            cancellationToken);
-        checks.AddRange(remoteChecks);
-
-        return new DeploymentPreflightResult(checks, source.CommitSha);
     }
-
-    private async Task<(long Bytes, string? CommitSha)> CheckSourceAsync(
-        KKProject project,
-        DeploymentRequest request,
-        List<DeploymentPreflightCheck> checks,
-        CancellationToken cancellationToken)
-    {
-        if (project.SourceType == ProjectSourceType.LocalDirectory)
-        {
-            try
-            {
-                var path = project.LocalDirectoryPath;
-                if (string.IsNullOrWhiteSpace(path) ||
-                    !Path.IsPathFullyQualified(path) ||
-                    !Directory.Exists(path))
-                {
-                    throw new DirectoryNotFoundException(path);
-                }
-
-                var bytes = await Task.Run(
-                    () => EstimateSourceBytes(path, cancellationToken),
-                    cancellationToken);
-
-                checks.Add(Success("source", "Локальный исходный каталог доступен."));
-                return (bytes, null);
-            }
-            catch (Exception exception) when (exception is not OperationCanceledException)
-            {
-                checks.Add(Error("source", "Локальный исходный каталог недоступен.",
-                    exception.Message));
-                return (0, null);
-            }
-        }
-
-        if (project.SourceType == ProjectSourceType.GitHubRepository)
-        {
-            try
-            {
-                var token = await gitHubAuthenticationService.GetTokenAsync(cancellationToken) ??
-                    throw new InvalidOperationException(localizationService.Get(
-                        "Подключите GitHub в настройках перед сборкой проекта."));
-                var commit = request.SourceCommitSha is not null ?
-                    await gitHubService.GetCommitAsync(project.GitHubRepositoryFullName ?? string.Empty,
-                        request.SourceCommitSha, token.AccessToken, cancellationToken) :
-                    await gitHubService.GetBranchCommitAsync(project.GitHubRepositoryFullName ?? string.Empty,
-                        request.GitHubBranch ?? project.GitHubBranch, token.AccessToken, cancellationToken);
-                var commitSha = commit.Sha;
-                checks.Add(Success("source", "GitHub-репозиторий доступен.", commitSha));
-                checks.Add(Warning("source-size", "Размер GitHub-архива станет известен после загрузки."));
-                return (0, commitSha);
-            }
-            catch (Exception exception) when (exception is not OperationCanceledException)
-            {
-                checks.Add(Error("source", "GitHub-репозиторий недоступен.",
-                    exception.Message));
-            }
-
-            return (0, null);
-        }
-
-        checks.Add(Error("source", "Тип источника проекта недопустим."));
-        return (0, null);
-    }
-
-    private async Task CheckBuildConfigurationAsync(
-        KKProject project,
-        List<DeploymentPreflightCheck> checks,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            var configuration = JsonSerializer.Deserialize<ProjectBuildConfiguration>(
-                project.BuildConfigurationJson,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ??
-                throw new JsonException("Build configuration is empty.");
-
-            if (configuration.BuildArguments is null ||
-                configuration.ConfigureArguments is null ||
-                configuration.Environment is null ||
-                configuration.BuildArguments.Any(argument => argument is null) ||
-                configuration.ConfigureArguments.Any(argument => argument is null))
-            {
-                throw new InvalidDataException("Build arguments or environment are invalid.");
-            }
-
-            var provider = project.BuildProvider;
-            if (provider == ProjectBuildProvider.Unknown &&
-                project.SourceType == ProjectSourceType.LocalDirectory &&
-                !string.IsNullOrWhiteSpace(project.LocalDirectoryPath) &&
-                Directory.Exists(project.LocalDirectoryPath))
-            {
-                provider = DetectProvider(BuildConfigurationHelper.ResolveSourcePath(
-                    project.LocalDirectoryPath, configuration.WorkingDirectory ?? "."));
-            }
-
-            var sourceRoot = project.SourceType == ProjectSourceType.LocalDirectory ?
-                project.LocalDirectoryPath :
-                null;
-            BuildConfigurationHelper.Validate(configuration, provider, sourceRoot);
-
-            if (provider == ProjectBuildProvider.Unknown)
-            {
-                checks.Add(Warning("build", "Способ сборки будет определён после загрузки исходников."));
-                return;
-            }
-
-            if (sourceRoot is null)
-            {
-                checks.Add(Warning(
-                    "build-source",
-                    "Входные файлы сборки будут проверены после загрузки GitHub-архива."));
-            }
-
-            if (sourceRoot is not null && !Directory.Exists(sourceRoot))
-            {
-                return;
-            }
-
-            if (sourceRoot is not null)
-            {
-                var buildRoot = BuildConfigurationHelper.ResolveSourcePath(
-                    sourceRoot, configuration.WorkingDirectory ?? ".");
-                var hasInputs = provider switch
-                {
-                    ProjectBuildProvider.DotNet =>
-                        !string.IsNullOrWhiteSpace(configuration.DotNetProjectPath) ||
-                        Directory.EnumerateFiles(buildRoot, "*.csproj",
-                            SearchOption.AllDirectories).Any(),
-                    ProjectBuildProvider.Go =>
-                        File.Exists(Path.Combine(buildRoot, "go.mod")),
-                    ProjectBuildProvider.Python =>
-                        File.Exists(Path.Combine(buildRoot,
-                            project.RemoteExecutableFileName.Replace('/',
-                                Path.DirectorySeparatorChar))),
-                    ProjectBuildProvider.Cpp =>
-                        File.Exists(Path.Combine(buildRoot, "CMakeLists.txt")),
-                    _ => true,
-                };
-                if (!hasInputs)
-                {
-                    throw new FileNotFoundException(localizationService.Get(
-                        "Не найдены входные файлы выбранного способа сборки."));
-                }
-            }
-
-            if (provider == ProjectBuildProvider.Custom &&
-                string.IsNullOrWhiteSpace(configuration.Command))
-            {
-                throw new InvalidDataException(localizationService.Get(
-                    "Укажите команду пользовательской сборки."));
-            }
-
-            if (provider == ProjectBuildProvider.Cpp &&
-                string.IsNullOrWhiteSpace(configuration.ToolchainFile))
-            {
-                throw new InvalidDataException(localizationService.Get(
-                    "Укажите существующий CMake toolchain-файл для сборки C++ под Linux."));
-            }
-
-            if (provider == ProjectBuildProvider.Cpp &&
-                sourceRoot is not null &&
-                !string.IsNullOrWhiteSpace(configuration.ToolchainFile))
-            {
-                var toolchain = configuration.ToolchainFile.Replace(
-                    "{source}", sourceRoot, StringComparison.Ordinal);
-                if (toolchain.Contains('{'))
-                {
-                    checks.Add(Warning(
-                        "toolchain",
-                        "Путь к toolchain будет проверен после подстановки параметров сборки."));
-                }
-
-                if (!toolchain.Contains('{') &&
-                    !File.Exists(Path.GetFullPath(Path.IsPathRooted(toolchain) ?
-                        toolchain :
-                        Path.Combine(sourceRoot, toolchain))))
-                {
-                    throw new FileNotFoundException(toolchain);
-                }
-            }
-
-            var tool = provider switch
-            {
-                ProjectBuildProvider.DotNet => "dotnet",
-                ProjectBuildProvider.Go => "go",
-                ProjectBuildProvider.Cpp => "cmake",
-                ProjectBuildProvider.Custom => configuration.Command,
-                _ => null,
-            };
-
-            if (tool?.Contains('{') == true)
-            {
-                checks.Add(Warning(
-                    "build-tool",
-                    "Команда сборки будет проверена после подстановки параметров."));
-            }
-
-            if (tool is not null &&
-                !tool.Contains('{') &&
-                !ToolExists(tool, sourceRoot))
-            {
-                throw new FileNotFoundException(localizationService.Format(
-                    "Инструмент сборки «{0}» не найден.", tool));
-            }
-
-            if (provider == ProjectBuildProvider.DotNet &&
-                !await HasDotNetSdkAsync(cancellationToken))
-            {
-                throw new InvalidOperationException(localizationService.Get(
-                    ".NET SDK не найден. Установите .NET SDK и перезапустите KK.Var."));
-            }
-
-            if (provider == ProjectBuildProvider.Cpp &&
-                (string.IsNullOrWhiteSpace(configuration.CmakeGenerator) ||
-                 configuration.CmakeGenerator.Equals("Ninja", StringComparison.OrdinalIgnoreCase)) &&
-                !ToolExists("ninja"))
-            {
-                throw new FileNotFoundException(localizationService.Get(
-                    "Ninja не найден."));
-            }
-
-            checks.Add(Success("build", "Build-конфигурация и локальный инструмент проверены."));
-        }
-        catch (Exception exception) when (exception is not OperationCanceledException)
-        {
-            checks.Add(Error("build", "Build-конфигурация или инструмент недоступны.",
-                exception.Message));
-        }
-    }
-
-    private async Task CheckLocalStorageAsync(
-        List<DeploymentPreflightCheck> checks,
-        long minimumFreeBytes,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            var root = await artifactStorageService.GetEffectiveRootAsync(cancellationToken);
-            Directory.CreateDirectory(root);
-            var probe = Path.Combine(root, $".kk-var-preflight-{Guid.NewGuid():N}.tmp");
-            try
-            {
-                await using var stream = new FileStream(
-                    probe,
-                    FileMode.CreateNew,
-                    FileAccess.Write,
-                    FileShare.None);
-                await stream.WriteAsync(new byte[] { 0 }, cancellationToken);
-            }
-            finally
-            {
-                if (File.Exists(probe))
-                {
-                    File.Delete(probe);
-                }
-            }
-
-            var drive = new DriveInfo(Path.GetPathRoot(root) ?? root);
-            checks.Add(new DeploymentPreflightCheck(
-                "local-space",
-                drive.AvailableFreeSpace >= minimumFreeBytes ?
-                    PreflightStatus.Success :
-                    PreflightStatus.Error,
-                localizationService.Get(drive.AvailableFreeSpace >= minimumFreeBytes ?
-                    "Локальный архив можно создать; свободное место проверено." :
-                    "Недостаточно места для локального архива."),
-                localizationService.Format("Доступно байт: {0}; требуется минимум: {1}.",
-                    drive.AvailableFreeSpace,
-                    minimumFreeBytes)));
-        }
-        catch (Exception exception) when (exception is not OperationCanceledException)
-        {
-            checks.Add(Error("local-space", "Не удалось подготовить локальный архив.",
-                exception.Message));
-        }
-    }
-
-    private void CheckRemotePath(
-        KKProject project,
-        List<DeploymentPreflightCheck> checks)
-    {
-        var path = project.RemoteDeploymentDirectory;
-        var segments = path?.Split('/', StringSplitOptions.RemoveEmptyEntries) ?? [];
-        var restricted = new[]
-        {
-            "/bin/", "/boot/", "/dev/", "/etc/", "/lib/", "/lib64/",
-            "/proc/", "/run/", "/sbin/", "/sys/", "/usr/bin/",
-            "/usr/lib/", "/usr/lib64/", "/usr/sbin/", "/usr/share/",
-        };
-        var valid = !string.IsNullOrWhiteSpace(path) &&
-            path.StartsWith("/", StringComparison.Ordinal) &&
-            path.IndexOfAny(['\0', '\r', '\n']) < 0 &&
-            segments.Length >= 2 &&
-            !(segments[0].Equals("home", StringComparison.OrdinalIgnoreCase) &&
-              segments.Length < 3) &&
-            !segments.Any(segment => segment is "." or "..") &&
-            !restricted.Any(prefix =>
-                (path.TrimEnd('/') + "/").StartsWith(
-                    prefix,
-                    StringComparison.OrdinalIgnoreCase)) &&
-            IsSafeRelativeFilePath(project.ProjectEnvironmentFilePath) &&
-            IsSafeRelativeFilePath(project.RemoteExecutableFileName);
-
-        checks.Add(valid ?
-            Success("remote-path", "Удалённый путь безопасен для Deploy.") :
-            Error("remote-path", "Удалённый путь Deploy небезопасен."));
-    }
-
-    private static bool IsSafeRelativeFilePath(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value) ||
-            Path.IsPathRooted(value) ||
-            value.IndexOfAny(['\0', '\r', '\n']) >= 0)
-        {
-            return false;
-        }
-
-        return value.Replace('\\', '/').Split('/')
-            .All(segment => !string.IsNullOrWhiteSpace(segment) &&
-                segment is not ("." or ".."));
-    }
-
-    private static ProjectBuildProvider DetectProvider(string sourceDirectory) =>
-        BuildConfigurationHelper.DetectProvider(sourceDirectory);
-
-    private static long EstimateSourceBytes(
-        string root,
-        CancellationToken cancellationToken)
-    {
-        var pending = new Stack<string>();
-        pending.Push(root);
-        var bytes = 0L;
-
-        while (pending.Count > 0)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            var directory = pending.Pop();
-
-            foreach (var file in Directory.EnumerateFiles(directory))
-            {
-                var info = new FileInfo(file);
-                if ((info.Attributes & FileAttributes.ReparsePoint) == 0)
-                {
-                    bytes = checked(bytes + info.Length);
-                }
-            }
-
-            foreach (var child in Directory.EnumerateDirectories(directory))
-            {
-                var info = new DirectoryInfo(child);
-                if (!IgnoredSourceDirectories.Contains(info.Name) &&
-                    (info.Attributes & FileAttributes.ReparsePoint) == 0)
-                {
-                    pending.Push(child);
-                }
-            }
-        }
-
-        return bytes;
-    }
-
-    private static bool ToolExists(string tool, string? sourceRoot = null)
-    {
-        if (Path.IsPathFullyQualified(tool))
-        {
-            return File.Exists(tool);
-        }
-
-        if (tool.IndexOfAny([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar]) >= 0)
-        {
-            return File.Exists(Path.GetFullPath(Path.Combine(
-                sourceRoot ?? Directory.GetCurrentDirectory(), tool)));
-        }
-
-        var extensions = OperatingSystem.IsWindows() ?
-            new[] { ".exe", ".cmd", ".bat", string.Empty } :
-            new[] { string.Empty };
-        foreach (var directory in (Environment.GetEnvironmentVariable("PATH") ?? string.Empty)
-                     .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
-        {
-            foreach (var extension in extensions)
-            {
-                if (File.Exists(Path.Combine(directory.Trim('"'), tool + extension)))
-                {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    private static async Task<bool> HasDotNetSdkAsync(CancellationToken cancellationToken)
-    {
-        var startInfo = new ProcessStartInfo
-        {
-            FileName = "dotnet",
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-        };
-        startInfo.ArgumentList.Add("--list-sdks");
-
-        using var process = Process.Start(startInfo) ??
-            throw new InvalidOperationException("The dotnet process could not be started.");
-        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        timeout.CancelAfter(TimeSpan.FromSeconds(10));
-
-        try
-        {
-            var outputTask = process.StandardOutput.ReadToEndAsync(timeout.Token);
-            var errorTask = process.StandardError.ReadToEndAsync(timeout.Token);
-            await process.WaitForExitAsync(timeout.Token);
-            var output = await outputTask;
-            _ = await errorTask;
-            return process.ExitCode == 0 && !string.IsNullOrWhiteSpace(output);
-        }
-        catch (OperationCanceledException)
-        {
-            if (!process.HasExited)
-            {
-                process.Kill(entireProcessTree: true);
-            }
-
-            cancellationToken.ThrowIfCancellationRequested();
-            return false;
-        }
-    }
-
-    private DeploymentPreflightCheck Success(string key, string message, string? detail = null) =>
-        new DeploymentPreflightCheck(key, PreflightStatus.Success,
-            localizationService.Get(message), detail);
-
-    private DeploymentPreflightCheck Warning(string key, string message, string? detail = null) =>
-        new DeploymentPreflightCheck(key, PreflightStatus.Warning,
-            localizationService.Get(message), detail);
-
-    private DeploymentPreflightCheck Error(string key, string message, string? detail = null) =>
-        new DeploymentPreflightCheck(key, PreflightStatus.Error,
-            localizationService.Get(message), detail);
-
 }

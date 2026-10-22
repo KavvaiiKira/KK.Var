@@ -4,96 +4,103 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using KK.Var.Enums;
 using KK.Var.Models;
 
-namespace KK.Var.ViewModels;
-
-public partial class MainViewModel
+namespace KK.Var.ViewModels
 {
-    private bool _loadingNotificationPreference;
-    public event Action<DeploymentCompletionNotice>? DeploymentCompleted;
-
-    [ObservableProperty]
-    public partial bool DeploymentNotificationsEnabled { get; set; } = true;
-
-    public async Task<bool> OpenNotificationTargetAsync(DeploymentCompletionNotice notice)
+    public partial class MainViewModel
     {
-        if (_projectService is null || _projectDeploymentService is null)
+        public event Action<DeploymentCompletionNotice>? DeploymentCompleted;
+
+        public async Task<bool> OpenNotificationTargetAsync(DeploymentCompletionNotice notice)
         {
-            return false;
-        }
-        try
-        {
-            var project = await _projectService.GetByIdAsync(notice.ProjectId) ??
-                throw new InvalidOperationException(Localize("Проект не найден."));
-            SelectedProject = project;
-            await LoadProjectDetailsAsync(project);
-            if (notice.DeploymentId is { } deploymentId)
+            try
             {
-                var deployment = await _projectDeploymentService.GetByIdAsync(deploymentId) ??
-                    throw new InvalidOperationException(Localize("Операция больше недоступна."));
-                if (deployment.KKProjectId != project.Id)
+                var project = await ProjectList.GetByIdAsync(notice.ProjectId) ??
+                    throw new InvalidOperationException(Localize("Проект не найден."));
+                SelectedProject = project;
+                await LoadProjectDetailsAsync(project);
+                if (notice.DeploymentId is { } deploymentId)
                 {
-                    throw new InvalidOperationException(Localize("Операция больше недоступна."));
+                    var deployment = await _deploymentHistory.GetByIdAsync(deploymentId) ??
+                        throw new InvalidOperationException(Localize("Операция больше недоступна."));
+                    if (deployment.KKProjectId != project.Id)
+                    {
+                        throw new InvalidOperationException(Localize("Операция больше недоступна."));
+                    }
+                    deployment.Project = project;
+                    await LoadDeploymentDetailsAsync(new DeploymentHistoryItemViewModel(
+                        deployment,
+                        _localizationService));
                 }
-                deployment.Project = project;
-                await LoadDeploymentDetailsAsync(new DeploymentHistoryItemViewModel(deployment, _localizationService));
+                return true;
             }
-            return true;
+            catch (Exception exception)
+            {
+                PublishNotification(Localize(exception.Message), isError: true);
+                return false;
+            }
         }
-        catch (Exception exception)
-        {
-            PublishNotification(exception.Message, isError: true);
-            return false;
-        }
-    }
 
-    public string NotificationTitle(DeploymentCompletionNotice notice)
-    {
-        if (notice.AutomaticRollbackFailed)
+        public string NotificationTitle(DeploymentCompletionNotice notice)
         {
-            return Localize("Ошибка Deploy и автоматического rollback");
+            if (notice.AutomaticRollbackFailed)
+            {
+                return Localize("Ошибка Deploy и автоматического rollback");
+            }
+            if (notice.AutomaticRollbackCompleted)
+            {
+                return Localize("Ошибка Deploy: автоматический rollback выполнен");
+            }
+            return (notice.OperationType, notice.Status) switch
+            {
+                (DeploymentOperationType.Rollback, DeploymentStatus.Succeeded) => Localize("Rollback завершён"),
+                (DeploymentOperationType.Rollback, _) => Localize("Rollback завершился ошибкой"),
+                (_, DeploymentStatus.Succeeded) => Localize("Deploy завершён"),
+                _ => Localize("Deploy завершился ошибкой"),
+            };
         }
-        if (notice.AutomaticRollbackCompleted)
-        {
-            return Localize("Ошибка Deploy: автоматический rollback выполнен");
-        }
-        return (notice.OperationType, notice.Status) switch
-        {
-            (DeploymentOperationType.Rollback, DeploymentStatus.Succeeded) => Localize("Rollback завершён"),
-            (DeploymentOperationType.Rollback, _) => Localize("Rollback завершился ошибкой"),
-            (_, DeploymentStatus.Succeeded) => Localize("Deploy завершён"),
-            _ => Localize("Deploy завершился ошибкой"),
-        };
-    }
 
-    partial void OnDeploymentNotificationsEnabledChanged(bool value)
-    {
-        Settings.DeploymentNotificationsEnabled = value;
-        if (!_loadingNotificationPreference)
-        {
-            _ = SaveNotificationPreferenceAsync(value);
-        }
-    }
+        [ObservableProperty]
+        public partial string NotificationMessage { get; set; } = string.Empty;
 
-    private void LoadNotificationPreference()
-    {
-        _loadingNotificationPreference = true;
-        DeploymentNotificationsEnabled = Settings.DeploymentNotificationsEnabled;
-        _loadingNotificationPreference = false;
-    }
+        [ObservableProperty]
+        public partial bool IsNotificationError { get; set; }
 
-    private async Task SaveNotificationPreferenceAsync(bool enabled)
-    {
-        if (_userSettingsService is null)
+        public bool HasNotification => !string.IsNullOrWhiteSpace(NotificationMessage);
+
+        public bool HasErrorNotification => HasNotification && IsNotificationError;
+
+        public bool HasSuccessNotification => HasNotification && !IsNotificationError;
+
+        public void ClearStatusNotification()
         {
-            return;
+            _versionTagError = null;
+            _failedVersionTag = null;
+            NotificationMessage = string.Empty;
+            IsNotificationError = false;
         }
-        try
+
+        public void ShowNotification(string message, bool isError) =>
+            PublishNotification(message, isError);
+
+        partial void OnNotificationMessageChanged(string value)
         {
-            await _userSettingsService.SaveDeploymentNotificationsEnabledAsync(enabled);
+            OnPropertyChanged(nameof(HasNotification));
+            OnPropertyChanged(nameof(HasErrorNotification));
+            OnPropertyChanged(nameof(HasSuccessNotification));
         }
-        catch (Exception exception)
+
+        partial void OnIsNotificationErrorChanged(bool value)
         {
-            PublishNotification(exception.Message, isError: true);
+            OnPropertyChanged(nameof(HasErrorNotification));
+            OnPropertyChanged(nameof(HasSuccessNotification));
+        }
+
+        private void PublishNotification(string message, bool isError)
+        {
+            _versionTagError = null;
+            _failedVersionTag = null;
+            IsNotificationError = isError;
+            NotificationMessage = message;
         }
     }
 }

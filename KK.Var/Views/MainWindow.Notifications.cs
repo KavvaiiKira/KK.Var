@@ -7,108 +7,116 @@ using KK.Var.Models;
 using KK.Var.Services.Implementations;
 using KK.Var.ViewModels;
 
-namespace KK.Var.Views;
-
-public partial class MainWindow
+namespace KK.Var.Views
 {
-    private WindowsDeploymentNotifications? _windowsNotifications;
-    private MainViewModel? _notificationViewModel;
-    private DeploymentCompletionNotice? _pendingNotificationNavigation;
-
-    private void InitializeDeploymentNotifications(MainViewModel viewModel)
+    public partial class MainWindow
     {
-        _notificationViewModel = viewModel;
-        _windowsNotifications = new WindowsDeploymentNotifications(TryGetPlatformHandle()?.Handle ?? 0,
-            notice => Dispatcher.UIThread.Post(() => NavigateNotification(notice)));
-        viewModel.DeploymentCompleted += DeploymentCompleted;
-        viewModel.PropertyChanged += NotificationSettingsChanged;
-    }
+        private WindowsDeploymentNotifications? _windowsNotifications;
 
-    private void NotificationSettingsChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(MainViewModel.DeploymentNotificationsEnabled) &&
-            _notificationViewModel?.DeploymentNotificationsEnabled == false)
+        private MainViewModel? _notificationViewModel;
+
+        private DeploymentCompletionNotice? _pendingNotificationNavigation;
+
+        private void InitializeDeploymentNotifications(MainViewModel viewModel)
         {
-            _windowsNotifications?.Clear();
+            _notificationViewModel = viewModel;
+            _windowsNotifications = new WindowsDeploymentNotifications(
+                TryGetPlatformHandle()?.Handle ?? 0,
+                notice => Dispatcher.UIThread.Post(() => NavigateNotification(notice)),
+                _notificationLogger);
+            viewModel.DeploymentCompleted += DeploymentCompleted;
+            viewModel.AppSettings.PropertyChanged += NotificationSettingsChanged;
         }
-    }
 
-    private void DeploymentCompleted(DeploymentCompletionNotice notice)
-    {
-        if (_notificationViewModel is not { DeploymentNotificationsEnabled: true } viewModel)
+        private void NotificationSettingsChanged(object? sender, PropertyChangedEventArgs e)
         {
-            return;
-        }
-        var isCurrentDetails = DeploymentDetailsPage.IsVisible && notice.DeploymentId is { } id &&
-            viewModel.SelectedDeploymentDetails?.Deployment.Id == id;
-        var isCurrentDeploy = ProjectDetailsPage.IsVisible && ProjectDetailsPage.IsDeploySectionVisible &&
-            viewModel.SelectedProject?.Id == notice.ProjectId;
-        if (IsActive && WindowState != WindowState.Minimized && (isCurrentDetails || isCurrentDeploy))
-        {
-            return;
-        }
-        _windowsNotifications?.Show(notice, "KK.Var — " + viewModel.NotificationTitle(notice),
-            string.IsNullOrWhiteSpace(notice.ProjectName) ?
-                viewModel.Localize("Откройте подробности операции.") : notice.ProjectName);
-    }
-
-    private async void NavigateNotification(DeploymentCompletionNotice notice)
-    {
-        try
-        {
-            Show();
-            if (WindowState == WindowState.Minimized)
+            if (e.PropertyName == nameof(ApplicationSettingsViewModel.DeploymentNotificationsEnabled) &&
+                _notificationViewModel?.AppSettings.DeploymentNotificationsEnabled == false)
             {
-                WindowState = WindowState.Normal;
+                _windowsNotifications?.Clear();
             }
-            Activate();
-            if (ProjectDetailsPage.IsVisible &&
-                !ProjectDetailsPage.CanNavigateAway(() => NavigateNotification(notice)))
+        }
+
+        private void DeploymentCompleted(DeploymentCompletionNotice notice)
+        {
+            if (_notificationViewModel is not { AppSettings.DeploymentNotificationsEnabled: true } viewModel)
             {
                 return;
             }
-            if (CreateProjectPage.IsVisible)
+            var isCurrentDetails = DeploymentDetailsPage.IsVisible && notice.DeploymentId is { } id &&
+                viewModel.SelectedDeploymentDetails?.Deployment.Id == id;
+            var isCurrentDeploy = ProjectDetailsPage.IsVisible && ProjectDetailsPage.IsDeploySectionVisible &&
+                viewModel.SelectedProject?.Id == notice.ProjectId;
+            if (IsActive && WindowState != WindowState.Minimized && (isCurrentDetails || isCurrentDeploy))
             {
-                _pendingNotificationNavigation = notice;
-                CreateProjectPage.RequestClose();
                 return;
             }
-            await ShowNotificationTargetAsync(notice);
+            _windowsNotifications?.Show(
+                notice,
+                "KK.Var — " + viewModel.NotificationTitle(notice),
+                string.IsNullOrWhiteSpace(notice.ProjectName) ?
+                    viewModel.Localize("Откройте подробности операции.") :
+                    notice.ProjectName);
         }
-        catch (Exception exception)
-        {
-            _notificationViewModel?.ShowNotification(exception.Message, isError: true);
-        }
-    }
 
-    private async Task ShowNotificationTargetAsync(DeploymentCompletionNotice notice)
-    {
-        if (_notificationViewModel is not { } viewModel || !await viewModel.OpenNotificationTargetAsync(notice))
+        private async void NavigateNotification(DeploymentCompletionNotice notice)
         {
-            return;
+            try
+            {
+                Show();
+                if (WindowState == WindowState.Minimized)
+                {
+                    WindowState = WindowState.Normal;
+                }
+                Activate();
+                if (ProjectDetailsPage.IsVisible &&
+                    !ProjectDetailsPage.CanNavigateAway(() => NavigateNotification(notice)))
+                {
+                    return;
+                }
+                if (CreateProjectPage.IsVisible)
+                {
+                    _pendingNotificationNavigation = notice;
+                    CreateProjectPage.RequestClose();
+                    return;
+                }
+                await ShowNotificationTargetAsync(notice);
+            }
+            catch (Exception exception)
+            {
+                _notificationViewModel?.ShowNotification(_localizationService.Get(exception.Message), isError: true);
+            }
         }
-        _showSettingsAfterProjectEditorClose = false;
-        _showHistoryAfterProjectEditorClose = false;
-        _deploymentDetailsReturnToProject = true;
-        if (notice.DeploymentId is not null)
-        {
-            ShowDeploymentDetailsPage();
-        }
-        else
-        {
-            ProjectDetailsPage.ShowDeploySection(prepare: false);
-            ShowProjectDetailsPage();
-        }
-    }
 
-    protected override void OnClosed(EventArgs e)
-    {
-        if (_notificationViewModel is { } viewModel)
+        private async Task ShowNotificationTargetAsync(DeploymentCompletionNotice notice)
         {
-            viewModel.DeploymentCompleted -= DeploymentCompleted;
-            viewModel.PropertyChanged -= NotificationSettingsChanged;
+            if (_notificationViewModel is not { } viewModel || !await viewModel.OpenNotificationTargetAsync(notice))
+            {
+                return;
+            }
+            _showSettingsAfterProjectEditorClose = false;
+            _showHistoryAfterProjectEditorClose = false;
+            _deploymentDetailsReturnToProject = true;
+            if (notice.DeploymentId is not null)
+            {
+                ShowDeploymentDetailsPage();
+            }
+            else
+            {
+                ProjectDetailsPage.ShowDeploySection(prepare: false);
+                ShowProjectDetailsPage();
+            }
         }
-        _windowsNotifications?.Dispose();
-        base.OnClosed(e);
+
+        protected override void OnClosed(EventArgs e)
+        {
+            if (_notificationViewModel is { } viewModel)
+            {
+                viewModel.DeploymentCompleted -= DeploymentCompleted;
+                viewModel.AppSettings.PropertyChanged -= NotificationSettingsChanged;
+            }
+            _windowsNotifications?.Dispose();
+            base.OnClosed(e);
+        }
     }
 }

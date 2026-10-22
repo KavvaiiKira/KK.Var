@@ -1,466 +1,463 @@
 using System;
-using System.Linq;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Threading;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
+using KK.Var.Constants;
 using KK.Var.ViewModels;
 
-namespace KK.Var.Views.Pages;
-
-public partial class ProjectDetailsView : UserControl
+namespace KK.Var.Views.Pages
 {
-    private Action? _pendingNavigation;
-    private ProjectVersionItemViewModel? _versionPendingDelete;
-
-    public ProjectDetailsView()
+    public partial class ProjectDetailsView : UserControl
     {
-        InitializeComponent();
-    }
+        private Action? _pendingNavigation;
 
-    public event EventHandler? BackRequested;
+        private ProjectVersionItemViewModel? _versionPendingDelete;
 
-    public bool IsDeploySectionVisible => DeployPanel.IsVisible;
-
-    private async void ExportProjectButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (DataContext is not MainViewModel viewModel ||
-            TopLevel.GetTopLevel(this)?.StorageProvider is not { } storageProvider)
+        public ProjectDetailsView()
         {
-            return;
+            InitializeComponent();
         }
-        try
+
+        public event EventHandler? BackRequested;
+
+        public bool IsDeploySectionVisible => DeployPanel.IsVisible;
+
+        private async void ExportProjectButton_OnClick(object? sender, RoutedEventArgs e)
         {
-            var json = await viewModel.ExportProjectConfigurationAsync();
-            if (json is null)
+            if (DataContext is not MainViewModel viewModel ||
+                TopLevel.GetTopLevel(this)?.StorageProvider is not { } storageProvider)
             {
                 return;
             }
-            var file = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            try
             {
-                Title = viewModel.Localize("Экспорт конфигурации проекта"),
-                SuggestedFileName = "project.kkvar.json",
-                DefaultExtension = "json",
-                FileTypeChoices = [FilePickerFileTypes.Json],
-            });
-            if (file is null)
-            {
-                return;
-            }
-            await using var stream = await file.OpenWriteAsync();
-            stream.SetLength(0);
-            await using var writer = new StreamWriter(stream, new UTF8Encoding(false));
-            await writer.WriteAsync(json);
-            await writer.FlushAsync();
-            viewModel.ShowNotification(viewModel.Localize("Конфигурация проекта экспортирована."), isError: false);
-        }
-        catch (Exception exception)
-        {
-            viewModel.ShowNotification(exception.Message, isError: true);
-        }
-    }
-
-    private async void DeploymentBranches_OnOpened(object? sender, EventArgs e)
-    {
-        if (DataContext is MainViewModel viewModel)
-        {
-            await viewModel.DeploymentGitHubSource.LoadBranchesAsync();
-            await viewModel.DeploymentGitHubSource.RefreshCommitAsync();
-        }
-    }
-
-    private async void DeploymentCommit_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (DataContext is MainViewModel viewModel)
-        {
-            await viewModel.DeploymentGitHubSource.RefreshCommitAsync();
-        }
-    }
-
-    public event EventHandler? EditRequested;
-
-    public event EventHandler? DeleteRequested;
-
-    public event EventHandler? DeployRequested;
-
-    public event Action<DeploymentHistoryItemViewModel>? DeploymentSelected;
-
-    private void DeploymentItem_OnPointerPressed(object? sender, PointerPressedEventArgs e)
-    {
-        if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed &&
-            (sender as Control)?.DataContext is DeploymentHistoryItemViewModel item)
-        {
-            DeploymentSelected?.Invoke(item);
-        }
-    }
-
-    private void BackButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (!CanNavigateAway(() => BackRequested?.Invoke(this, EventArgs.Empty)))
-        {
-            return;
-        }
-
-        BackRequested?.Invoke(this, EventArgs.Empty);
-    }
-
-    private void EditButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (!CanNavigateAway(() => EditRequested?.Invoke(this, EventArgs.Empty)))
-        {
-            return;
-        }
-
-        EditRequested?.Invoke(this, EventArgs.Empty);
-    }
-
-    private void DeleteButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (!CanNavigateAway(() => DeleteRequested?.Invoke(this, EventArgs.Empty)))
-        {
-            return;
-        }
-
-        DeleteRequested?.Invoke(this, EventArgs.Empty);
-    }
-
-    private void DeployButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (!CanNavigateAway(() => DeployRequested?.Invoke(this, EventArgs.Empty)))
-        {
-            return;
-        }
-
-        DeployRequested?.Invoke(this, EventArgs.Empty);
-    }
-
-    private void OverviewTab_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (!CanNavigateAway(ShowOverviewSection))
-        {
-            return;
-        }
-
-        ShowOverviewSection();
-    }
-
-    private void EnvironmentTab_OnClick(object? sender, RoutedEventArgs e)
-    {
-        ShowSection(EnvironmentPanel, EnvironmentTab);
-    }
-
-    private void VersionsTab_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (!CanNavigateAway(() => ShowSection(VersionsPanel, VersionsTab)))
-        {
-            return;
-        }
-
-        ShowSection(VersionsPanel, VersionsTab);
-    }
-
-    private void ProjectHistoryTab_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (!CanNavigateAway(() => ShowSection(HistoryPanel, ProjectHistoryTab)))
-        {
-            return;
-        }
-
-        ShowSection(HistoryPanel, ProjectHistoryTab);
-    }
-
-    private void AddVariableButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (DataContext is MainViewModel viewModel)
-        {
-            viewModel.AddEnvironmentVariable();
-        }
-    }
-
-    private void RemoveVariableButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (DataContext is MainViewModel viewModel &&
-            (sender as Control)?.DataContext is EnvironmentVariableRowViewModel variable)
-        {
-            viewModel.RemoveEnvironmentVariable(variable);
-        }
-    }
-
-    private async void SaveVariablesButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (DataContext is MainViewModel viewModel)
-        {
-            await viewModel.SaveEnvironmentVariablesAsync();
-        }
-    }
-
-    private async void LoadMoreProjectHistoryButton_OnClick(
-        object? sender,
-        RoutedEventArgs e)
-    {
-        if (DataContext is MainViewModel viewModel)
-        {
-            await viewModel.LoadMoreProjectHistoryAsync();
-        }
-    }
-
-    private async void RunDeployButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (DataContext is MainViewModel viewModel)
-        {
-            var projectId = viewModel.SelectedProject?.Id;
-            await viewModel.DeploySelectedProjectAsync();
-            if (viewModel.SelectedProject?.Id == projectId)
-            {
-                FocusPreflightError();
-            }
-        }
-    }
-
-    private async void CheckDeploymentButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (DataContext is MainViewModel viewModel)
-        {
-            var projectId = viewModel.SelectedProject?.Id;
-            await viewModel.CheckSelectedDeploymentAsync();
-            if (viewModel.SelectedProject?.Id == projectId)
-            {
-                FocusPreflightError();
-            }
-        }
-    }
-
-    private void FocusPreflightError()
-    {
-        Dispatcher.UIThread.Post(() =>
-        {
-            if (!DeployPanel.IsVisible)
-            {
-                return;
-            }
-
-            var error = PreflightResults.Items.OfType<DeploymentPreflightItemViewModel>()
-                .FirstOrDefault(item => item.IsError);
-            if (error is null)
-            {
-                if (DataContext is MainViewModel { DeploymentVersionTag: var tag } &&
-                    string.IsNullOrWhiteSpace(tag))
+                var json = await viewModel.ExportProjectConfigurationAsync();
+                if (json is null)
                 {
-                    DeploymentTagInput.Focus();
+                    return;
                 }
+                var file = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+                {
+                    Title = viewModel.Localize("Экспорт конфигурации проекта"),
+                    SuggestedFileName = UiConstants.ProjectExportFileName,
+                    DefaultExtension = UiConstants.JsonFileExtension,
+                    FileTypeChoices = [FilePickerFileTypes.Json],
+                });
+                if (file is null)
+                {
+                    return;
+                }
+                await using var stream = await file.OpenWriteAsync();
+                stream.SetLength(0);
+                await using var writer = new StreamWriter(stream, new UTF8Encoding(false));
+                await writer.WriteAsync(json);
+                await writer.FlushAsync();
+                viewModel.ShowNotification(
+                    viewModel.Localize("Конфигурация проекта экспортирована."),
+                    isError: false);
+            }
+            catch (Exception exception)
+            {
+                viewModel.ShowNotification(viewModel.Localize(exception.Message), isError: true);
+            }
+        }
 
+        private async void DeploymentBranches_OnOpened(object? sender, EventArgs e)
+        {
+            if (DataContext is MainViewModel viewModel)
+            {
+                await viewModel.DeploymentGitHubSource.LoadBranchesAsync();
+                await viewModel.DeploymentGitHubSource.RefreshCommitAsync();
+            }
+        }
+
+        private async void DeploymentCommit_OnClick(object? sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainViewModel viewModel)
+            {
+                await viewModel.DeploymentGitHubSource.RefreshCommitAsync();
+            }
+        }
+
+        public event EventHandler? EditRequested;
+
+        public event EventHandler? DeleteRequested;
+
+        public event EventHandler? DeployRequested;
+
+        public event Action<DeploymentHistoryItemViewModel>? DeploymentSelected;
+
+        private void DeploymentItem_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+        {
+            if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed &&
+                (sender as Control)?.DataContext is DeploymentHistoryItemViewModel item)
+            {
+                DeploymentSelected?.Invoke(item);
+            }
+        }
+
+        private void BackButton_OnClick(object? sender, RoutedEventArgs e)
+        {
+            if (!CanNavigateAway(() => BackRequested?.Invoke(this, EventArgs.Empty)))
+            {
                 return;
             }
 
-            PreflightResults.SelectedItem = error;
-            PreflightResults.ScrollIntoView(error);
-            PreflightResults.Focus();
-            PreflightResults.ContainerFromItem(error)?.Focus();
-        }, DispatcherPriority.Loaded);
-    }
-
-    private void CancelDeploymentButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (DataContext is MainViewModel viewModel)
-        {
-            viewModel.CancelSelectedDeployment();
-        }
-    }
-
-    private async void RollbackButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (DataContext is MainViewModel viewModel &&
-            (sender as Control)?.DataContext is ProjectVersionItemViewModel version)
-        {
-            await viewModel.RollbackAsync(version);
-        }
-    }
-
-    private async void PinVersionButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (DataContext is MainViewModel viewModel &&
-            (sender as Control)?.DataContext is ProjectVersionItemViewModel version)
-        {
-            await viewModel.ToggleVersionPinnedAsync(version);
-        }
-    }
-
-    private void DeleteVersionButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (DataContext is not MainViewModel viewModel ||
-            (sender as Control)?.DataContext is not ProjectVersionItemViewModel version ||
-            !version.CanDelete)
-        {
-            return;
+            BackRequested?.Invoke(this, EventArgs.Empty);
         }
 
-        _versionPendingDelete = version;
-        DeleteVersionMessage.Text = viewModel.LocalizeFormat(
-            "Версия «{0}» и её локальный архив будут удалены. Отменить это действие нельзя.",
-            version.Tag);
-        DeleteVersionConfirmation.IsVisible = true;
-    }
-
-    private async void PrepareVersionCleanupButton_OnClick(
-        object? sender,
-        RoutedEventArgs e)
-    {
-        if (DataContext is MainViewModel viewModel)
+        private void EditButton_OnClick(object? sender, RoutedEventArgs e)
         {
-            await viewModel.PrepareVersionCleanupAsync();
-        }
-    }
+            if (!CanNavigateAway(() => EditRequested?.Invoke(this, EventArgs.Empty)))
+            {
+                return;
+            }
 
-    private void CancelVersionCleanupButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (DataContext is MainViewModel viewModel)
-        {
-            viewModel.CancelVersionCleanup();
-        }
-    }
-
-    private async void ConfirmVersionCleanupButton_OnClick(
-        object? sender,
-        RoutedEventArgs e)
-    {
-        if (DataContext is MainViewModel viewModel)
-        {
-            await viewModel.ApplyVersionCleanupAsync();
-        }
-    }
-
-    private void CancelDeleteVersionButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        _versionPendingDelete = null;
-        DeleteVersionConfirmation.IsVisible = false;
-    }
-
-    private async void ConfirmDeleteVersionButton_OnClick(
-        object? sender,
-        RoutedEventArgs e)
-    {
-        if (_versionPendingDelete is null || DataContext is not MainViewModel viewModel)
-        {
-            return;
+            EditRequested?.Invoke(this, EventArgs.Empty);
         }
 
-        var version = _versionPendingDelete;
-        _versionPendingDelete = null;
-        DeleteVersionConfirmation.IsVisible = false;
-        await viewModel.DeleteVersionAsync(version);
-    }
-
-    private void DeploymentLog_OnTextChanged(object? sender, TextChangedEventArgs e)
-    {
-        DeploymentLog.CaretIndex = DeploymentLog.Text?.Length ?? 0;
-    }
-
-    public void ShowOverviewSection()
-    {
-        ShowSection(OverviewPanel, OverviewTab);
-    }
-
-    public void ShowDeploySection(bool prepare = true)
-    {
-        if (prepare && DataContext is MainViewModel viewModel)
+        private void DeleteButton_OnClick(object? sender, RoutedEventArgs e)
         {
-            viewModel.PrepareDeploymentView();
+            if (!CanNavigateAway(() => DeleteRequested?.Invoke(this, EventArgs.Empty)))
+            {
+                return;
+            }
+
+            DeleteRequested?.Invoke(this, EventArgs.Empty);
         }
 
-        ShowSection(DeployPanel);
-    }
-
-    public void ShowHistorySection()
-    {
-        ShowSection(HistoryPanel, ProjectHistoryTab);
-    }
-
-    public bool CanNavigateAway(Action pendingNavigation)
-    {
-        if (EnvironmentPanel.IsVisible &&
-            DataContext is MainViewModel { HasUnsavedEnvironmentChanges: true })
+        private void DeployButton_OnClick(object? sender, RoutedEventArgs e)
         {
-            _pendingNavigation = pendingNavigation;
-            UnsavedEnvironmentConfirmation.IsVisible = true;
-            return false;
+            if (!CanNavigateAway(() => DeployRequested?.Invoke(this, EventArgs.Empty)))
+            {
+                return;
+            }
+
+            DeployRequested?.Invoke(this, EventArgs.Empty);
         }
 
-        return true;
-    }
-
-    private void StayOnEnvironmentButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        _pendingNavigation = null;
-        UnsavedEnvironmentConfirmation.IsVisible = false;
-    }
-
-    private async void DiscardEnvironmentButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        var navigation = _pendingNavigation;
-        _pendingNavigation = null;
-        UnsavedEnvironmentConfirmation.IsVisible = false;
-
-        if (DataContext is MainViewModel viewModel)
+        private void OverviewTab_OnClick(object? sender, RoutedEventArgs e)
         {
-            await viewModel.DiscardEnvironmentChangesAsync();
+            if (!CanNavigateAway(ShowOverviewSection))
+            {
+                return;
+            }
+
+            ShowOverviewSection();
         }
 
-        navigation?.Invoke();
-    }
+        private void EnvironmentTab_OnClick(object? sender, RoutedEventArgs e) =>
+            ShowSection(EnvironmentPanel, EnvironmentTab);
 
-    private async void SaveEnvironmentAndContinueButton_OnClick(
-        object? sender,
-        RoutedEventArgs e)
-    {
-        if (DataContext is not MainViewModel viewModel ||
-            !await viewModel.SaveEnvironmentVariablesAsync())
+        private void VersionsTab_OnClick(object? sender, RoutedEventArgs e)
         {
-            return;
+            if (!CanNavigateAway(() => ShowSection(VersionsPanel, VersionsTab)))
+            {
+                return;
+            }
+
+            ShowSection(VersionsPanel, VersionsTab);
         }
 
-        var navigation = _pendingNavigation;
-        _pendingNavigation = null;
-        UnsavedEnvironmentConfirmation.IsVisible = false;
-        navigation?.Invoke();
-    }
-
-    private void ShowSection(Control panel, Button? activeTab = null)
-    {
-        var sectionChanged =
-            (OverviewPanel.IsVisible && panel != OverviewPanel) ||
-            (EnvironmentPanel.IsVisible && panel != EnvironmentPanel) ||
-            (VersionsPanel.IsVisible && panel != VersionsPanel) ||
-            (HistoryPanel.IsVisible && panel != HistoryPanel) ||
-            (DeployPanel.IsVisible && panel != DeployPanel);
-        if (sectionChanged && DataContext is MainViewModel viewModel)
+        private void ProjectHistoryTab_OnClick(object? sender, RoutedEventArgs e)
         {
-            viewModel.ClearStatusNotification();
+            if (!CanNavigateAway(() => ShowSection(HistoryPanel, ProjectHistoryTab)))
+            {
+                return;
+            }
+
+            ShowSection(HistoryPanel, ProjectHistoryTab);
         }
 
-        OverviewPanel.IsVisible = panel == OverviewPanel;
-        EnvironmentPanel.IsVisible = panel == EnvironmentPanel;
-        VersionsPanel.IsVisible = panel == VersionsPanel;
-        HistoryPanel.IsVisible = panel == HistoryPanel;
-        DeployPanel.IsVisible = panel == DeployPanel;
-
-        SetTabState(OverviewTab, activeTab == OverviewTab);
-        SetTabState(EnvironmentTab, activeTab == EnvironmentTab);
-        SetTabState(VersionsTab, activeTab == VersionsTab);
-        SetTabState(ProjectHistoryTab, activeTab == ProjectHistoryTab);
-    }
-
-    private static void SetTabState(Button button, bool isActive)
-    {
-        if (isActive && !button.Classes.Contains("active"))
+        private void AddVariableButton_OnClick(object? sender, RoutedEventArgs e)
         {
-            button.Classes.Add("active");
+            if (DataContext is MainViewModel viewModel)
+            {
+                viewModel.EnvironmentEditor.AddEnvironmentVariable();
+            }
         }
-        else if (!isActive)
+
+        private void RemoveVariableButton_OnClick(object? sender, RoutedEventArgs e)
         {
-            button.Classes.Remove("active");
+            if (DataContext is MainViewModel viewModel &&
+                (sender as Control)?.DataContext is EnvironmentVariableRowViewModel variable)
+            {
+                viewModel.EnvironmentEditor.RemoveEnvironmentVariable(variable);
+            }
+        }
+
+        private async void SaveVariablesButton_OnClick(object? sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainViewModel viewModel)
+            {
+                await viewModel.EnvironmentEditor.SaveEnvironmentVariablesAsync();
+            }
+        }
+
+        private async void LoadMoreProjectHistoryButton_OnClick(
+            object? sender,
+            RoutedEventArgs e)
+        {
+            if (DataContext is MainViewModel viewModel)
+            {
+                await viewModel.ProjectDetails.LoadMoreProjectHistoryAsync();
+            }
+        }
+
+        private async void RunDeployButton_OnClick(object? sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainViewModel viewModel)
+            {
+                var projectId = viewModel.SelectedProject?.Id;
+                await viewModel.DeploySelectedProjectAsync();
+                if (viewModel.SelectedProject?.Id == projectId)
+                {
+                    FocusPreflightError();
+                }
+            }
+        }
+
+        private async void CheckDeploymentButton_OnClick(object? sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainViewModel viewModel)
+            {
+                var projectId = viewModel.SelectedProject?.Id;
+                await viewModel.CheckSelectedDeploymentAsync();
+                if (viewModel.SelectedProject?.Id == projectId)
+                {
+                    FocusPreflightError();
+                }
+            }
+        }
+
+        private void FocusPreflightError() =>
+            Dispatcher.UIThread.Post(
+                () =>
+                        {
+                            if (!DeployPanel.IsVisible)
+                            {
+                                return;
+                            }
+
+                            var error = PreflightResults.Items.OfType<DeploymentPreflightItemViewModel>()
+                                .FirstOrDefault(item => item.IsError);
+                            if (error is null)
+                            {
+                                if (DataContext is MainViewModel { DeploymentVersionTag: var tag } &&
+                                    string.IsNullOrWhiteSpace(tag))
+                                {
+                                    DeploymentTagInput.Focus();
+                                }
+
+                                return;
+                            }
+
+                            PreflightResults.SelectedItem = error;
+                            PreflightResults.ScrollIntoView(error);
+                            PreflightResults.Focus();
+                            PreflightResults.ContainerFromItem(error)?.Focus();
+                        },
+                DispatcherPriority.Loaded);
+
+        private void CancelDeploymentButton_OnClick(object? sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainViewModel viewModel)
+            {
+                viewModel.CancelSelectedDeployment();
+            }
+        }
+
+        private async void RollbackButton_OnClick(object? sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainViewModel viewModel &&
+                (sender as Control)?.DataContext is ProjectVersionItemViewModel version)
+            {
+                await viewModel.RollbackAsync(version);
+            }
+        }
+
+        private async void PinVersionButton_OnClick(object? sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainViewModel viewModel &&
+                (sender as Control)?.DataContext is ProjectVersionItemViewModel version)
+            {
+                await viewModel.ProjectDetails.ToggleVersionPinnedAsync(version);
+            }
+        }
+
+        private void DeleteVersionButton_OnClick(object? sender, RoutedEventArgs e)
+        {
+            if (DataContext is not MainViewModel viewModel ||
+                (sender as Control)?.DataContext is not ProjectVersionItemViewModel version ||
+                !version.CanDelete)
+            {
+                return;
+            }
+
+            _versionPendingDelete = version;
+            DeleteVersionMessage.Text = viewModel.LocalizeFormat(
+                "Версия «{0}» и её локальный архив будут удалены. Отменить это действие нельзя.",
+                version.Tag);
+            DeleteVersionConfirmation.IsVisible = true;
+        }
+
+        private async void PrepareVersionCleanupButton_OnClick(
+            object? sender,
+            RoutedEventArgs e)
+        {
+            if (DataContext is MainViewModel viewModel)
+            {
+                await viewModel.ProjectDetails.PrepareVersionCleanupAsync();
+            }
+        }
+
+        private void CancelVersionCleanupButton_OnClick(object? sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainViewModel viewModel)
+            {
+                viewModel.ProjectDetails.CancelVersionCleanup();
+            }
+        }
+
+        private async void ConfirmVersionCleanupButton_OnClick(
+            object? sender,
+            RoutedEventArgs e)
+        {
+            if (DataContext is MainViewModel viewModel)
+            {
+                await viewModel.ProjectDetails.ApplyVersionCleanupAsync();
+            }
+        }
+
+        private void CancelDeleteVersionButton_OnClick(object? sender, RoutedEventArgs e)
+        {
+            _versionPendingDelete = null;
+            DeleteVersionConfirmation.IsVisible = false;
+        }
+
+        private async void ConfirmDeleteVersionButton_OnClick(
+            object? sender,
+            RoutedEventArgs e)
+        {
+            if (_versionPendingDelete is null || DataContext is not MainViewModel viewModel)
+            {
+                return;
+            }
+
+            var version = _versionPendingDelete;
+            _versionPendingDelete = null;
+            DeleteVersionConfirmation.IsVisible = false;
+            await viewModel.ProjectDetails.DeleteVersionAsync(version);
+        }
+
+        private void DeploymentLog_OnTextChanged(object? sender, TextChangedEventArgs e) =>
+            DeploymentLog.CaretIndex = DeploymentLog.Text?.Length ?? 0;
+
+        public void ShowOverviewSection() =>
+            ShowSection(OverviewPanel, OverviewTab);
+
+        public void ShowDeploySection(bool prepare = true)
+        {
+            if (prepare && DataContext is MainViewModel viewModel)
+            {
+                viewModel.PrepareDeploymentView();
+            }
+
+            ShowSection(DeployPanel);
+        }
+
+        public void ShowHistorySection() =>
+            ShowSection(HistoryPanel, ProjectHistoryTab);
+
+        public bool CanNavigateAway(Action pendingNavigation)
+        {
+            if (EnvironmentPanel.IsVisible &&
+                DataContext is MainViewModel { EnvironmentEditor.HasUnsavedEnvironmentChanges: true })
+            {
+                _pendingNavigation = pendingNavigation;
+                UnsavedEnvironmentConfirmation.IsVisible = true;
+                return false;
+            }
+
+            return true;
+        }
+
+        private void StayOnEnvironmentButton_OnClick(object? sender, RoutedEventArgs e)
+        {
+            _pendingNavigation = null;
+            UnsavedEnvironmentConfirmation.IsVisible = false;
+        }
+
+        private async void DiscardEnvironmentButton_OnClick(object? sender, RoutedEventArgs e)
+        {
+            var navigation = _pendingNavigation;
+            _pendingNavigation = null;
+            UnsavedEnvironmentConfirmation.IsVisible = false;
+
+            if (DataContext is MainViewModel viewModel)
+            {
+                await viewModel.EnvironmentEditor.DiscardEnvironmentChangesAsync();
+            }
+
+            navigation?.Invoke();
+        }
+
+        private async void SaveEnvironmentAndContinueButton_OnClick(
+            object? sender,
+            RoutedEventArgs e)
+        {
+            if (DataContext is not MainViewModel viewModel ||
+                !await viewModel.EnvironmentEditor.SaveEnvironmentVariablesAsync())
+            {
+                return;
+            }
+
+            var navigation = _pendingNavigation;
+            _pendingNavigation = null;
+            UnsavedEnvironmentConfirmation.IsVisible = false;
+            navigation?.Invoke();
+        }
+
+        private void ShowSection(Control panel, Button? activeTab = null)
+        {
+            var sectionChanged =
+                (OverviewPanel.IsVisible && panel != OverviewPanel) ||
+                (EnvironmentPanel.IsVisible && panel != EnvironmentPanel) ||
+                (VersionsPanel.IsVisible && panel != VersionsPanel) ||
+                (HistoryPanel.IsVisible && panel != HistoryPanel) ||
+                (DeployPanel.IsVisible && panel != DeployPanel);
+            if (sectionChanged && DataContext is MainViewModel viewModel)
+            {
+                viewModel.ClearStatusNotification();
+            }
+
+            OverviewPanel.IsVisible = panel == OverviewPanel;
+            EnvironmentPanel.IsVisible = panel == EnvironmentPanel;
+            VersionsPanel.IsVisible = panel == VersionsPanel;
+            HistoryPanel.IsVisible = panel == HistoryPanel;
+            DeployPanel.IsVisible = panel == DeployPanel;
+
+            SetTabState(OverviewTab, activeTab == OverviewTab);
+            SetTabState(EnvironmentTab, activeTab == EnvironmentTab);
+            SetTabState(VersionsTab, activeTab == VersionsTab);
+            SetTabState(ProjectHistoryTab, activeTab == ProjectHistoryTab);
+        }
+
+        private static void SetTabState(Button button, bool isActive)
+        {
+            if (isActive && !button.Classes.Contains(UiConstants.ActiveNavigationClass))
+            {
+                button.Classes.Add(UiConstants.ActiveNavigationClass);
+            }
+            else if (!isActive)
+            {
+                button.Classes.Remove(UiConstants.ActiveNavigationClass);
+            }
         }
     }
 }

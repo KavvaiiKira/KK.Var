@@ -6,156 +6,159 @@ using System.Threading.Tasks;
 using KK.Var.Data;
 using KK.Var.Enums;
 using KK.Var.Models;
+using KK.Var.Services;
 using Microsoft.EntityFrameworkCore;
 
-namespace KK.Var.Repositories.Implementations;
-
-public sealed class KKProjectDeploymentRepository(
-    IDbContextFactory<AppDbContext> contextFactory) : IKKProjectDeploymentRepository
+namespace KK.Var.Repositories.Implementations
 {
-    public async Task<IReadOnlyList<KKProjectDeployment>> SearchAsync(
-        string? projectName,
-        string? searchText,
-        DateTime? startedFromUtc,
-        DateTime? startedBeforeUtc,
-        DeploymentStatus? status,
-        int skip,
-        int take,
-        CancellationToken cancellationToken = default,
-        Guid? remoteMachineId = null)
+    public sealed class KKProjectDeploymentRepository(
+        IDbContextFactory<AppDbContext> contextFactory,
+        ILocalizationService localizationService) : IKKProjectDeploymentRepository
     {
-        if (skip < 0)
+        public async Task<IReadOnlyList<KKProjectDeployment>> SearchAsync(
+            string? projectName,
+            string? searchText,
+            DateTime? startedFromUtc,
+            DateTime? startedBeforeUtc,
+            DeploymentStatus? status,
+            int skip,
+            int take,
+            CancellationToken cancellationToken = default,
+            Guid? remoteMachineId = null)
         {
-            throw new ArgumentOutOfRangeException(nameof(skip));
+            if (skip < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(skip));
+            }
+
+            if (take is < 1 or > 200)
+            {
+                throw new ArgumentOutOfRangeException(nameof(take));
+            }
+
+            await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+            var query = db.ProjectDeployments
+                .AsNoTracking()
+                .Include(deployment => deployment.Project)
+                .Include(deployment => deployment.Version)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(projectName))
+            {
+                query = query.Where(deployment => deployment.Project.Name == projectName);
+            }
+
+            if (status.HasValue)
+            {
+                query = query.Where(deployment => deployment.Status == status.Value);
+            }
+
+            if (remoteMachineId.HasValue)
+            {
+                query = query.Where(deployment => deployment.RemoteMachineId == remoteMachineId);
+            }
+
+            if (startedFromUtc.HasValue && startedBeforeUtc.HasValue)
+            {
+                query = query.Where(deployment =>
+                    deployment.StartedAtUtc >= startedFromUtc.Value &&
+                    deployment.StartedAtUtc < startedBeforeUtc.Value);
+            }
+            else if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                var normalizedSearch = searchText.Trim();
+                query = query.Where(deployment =>
+                    deployment.Project.Name.Contains(normalizedSearch) ||
+                    deployment.VersionTag.Contains(normalizedSearch));
+            }
+
+            return await query
+                .OrderByDescending(deployment => deployment.StartedAtUtc)
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync(cancellationToken);
         }
 
-        if (take is < 1 or > 200)
+        public async Task<IReadOnlyList<KKProjectDeployment>> GetByProjectIdAsync(
+            Guid projectId,
+            CancellationToken cancellationToken = default)
         {
-            throw new ArgumentOutOfRangeException(nameof(take));
+            await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+            return await db.ProjectDeployments
+                .AsNoTracking()
+                .Include(deployment => deployment.Version)
+                .Where(deployment => deployment.KKProjectId == projectId)
+                .OrderByDescending(deployment => deployment.StartedAtUtc)
+                .ToListAsync(cancellationToken);
         }
 
-        await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
-
-        var query = db.ProjectDeployments
-            .AsNoTracking()
-            .Include(deployment => deployment.Project)
-            .Include(deployment => deployment.Version)
-            .AsQueryable();
-
-        if (!string.IsNullOrWhiteSpace(projectName))
+        public async Task<KKProjectDeployment?> GetByIdAsync(
+            Guid id,
+            CancellationToken cancellationToken = default)
         {
-            query = query.Where(deployment => deployment.Project.Name == projectName);
+            await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+            return await db.ProjectDeployments
+                .AsNoTracking()
+                .SingleOrDefaultAsync(deployment => deployment.Id == id, cancellationToken);
         }
 
-        if (status.HasValue)
+        public async Task<KKProjectDeployment?> GetLatestSuccessfulAsync(
+            Guid projectId,
+            CancellationToken cancellationToken = default)
         {
-            query = query.Where(deployment => deployment.Status == status.Value);
+            await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+            return await db.ProjectDeployments
+                .AsNoTracking()
+                .Where(deployment =>
+                    deployment.KKProjectId == projectId &&
+                    deployment.Status == DeploymentStatus.Succeeded)
+                .OrderByDescending(deployment => deployment.CompletedAtUtc)
+                .FirstOrDefaultAsync(cancellationToken);
         }
 
-        if (remoteMachineId.HasValue)
+        public async Task<IReadOnlyList<KKProjectDeployment>> GetRunningAsync(
+            CancellationToken cancellationToken = default)
         {
-            query = query.Where(deployment => deployment.RemoteMachineId == remoteMachineId);
+            await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+            return await db.ProjectDeployments
+                .AsNoTracking()
+                .Include(deployment => deployment.Project)
+                .Include(deployment => deployment.Version)
+                .Where(deployment => deployment.Status == DeploymentStatus.Running)
+                .OrderBy(deployment => deployment.StartedAtUtc)
+                .ToListAsync(cancellationToken);
         }
 
-        if (startedFromUtc.HasValue && startedBeforeUtc.HasValue)
+        public async Task AddAsync(
+            KKProjectDeployment deployment,
+            CancellationToken cancellationToken = default)
         {
-            query = query.Where(deployment =>
-                deployment.StartedAtUtc >= startedFromUtc.Value &&
-                deployment.StartedAtUtc < startedBeforeUtc.Value);
-        }
-        else if (!string.IsNullOrWhiteSpace(searchText))
-        {
-            var normalizedSearch = searchText.Trim();
-            query = query.Where(deployment =>
-                deployment.Project.Name.Contains(normalizedSearch) ||
-                deployment.VersionTag.Contains(normalizedSearch));
+            await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
+            db.ProjectDeployments.Add(deployment);
+            await db.SaveChangesAsync(cancellationToken);
         }
 
-        return await query
-            .OrderByDescending(deployment => deployment.StartedAtUtc)
-            .Skip(skip)
-            .Take(take)
-            .ToListAsync(cancellationToken);
-    }
-
-    public async Task<IReadOnlyList<KKProjectDeployment>> GetByProjectIdAsync(
-        Guid projectId,
-        CancellationToken cancellationToken = default)
-    {
-        await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
-
-        return await db.ProjectDeployments
-            .AsNoTracking()
-            .Include(deployment => deployment.Version)
-            .Where(deployment => deployment.KKProjectId == projectId)
-            .OrderByDescending(deployment => deployment.StartedAtUtc)
-            .ToListAsync(cancellationToken);
-    }
-
-    public async Task<KKProjectDeployment?> GetByIdAsync(
-        Guid id,
-        CancellationToken cancellationToken = default)
-    {
-        await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
-
-        return await db.ProjectDeployments
-            .AsNoTracking()
-            .SingleOrDefaultAsync(deployment => deployment.Id == id, cancellationToken);
-    }
-
-    public async Task<KKProjectDeployment?> GetLatestSuccessfulAsync(
-        Guid projectId,
-        CancellationToken cancellationToken = default)
-    {
-        await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
-
-        return await db.ProjectDeployments
-            .AsNoTracking()
-            .Where(deployment =>
-                deployment.KKProjectId == projectId &&
-                deployment.Status == DeploymentStatus.Succeeded)
-            .OrderByDescending(deployment => deployment.CompletedAtUtc)
-            .FirstOrDefaultAsync(cancellationToken);
-    }
-
-    public async Task<IReadOnlyList<KKProjectDeployment>> GetRunningAsync(
-        CancellationToken cancellationToken = default)
-    {
-        await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
-
-        return await db.ProjectDeployments
-            .AsNoTracking()
-            .Include(deployment => deployment.Project)
-            .Include(deployment => deployment.Version)
-            .Where(deployment => deployment.Status == DeploymentStatus.Running)
-            .OrderBy(deployment => deployment.StartedAtUtc)
-            .ToListAsync(cancellationToken);
-    }
-
-    public async Task AddAsync(
-        KKProjectDeployment deployment,
-        CancellationToken cancellationToken = default)
-    {
-        await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
-        db.ProjectDeployments.Add(deployment);
-        await db.SaveChangesAsync(cancellationToken);
-    }
-
-    public async Task UpdateAsync(
-        KKProjectDeployment deployment,
-        CancellationToken cancellationToken = default)
-    {
-        await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
-        var existing = await db.ProjectDeployments.SingleOrDefaultAsync(
-            candidate => candidate.Id == deployment.Id,
-            cancellationToken);
-
-        if (existing is null)
+        public async Task UpdateAsync(
+            KKProjectDeployment deployment,
+            CancellationToken cancellationToken = default)
         {
-            throw new KeyNotFoundException($"Deployment '{deployment.Id}' was not found.");
-        }
+            await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
+            var existing = await db.ProjectDeployments.SingleOrDefaultAsync(
+                candidate => candidate.Id == deployment.Id,
+                cancellationToken);
 
-        db.Entry(existing).CurrentValues.SetValues(deployment);
-        await db.SaveChangesAsync(cancellationToken);
+            if (existing is null)
+            {
+                throw new KeyNotFoundException(localizationService.Format("Операция развёртывания «{0}» не найдена.", deployment.Id));
+            }
+
+            db.Entry(existing).CurrentValues.SetValues(deployment);
+            await db.SaveChangesAsync(cancellationToken);
+        }
     }
 }

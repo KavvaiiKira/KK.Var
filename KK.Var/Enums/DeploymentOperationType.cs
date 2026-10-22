@@ -1,7 +1,8 @@
-namespace KK.Var.Enums;
-
-public enum DeploymentOperationType
+namespace KK.Var.Enums
 {
-    Deploy = 1,
-    Rollback = 2,
+    public enum DeploymentOperationType
+    {
+        Deploy = 1,
+        Rollback = 2,
+    }
 }

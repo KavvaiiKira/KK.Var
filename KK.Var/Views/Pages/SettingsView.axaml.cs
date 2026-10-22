@@ -1,101 +1,101 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using KK.Var.ViewModels;
 
-namespace KK.Var.Views.Pages;
-
-public partial class SettingsView : UserControl
+namespace KK.Var.Views.Pages
 {
-    public SettingsView()
+    public partial class SettingsView : UserControl
     {
-        InitializeComponent();
-        AddHandler(TextBox.TextChangedEvent, SettingsInput_OnChanged);
-    }
-
-    private void SettingsInput_OnChanged(object? sender, TextChangedEventArgs e)
-    {
-        if (DataContext is MainViewModel viewModel)
+        public SettingsView()
         {
-            viewModel.InvalidateDeploymentPreflight();
-            if (!viewModel.IsMachineProfileLoading && !viewModel.IsConnectionCheckRunning)
+            InitializeComponent();
+            AddHandler(TextBox.TextChangedEvent, SettingsInput_OnChanged);
+        }
+
+        private void SettingsInput_OnChanged(object? sender, TextChangedEventArgs e)
+        {
+            if (DataContext is MainViewModel viewModel)
             {
-                viewModel.InvalidatePendingMachineVerification();
+                viewModel.InvalidateDeploymentPreflight();
+                if (!viewModel.MachineEditor.IsMachineProfileLoading && !viewModel.MachineEditor.IsConnectionCheckRunning)
+                {
+                    viewModel.MachineEditor.InvalidatePendingMachineVerification();
+                }
             }
         }
-    }
 
-    private async void CopyGitHubCodeButton_OnClick(
-        object? sender,
-        RoutedEventArgs e)
-    {
-        if (DataContext is not MainViewModel viewModel ||
-            string.IsNullOrWhiteSpace(viewModel.GitHubUserCode))
+        private async void CopyGitHubCodeButton_OnClick(
+            object? sender,
+            RoutedEventArgs e)
         {
-            return;
-        }
-
-        var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
-
-        if (clipboard is not null)
-        {
-            await clipboard.SetTextAsync(viewModel.GitHubUserCode);
-        }
-    }
-
-    private async void SelectArtifactsDirectoryButton_OnClick(
-        object? sender,
-        RoutedEventArgs e)
-    {
-        if (DataContext is not MainViewModel viewModel ||
-            TopLevel.GetTopLevel(this)?.StorageProvider is not { } storageProvider)
-        {
-            return;
-        }
-
-        var folders = await storageProvider.OpenFolderPickerAsync(
-            new FolderPickerOpenOptions
+            if (DataContext is not MainViewModel viewModel ||
+                string.IsNullOrWhiteSpace(viewModel.GitHubAccount.GitHubUserCode))
             {
-                Title = viewModel.Localize("Выберите каталог локальных версий"),
-                AllowMultiple = false,
-            });
+                return;
+            }
 
-        if (folders.Count > 0 && folders[0].Path.IsFile)
-        {
-            await viewModel.PrepareArtifactStorageMigrationAsync(
-                folders[0].Path.LocalPath);
+            var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+
+            if (clipboard is not null)
+            {
+                await clipboard.SetTextAsync(viewModel.GitHubAccount.GitHubUserCode);
+            }
         }
-    }
 
-    private async void ResetArtifactsDirectoryButton_OnClick(
-        object? sender,
-        RoutedEventArgs e)
-    {
-        if (DataContext is MainViewModel viewModel)
+        private async void SelectArtifactsDirectoryButton_OnClick(
+            object? sender,
+            RoutedEventArgs e)
         {
-            await viewModel.PrepareArtifactStorageMigrationAsync(null);
+            if (DataContext is not MainViewModel viewModel ||
+                TopLevel.GetTopLevel(this)?.StorageProvider is not { } storageProvider)
+            {
+                return;
+            }
+
+            var folders = await storageProvider.OpenFolderPickerAsync(
+                new FolderPickerOpenOptions
+                {
+                    Title = viewModel.Localize("Выберите каталог локальных версий"),
+                    AllowMultiple = false,
+                });
+
+            if (folders.Count > 0 && folders[0].Path.IsFile)
+            {
+                await viewModel.ArtifactStorage.PrepareArtifactStorageMigrationAsync(
+                    folders[0].Path.LocalPath);
+            }
         }
-    }
 
-    private async void ApplyArtifactMigrationButton_OnClick(
-        object? sender,
-        RoutedEventArgs e)
-    {
-        if (DataContext is MainViewModel viewModel)
+        private async void ResetArtifactsDirectoryButton_OnClick(
+            object? sender,
+            RoutedEventArgs e)
         {
-            await viewModel.ApplyArtifactStorageMigrationAsync();
+            if (DataContext is MainViewModel viewModel)
+            {
+                await viewModel.ArtifactStorage.PrepareArtifactStorageMigrationAsync(null);
+            }
         }
-    }
 
-    private void CancelArtifactMigrationButton_OnClick(
-        object? sender,
-        RoutedEventArgs e)
-    {
-        if (DataContext is MainViewModel viewModel)
+        private async void ApplyArtifactMigrationButton_OnClick(
+            object? sender,
+            RoutedEventArgs e)
         {
-            viewModel.CancelArtifactStorageMigration();
+            if (DataContext is MainViewModel viewModel)
+            {
+                await viewModel.ArtifactStorage.ApplyArtifactStorageMigrationAsync();
+            }
+        }
+
+        private void CancelArtifactMigrationButton_OnClick(
+            object? sender,
+            RoutedEventArgs e)
+        {
+            if (DataContext is MainViewModel viewModel)
+            {
+                viewModel.ArtifactStorage.CancelArtifactStorageMigration();
+            }
         }
     }
 }

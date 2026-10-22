@@ -1,9 +1,10 @@
-namespace KK.Var.Enums;
-
-public enum DeploymentQueueStatus
+namespace KK.Var.Enums
 {
-    Waiting = 1,
-    Running = 2,
-    Completed = 3,
-    Cancelled = 4,
+    public enum DeploymentQueueStatus
+    {
+        Waiting = 1,
+        Running = 2,
+        Completed = 3,
+        Cancelled = 4,
+    }
 }

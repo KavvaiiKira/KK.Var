@@ -1,64 +1,22 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using KK.Var.Enums;
 using KK.Var.Models;
 
-namespace KK.Var.Services;
-
-public interface IKKProjectDeploymentService
+namespace KK.Var.Services
 {
-    event Action<DeploymentCompletionNotice>? DeploymentCompleted;
+    public interface IKKProjectDeploymentService
+    {
+        Task<KKProjectDeployment> DeployAsync(
+            DeploymentRequest request,
+            IProgress<DeploymentProgress>? progress = null,
+            IProgress<DeploymentPreflightResult>? preflightProgress = null,
+            CancellationToken cancellationToken = default);
 
-    Task<KKProjectDeployment?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-
-    Task<IReadOnlyList<KKProjectDeployment>> SearchAsync(
-        string? projectName,
-        string? searchText,
-        DateTime? startedFromUtc,
-        DateTime? startedBeforeUtc,
-        DeploymentStatus? status,
-        int skip,
-        int take,
-        CancellationToken cancellationToken = default,
-        Guid? remoteMachineId = null);
-
-    Task<IReadOnlyList<KKProjectDeployment>> GetByProjectIdAsync(
-        Guid projectId,
-        CancellationToken cancellationToken = default);
-
-    Task<KKProjectDeployment> StartAsync(
-        Guid projectId,
-        Guid versionId,
-        DeploymentOperationType operationType,
-        string variablesSnapshotJson,
-        string remoteOperationId,
-        string logPath,
-        CancellationToken cancellationToken = default,
-        Guid? remoteMachineId = null);
-
-    Task CompleteAsync(
-        Guid deploymentId,
-        DeploymentStatus status,
-        string? logPath = null,
-        string? errorMessage = null,
-        CancellationToken cancellationToken = default,
-        bool automaticRollbackCompleted = false,
-        bool automaticRollbackFailed = false);
-
-    Task<KKProjectDeployment> DeployAsync(
-        DeploymentRequest request,
-        IProgress<DeploymentProgress>? progress = null,
-        IProgress<DeploymentPreflightResult>? preflightProgress = null,
-        CancellationToken cancellationToken = default);
-
-    Task<KKProjectDeployment> RollbackAsync(
-        Guid projectId,
-        Guid versionId,
-        IProgress<DeploymentProgress>? progress = null,
-        CancellationToken cancellationToken = default);
-
-    Task<int> RecoverInterruptedAsync(
-        CancellationToken cancellationToken = default);
+        Task<KKProjectDeployment> RollbackAsync(
+            Guid projectId,
+            Guid versionId,
+            IProgress<DeploymentProgress>? progress = null,
+            CancellationToken cancellationToken = default);
+    }
 }

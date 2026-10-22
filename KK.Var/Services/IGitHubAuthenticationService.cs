@@ -2,10 +2,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using KK.Var.Models;
 
-namespace KK.Var.Services;
-
-public interface IGitHubAuthenticationService
+namespace KK.Var.Services
 {
-    Task<GitHubToken?> GetTokenAsync(
-        CancellationToken cancellationToken = default);
+    public interface IGitHubAuthenticationService
+    {
+        Task<GitHubToken?> GetTokenAsync(
+            CancellationToken cancellationToken = default);
+    }
 }

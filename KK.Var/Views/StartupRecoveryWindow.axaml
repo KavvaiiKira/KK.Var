@@ -9,7 +9,7 @@
         CanResize="False"
         Background="Transparent"
         TransparencyLevelHint="Transparent"
-        Title="KK.Var - восстановление">
+        Title="{DynamicResource 'Восстановление KK.Var'}">
 
     <Window.Styles>
         <Style Selector="Button.recovery-button">
@@ -84,18 +84,18 @@
                 <Grid ColumnDefinitions="Auto,*,Auto,Auto">
                     <Button x:Name="OpenDataDirectoryButton"
                             Classes="recovery-button"
-                            Content="Открыть папку данных"
+                            Content="{DynamicResource 'Открыть папку данных'}"
                             Click="OpenDataDirectoryButton_OnClick" />
                     <Button x:Name="CloseButton"
                             Grid.Column="2"
                             Classes="recovery-button"
                             Margin="0,0,10,0"
-                            Content="Завершить"
+                            Content="{DynamicResource 'Завершить'}"
                             Click="CloseButton_OnClick" />
                     <Button x:Name="RecoverButton"
                             Grid.Column="3"
                             Classes="recovery-button recovery-primary"
-                            Content="Создать копию и сбросить"
+                            Content="{DynamicResource 'Создать копию и сбросить'}"
                             Click="RecoverButton_OnClick" />
                 </Grid>
             </Border>

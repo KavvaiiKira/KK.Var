@@ -1,33 +1,34 @@
 using System;
 using System.Collections.Generic;
 
-namespace KK.Var.Models;
-
-public sealed class KKProjectVersion
+namespace KK.Var.Models
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public sealed class KKProjectVersion
+    {
+        public Guid Id { get; set; } = Guid.NewGuid();
 
-    public Guid KKProjectId { get; set; }
+        public Guid KKProjectId { get; set; }
 
-    public string TargetArchitecture { get; set; } = string.Empty;
+        public string TargetArchitecture { get; set; } = string.Empty;
 
-    public string Tag { get; set; } = string.Empty;
+        public string Tag { get; set; } = string.Empty;
 
-    public string ArtifactRelativePath { get; set; } = string.Empty;
+        public string ArtifactRelativePath { get; set; } = string.Empty;
 
-    public string ArtifactSha256 { get; set; } = string.Empty;
+        public string ArtifactSha256 { get; set; } = string.Empty;
 
-    public long ArtifactSize { get; set; }
+        public long ArtifactSize { get; set; }
 
-    public bool IsPinned { get; set; }
+        public bool IsPinned { get; set; }
 
-    public string? SourceCommitSha { get; set; }
+        public string? SourceCommitSha { get; set; }
 
-    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
-    public string? Description { get; set; }
+        public string? Description { get; set; }
 
-    public KKProject Project { get; set; } = null!;
+        public KKProject Project { get; set; } = null!;
 
-    public ICollection<KKProjectDeployment> Deployments { get; set; } = new List<KKProjectDeployment>();
+        public ICollection<KKProjectDeployment> Deployments { get; set; } = new List<KKProjectDeployment>();
+    }
 }

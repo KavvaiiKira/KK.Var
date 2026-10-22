@@ -7,224 +7,233 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using KK.Var.Models;
 using KK.Var.Services;
 
-namespace KK.Var.ViewModels;
-
-public sealed record GitHubBranchOption(string Name, string Label);
-
-public partial class GitHubSourceSelectionViewModel : ViewModelBase
+namespace KK.Var.ViewModels
 {
-    private readonly IGitHubService? _gitHub;
-    private readonly IGitHubAuthenticationService? _authentication;
-    private readonly ILocalizationService? _localization;
-    private string? _repository;
-    private CancellationTokenSource? _commitCancellation;
-    private CancellationTokenSource? _branchesCancellation;
-    private bool _configuring;
-    private int _repositoryRevision;
-
-    public GitHubSourceSelectionViewModel()
+    public partial class GitHubSourceSelectionViewModel : ViewModelBase
     {
-        Configure(null, null);
-    }
+        private readonly IGitHubService _gitHub;
 
-    public GitHubSourceSelectionViewModel(IGitHubService gitHub,
-        IGitHubAuthenticationService authentication, ILocalizationService localization)
-    {
-        _gitHub = gitHub;
-        _authentication = authentication;
-        _localization = localization;
-        Configure(null, null);
-    }
+        private readonly IGitHubAuthenticationService _authentication;
 
-    public ObservableCollection<GitHubBranchOption> Branches { get; } = [];
+        private readonly ILocalizationService _localization;
 
-    public event EventHandler? BranchChanged;
+        private string? _repository;
 
-    [ObservableProperty]
-    public partial GitHubBranchOption? SelectedBranch { get; set; }
+        private CancellationTokenSource? _commitCancellation;
 
-    [ObservableProperty]
-    public partial GitHubCommit? Commit { get; set; }
+        private CancellationTokenSource? _branchesCancellation;
 
-    [ObservableProperty]
-    public partial bool IsResolving { get; set; }
+        private bool _configuring;
 
-    [ObservableProperty]
-    public partial bool IsLoadingBranches { get; set; }
+        private int _repositoryRevision;
 
-    [ObservableProperty]
-    public partial string ErrorMessage { get; set; } = string.Empty;
-
-    public string BranchName => SelectedBranch?.Name ?? string.Empty;
-
-    public string? Repository => _repository;
-
-    public bool HasCommit => Commit is not null && !IsResolving && !IsLoadingBranches && ErrorMessage.Length == 0;
-
-    public bool HasError => ErrorMessage.Length > 0;
-
-    public string CommitDisplay => Commit is { } commit ?
-        $"{commit.Sha}{Environment.NewLine}{commit.Author}{Environment.NewLine}{commit.Message}" : string.Empty;
-
-    public void Configure(string? repository, string? branch)
-    {
-        _configuring = true;
-        _repositoryRevision++;
-        _repository = repository;
-        _commitCancellation?.Cancel();
-        _branchesCancellation?.Cancel();
-        Branches.Clear();
-        Branches.Add(new GitHubBranchOption(string.Empty, Localize("Ветка по умолчанию в GitHub")));
-        if (!string.IsNullOrWhiteSpace(branch))
+        public GitHubSourceSelectionViewModel(
+            IGitHubService gitHub,
+            IGitHubAuthenticationService authentication,
+            ILocalizationService localization)
         {
-            Branches.Add(new GitHubBranchOption(branch, branch));
+            _gitHub = gitHub;
+            _authentication = authentication;
+            _localization = localization;
+            Configure(null, null);
         }
-        SelectedBranch = Branches.Last();
-        Commit = null;
-        ErrorMessage = string.Empty;
-        _configuring = false;
-    }
 
-    public void RefreshLocalization()
-    {
-        var selected = BranchName;
-        _configuring = true;
-        var previous = Branches.FirstOrDefault(option => option.Name.Length == 0);
-        if (previous is not null)
-        {
-            Branches.Remove(previous);
-        }
-        Branches.Insert(0, new GitHubBranchOption(string.Empty, Localize("Ветка по умолчанию в GitHub")));
-        SelectedBranch = Branches.FirstOrDefault(option => option.Name == selected);
-        _configuring = false;
-        ErrorMessage = string.Empty;
-    }
+        public ObservableCollection<GitHubBranchOption> Branches { get; } = [];
 
-    public async Task LoadBranchesAsync()
-    {
-        if (_gitHub is null || _authentication is null || _repository is null || IsLoadingBranches)
+        public event EventHandler? BranchChanged;
+
+        [ObservableProperty]
+        public partial GitHubBranchOption? SelectedBranch { get; set; }
+
+        [ObservableProperty]
+        public partial GitHubCommit? Commit { get; set; }
+
+        [ObservableProperty]
+        public partial bool IsResolving { get; set; }
+
+        [ObservableProperty]
+        public partial bool IsLoadingBranches { get; set; }
+
+        [ObservableProperty]
+        public partial string ErrorMessage { get; set; } = string.Empty;
+
+        public string BranchName => SelectedBranch?.Name ?? string.Empty;
+
+        public string? Repository => _repository;
+
+        public bool HasCommit => Commit is not null && !IsResolving && !IsLoadingBranches && ErrorMessage.Length == 0;
+
+        public bool HasError => ErrorMessage.Length > 0;
+
+        public string CommitDisplay => Commit is { } commit ?
+            $"{commit.Sha}{Environment.NewLine}{commit.Author}{Environment.NewLine}{commit.Message}" : string.Empty;
+
+        public void Configure(string? repository, string? branch)
         {
-            return;
-        }
-        var repository = _repository;
-        var revision = _repositoryRevision;
-        using var cancellation = new CancellationTokenSource();
-        _branchesCancellation = cancellation;
-        IsLoadingBranches = true;
-        ErrorMessage = string.Empty;
-        try
-        {
-            var token = await GetTokenAsync(cancellation.Token);
-            var branches = await _gitHub.GetBranchesAsync(repository, token.AccessToken, cancellation.Token);
-            if (revision != _repositoryRevision)
-            {
-                return;
-            }
-            var selected = BranchName;
             _configuring = true;
+            _repositoryRevision++;
+            _repository = repository;
+            _commitCancellation?.Cancel();
+            _branchesCancellation?.Cancel();
             Branches.Clear();
             Branches.Add(new GitHubBranchOption(string.Empty, Localize("Ветка по умолчанию в GitHub")));
-            foreach (var branch in branches.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal))
+            if (!string.IsNullOrWhiteSpace(branch))
             {
                 Branches.Add(new GitHubBranchOption(branch, branch));
             }
-            if (!Branches.Any(option => option.Name == selected))
-            {
-                Branches.Add(new GitHubBranchOption(selected, selected));
-            }
-            SelectedBranch = Branches.First(option => option.Name == selected);
-        }
-        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
-        {
-        }
-        catch (Exception exception)
-        {
-            if (revision == _repositoryRevision)
-            {
-                ErrorMessage = exception.Message;
-            }
-        }
-        finally
-        {
+            SelectedBranch = Branches.Last();
+            Commit = null;
+            ErrorMessage = string.Empty;
             _configuring = false;
-            _branchesCancellation = null;
-            IsLoadingBranches = false;
         }
-    }
 
-    public async Task RefreshCommitAsync()
-    {
-        _commitCancellation?.Cancel();
-        if (_gitHub is null || _authentication is null || _repository is null)
+        public void RefreshLocalization()
         {
-            return;
-        }
-        var revision = _repositoryRevision;
-        var repository = _repository;
-        var branch = BranchName;
-        using var cancellation = new CancellationTokenSource();
-        _commitCancellation = cancellation;
-        Commit = null;
-        IsResolving = true;
-        ErrorMessage = string.Empty;
-        try
-        {
-            var token = await GetTokenAsync(cancellation.Token);
-            var commit = await _gitHub.GetBranchCommitAsync(repository, branch, token.AccessToken, cancellation.Token);
-            if (!cancellation.IsCancellationRequested && revision == _repositoryRevision)
+            var selected = BranchName;
+            _configuring = true;
+            var previous = Branches.FirstOrDefault(option => option.Name.Length == 0);
+            if (previous is not null)
             {
-                Commit = commit;
+                Branches.Remove(previous);
+            }
+            Branches.Insert(0, new GitHubBranchOption(string.Empty, Localize("Ветка по умолчанию в GitHub")));
+            SelectedBranch = Branches.FirstOrDefault(option => option.Name == selected);
+            _configuring = false;
+            ErrorMessage = string.Empty;
+        }
+
+        public async Task LoadBranchesAsync()
+        {
+            if (_repository is null || IsLoadingBranches)
+            {
+                return;
+            }
+            var repository = _repository;
+            var revision = _repositoryRevision;
+            using var cancellation = new CancellationTokenSource();
+            _branchesCancellation = cancellation;
+            IsLoadingBranches = true;
+            ErrorMessage = string.Empty;
+            try
+            {
+                var token = await GetTokenAsync(cancellation.Token);
+                var branches = await _gitHub.GetBranchesAsync(repository, token.AccessToken, cancellation.Token);
+                if (revision != _repositoryRevision)
+                {
+                    return;
+                }
+                var selected = BranchName;
+                _configuring = true;
+                Branches.Clear();
+                Branches.Add(new GitHubBranchOption(string.Empty, Localize("Ветка по умолчанию в GitHub")));
+                foreach (var branch in branches.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal))
+                {
+                    Branches.Add(new GitHubBranchOption(branch, branch));
+                }
+                if (!Branches.Any(option => option.Name == selected))
+                {
+                    Branches.Add(new GitHubBranchOption(selected, selected));
+                }
+                SelectedBranch = Branches.First(option => option.Name == selected);
+            }
+            catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+            {
+                return;
+            }
+            catch (Exception exception)
+            {
+                if (revision == _repositoryRevision)
+                {
+                    ErrorMessage = Localize(exception.Message);
+                }
+            }
+            finally
+            {
+                _configuring = false;
+                _branchesCancellation = null;
+                IsLoadingBranches = false;
             }
         }
-        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+
+        public async Task RefreshCommitAsync()
         {
-        }
-        catch (Exception exception)
-        {
-            if (!cancellation.IsCancellationRequested && revision == _repositoryRevision)
+            _commitCancellation?.Cancel();
+            if (_repository is null)
             {
-                ErrorMessage = exception.Message;
+                return;
+            }
+            var revision = _repositoryRevision;
+            var repository = _repository;
+            var branch = BranchName;
+            using var cancellation = new CancellationTokenSource();
+            _commitCancellation = cancellation;
+            Commit = null;
+            IsResolving = true;
+            ErrorMessage = string.Empty;
+            try
+            {
+                var token = await GetTokenAsync(cancellation.Token);
+                var commit = await _gitHub.GetBranchCommitAsync(
+                    repository,
+                    branch,
+                    token.AccessToken,
+                    cancellation.Token);
+                if (!cancellation.IsCancellationRequested && revision == _repositoryRevision)
+                {
+                    Commit = commit;
+                }
+            }
+            catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+            {
+                return;
+            }
+            catch (Exception exception)
+            {
+                if (!cancellation.IsCancellationRequested && revision == _repositoryRevision)
+                {
+                    ErrorMessage = Localize(exception.Message);
+                }
+            }
+            finally
+            {
+                if (ReferenceEquals(_commitCancellation, cancellation))
+                {
+                    _commitCancellation = null;
+                    IsResolving = false;
+                }
             }
         }
-        finally
+
+        private async Task<GitHubToken> GetTokenAsync(CancellationToken cancellationToken) =>
+            await _authentication!.GetTokenAsync(cancellationToken) ??
+            throw new InvalidOperationException(Localize("Подключите GitHub в настройках перед сборкой проекта."));
+
+        partial void OnSelectedBranchChanged(GitHubBranchOption? value)
         {
-            if (ReferenceEquals(_commitCancellation, cancellation))
+            OnPropertyChanged(nameof(BranchName));
+            if (!_configuring)
             {
-                _commitCancellation = null;
-                IsResolving = false;
+                BranchChanged?.Invoke(this, EventArgs.Empty);
+                _ = RefreshCommitAsync();
             }
         }
-    }
 
-    private async Task<GitHubToken> GetTokenAsync(CancellationToken cancellationToken) =>
-        await _authentication!.GetTokenAsync(cancellationToken) ??
-        throw new InvalidOperationException(Localize("Подключите GitHub в настройках перед сборкой проекта."));
-
-    partial void OnSelectedBranchChanged(GitHubBranchOption? value)
-    {
-        OnPropertyChanged(nameof(BranchName));
-        if (!_configuring)
+        partial void OnCommitChanged(GitHubCommit? value)
         {
-            BranchChanged?.Invoke(this, EventArgs.Empty);
-            _ = RefreshCommitAsync();
+            OnPropertyChanged(nameof(HasCommit));
+            OnPropertyChanged(nameof(CommitDisplay));
         }
+
+        partial void OnIsResolvingChanged(bool value) => OnPropertyChanged(nameof(HasCommit));
+
+        partial void OnIsLoadingBranchesChanged(bool value) => OnPropertyChanged(nameof(HasCommit));
+
+        partial void OnErrorMessageChanged(string value)
+        {
+            OnPropertyChanged(nameof(HasError));
+            OnPropertyChanged(nameof(HasCommit));
+        }
+
+        private string Localize(string key) => _localization.Get(key);
     }
-
-    partial void OnCommitChanged(GitHubCommit? value)
-    {
-        OnPropertyChanged(nameof(HasCommit));
-        OnPropertyChanged(nameof(CommitDisplay));
-    }
-
-    partial void OnIsResolvingChanged(bool value) => OnPropertyChanged(nameof(HasCommit));
-
-    partial void OnIsLoadingBranchesChanged(bool value) => OnPropertyChanged(nameof(HasCommit));
-
-    partial void OnErrorMessageChanged(string value)
-    {
-        OnPropertyChanged(nameof(HasError));
-        OnPropertyChanged(nameof(HasCommit));
-    }
-
-    private string Localize(string key) => _localization?.Get(key) ?? key;
 }

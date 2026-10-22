@@ -2,26 +2,23 @@ using System;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 
-namespace KK.Var.Views.Pages;
-
-public partial class DeploymentDetailsView : UserControl
+namespace KK.Var.Views.Pages
 {
-    public DeploymentDetailsView()
+    public partial class DeploymentDetailsView : UserControl
     {
-        InitializeComponent();
-    }
+        public DeploymentDetailsView()
+        {
+            InitializeComponent();
+        }
 
-    public event EventHandler? BackRequested;
+        public event EventHandler? BackRequested;
 
-    public event EventHandler? RepeatDeployRequested;
+        public event EventHandler? RepeatDeployRequested;
 
-    private void BackButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        BackRequested?.Invoke(this, EventArgs.Empty);
-    }
+        private void BackButton_OnClick(object? sender, RoutedEventArgs e) =>
+            BackRequested?.Invoke(this, EventArgs.Empty);
 
-    private void RepeatDeployButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        RepeatDeployRequested?.Invoke(this, EventArgs.Empty);
+        private void RepeatDeployButton_OnClick(object? sender, RoutedEventArgs e) =>
+            RepeatDeployRequested?.Invoke(this, EventArgs.Empty);
     }
 }

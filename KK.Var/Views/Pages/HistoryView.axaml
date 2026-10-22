@@ -53,23 +53,35 @@
                       Classes="history-input"
                       MinWidth="190"
                       VerticalAlignment="Center"
-                      ItemsSource="{Binding HistoryProjectFilters}"
-                      SelectedItem="{Binding SelectedHistoryProject}" />
+                      ItemsSource="{Binding History.HistoryProjectFilters}"
+                      SelectedItem="{Binding History.SelectedHistoryProject}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="models:ProjectFilterOption">
+                        <TextBlock Text="{Binding Label}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
 
             <ComboBox Grid.Column="2"
                       Classes="history-input"
                       MinWidth="160"
                       VerticalAlignment="Center"
-                      ItemsSource="{Binding HistoryStatusFilters}"
-                      SelectedItem="{Binding SelectedHistoryStatus}" />
+                      ItemsSource="{Binding History.HistoryStatusFilters}"
+                      SelectedItem="{Binding History.SelectedHistoryStatusFilter, Mode=TwoWay}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="models:EnumOption">
+                        <TextBlock Text="{Binding Label}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
 
             <TextBox Grid.Column="3"
                      Classes="history-input"
                      VerticalAlignment="Center"
                      PlaceholderText="{DynamicResource 'Проект, версия или дата'}"
-                     Text="{Binding HistorySearchText, UpdateSourceTrigger=PropertyChanged}" />
+                     Text="{Binding History.HistorySearchText, UpdateSourceTrigger=PropertyChanged}" />
             <StackPanel Grid.Row="1" Grid.ColumnSpan="4" Margin="0,10,0,0" Orientation="Horizontal" Spacing="10">
-                <ComboBox Width="280" ItemsSource="{Binding MachineProfiles}" SelectedItem="{Binding SelectedHistoryMachine}"
+                <ComboBox Width="280" ItemsSource="{Binding MachineEditor.MachineProfiles}" SelectedItem="{Binding SelectedHistoryMachine}"
                           PlaceholderText="{DynamicResource 'Все машины'}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate x:DataType="models:RemoteMachine">
@@ -86,14 +98,14 @@
                       HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto">
             <Grid RowDefinitions="*,Auto">
-                <TextBlock IsVisible="{Binding HasNoHistoryItems}"
+                <TextBlock IsVisible="{Binding History.HasNoHistoryItems}"
                            Margin="0,70,0,0"
                            HorizontalAlignment="Center"
                            Text="{DynamicResource 'История пока пуста'}"
                            FontSize="16"
                            Foreground="{DynamicResource AppTextMutedBrush}" />
 
-                <ItemsControl Grid.Row="0" ItemsSource="{Binding HistoryItems}">
+                <ItemsControl Grid.Row="0" ItemsSource="{Binding History.HistoryItems}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:DeploymentHistoryItemViewModel">
                             <Border Margin="0,0,0,10"
@@ -136,7 +148,7 @@
                         Margin="0,10,0,0"
                         Padding="18,9"
                         HorizontalAlignment="Center"
-                        IsVisible="{Binding HasMoreHistoryItems}"
+                        IsVisible="{Binding History.HasMoreHistoryItems}"
                         Background="{DynamicResource AppSurfaceRaisedBrush}"
                         BorderBrush="{DynamicResource AppBorderBrush}"
                         BorderThickness="1"

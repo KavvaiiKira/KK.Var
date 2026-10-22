@@ -1,11 +1,12 @@
 using Avalonia.Controls;
 
-namespace KK.Var.Views.Controls;
-
-public partial class BrandMark : UserControl
+namespace KK.Var.Views.Controls
 {
-    public BrandMark()
+    public partial class BrandMark : UserControl
     {
-        InitializeComponent();
+        public BrandMark()
+        {
+            InitializeComponent();
+        }
     }
 }

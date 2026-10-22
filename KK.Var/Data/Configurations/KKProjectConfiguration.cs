@@ -1,113 +1,115 @@
+using KK.Var.Constants;
 using KK.Var.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace KK.Var.Data.Configurations;
-
-public sealed class KKProjectConfiguration : IEntityTypeConfiguration<KKProject>
+namespace KK.Var.Data.Configurations
 {
-    public void Configure(EntityTypeBuilder<KKProject> builder)
+    public sealed class KKProjectConfiguration : IEntityTypeConfiguration<KKProject>
     {
-        builder.ToTable("KKProjects", table =>
+        public void Configure(EntityTypeBuilder<KKProject> builder)
         {
-            table.HasCheckConstraint(
-                "CK_KKProjects_Source",
-                "(SourceType = 1 AND LocalDirectoryPath IS NOT NULL " +
-                "AND GitHubRepositoryId IS NULL AND GitHubRepositoryFullName IS NULL " +
-                "AND GitHubCloneUrl IS NULL) OR " +
-                "(SourceType = 2 AND LocalDirectoryPath IS NULL " +
-                "AND GitHubRepositoryId IS NOT NULL AND GitHubRepositoryFullName IS NOT NULL " +
-                "AND GitHubCloneUrl IS NOT NULL)");
-            table.HasCheckConstraint(
-                "CK_KKProjects_MaxStoredVersions",
-                "MaxStoredVersions > 0");
-            table.HasCheckConstraint(
-                "CK_KKProjects_MaxStoredVersionBytes",
-                "MaxStoredVersionBytes IS NULL OR MaxStoredVersionBytes > 0");
-        });
+            builder.ToTable(DatabaseSchema.ProjectsTable, table =>
+            {
+                table.HasCheckConstraint(
+                    DatabaseSchema.ProjectSourceConstraint,
+                    "(SourceType = 1 AND LocalDirectoryPath IS NOT NULL " +
+                                    "AND GitHubRepositoryId IS NULL AND GitHubRepositoryFullName IS NULL " +
+                                    "AND GitHubCloneUrl IS NULL) OR " +
+                                    "(SourceType = 2 AND LocalDirectoryPath IS NULL " +
+                                    "AND GitHubRepositoryId IS NOT NULL AND GitHubRepositoryFullName IS NOT NULL " +
+                                    "AND GitHubCloneUrl IS NOT NULL)");
+                table.HasCheckConstraint(
+                    DatabaseSchema.MaxVersionsConstraint,
+                    DatabaseSchema.PositiveMaxVersionsCheck);
+                table.HasCheckConstraint(
+                    DatabaseSchema.MaxVersionBytesConstraint,
+                    DatabaseSchema.PositiveMaxVersionBytesCheck);
+            });
 
-        builder.HasKey(project => project.Id);
+            builder.HasKey(project => project.Id);
 
-        builder.Property(project => project.Name)
-            .IsRequired()
-            .HasMaxLength(200)
-            .UseCollation("NOCASE");
+            builder.Property(project => project.Name)
+                .IsRequired()
+                .HasMaxLength(200)
+                .UseCollation(DatabaseSchema.CaseInsensitiveCollation);
 
-        builder.HasIndex(project => project.Name)
-            .IsUnique();
+            builder.HasIndex(project => project.Name)
+                .IsUnique();
 
-        builder.Property(project => project.Description)
-            .HasMaxLength(2000);
+            builder.Property(project => project.Description)
+                .HasMaxLength(2000);
 
-        builder.Property(project => project.SourceType)
-            .HasConversion<int>();
+            builder.Property(project => project.SourceType)
+                .HasConversion<int>();
 
-        builder.Property(project => project.LocalDirectoryPath)
-            .HasMaxLength(1024);
+            builder.Property(project => project.LocalDirectoryPath)
+                .HasMaxLength(1024);
 
-        builder.Property(project => project.GitHubRepositoryFullName)
-            .HasMaxLength(300);
+            builder.Property(project => project.GitHubRepositoryFullName)
+                .HasMaxLength(300);
 
-        builder.Property(project => project.GitHubCloneUrl)
-            .HasMaxLength(2048);
+            builder.Property(project => project.GitHubCloneUrl)
+                .HasMaxLength(2048);
 
-        builder.Property(project => project.GitHubBranch)
-            .HasMaxLength(255);
+            builder.Property(project => project.GitHubBranch)
+                .HasMaxLength(255);
 
-        builder.Property(project => project.BuildProvider)
-            .HasConversion<int>();
+            builder.Property(project => project.BuildProvider)
+                .HasConversion<int>();
 
-        builder.Property(project => project.BuildConfigurationJson)
-            .IsRequired();
+            builder.Property(project => project.BuildConfigurationJson)
+                .IsRequired();
 
-        builder.Property(project => project.RemoteServiceName)
-            .IsRequired()
-            .HasMaxLength(255)
-            .UseCollation("NOCASE");
+            builder.Property(project => project.RemoteServiceName)
+                .IsRequired()
+                .HasMaxLength(255)
+                .UseCollation(DatabaseSchema.CaseInsensitiveCollation);
 
-        builder.HasIndex(project => new { project.RemoteMachineId, project.RemoteServiceName })
-            .IsUnique();
+            builder.HasIndex(project => new { project.RemoteMachineId, project.RemoteServiceName })
+                .IsUnique();
 
-        builder.Property(project => project.RemoteExecutableFileName)
-            .IsRequired()
-            .HasMaxLength(255);
+            builder.Property(project => project.RemoteExecutableFileName)
+                .IsRequired()
+                .HasMaxLength(255);
 
-        builder.Property(project => project.RemoteDeploymentDirectory)
-            .IsRequired()
-            .HasMaxLength(1024);
+            builder.Property(project => project.RemoteDeploymentDirectory)
+                .IsRequired()
+                .HasMaxLength(1024);
 
-        builder.Property(project => project.ProjectEnvironmentFilePath)
-            .IsRequired()
-            .HasMaxLength(1024);
+            builder.Property(project => project.ProjectEnvironmentFilePath)
+                .IsRequired()
+                .HasMaxLength(1024);
 
-        builder.Property(project => project.EnvironmentFileFormat)
-            .HasConversion<int>();
+            builder.Property(project => project.EnvironmentFileFormat)
+                .HasConversion<int>();
 
-        builder.Property(project => project.HealthCheckType)
-            .HasConversion<int>();
+            builder.Property(project => project.HealthCheckType)
+                .HasConversion<int>();
 
-        builder.Property(project => project.HealthCheckHttpUrl)
-            .HasMaxLength(2048);
+            builder.Property(project => project.HealthCheckHttpUrl)
+                .HasMaxLength(2048);
 
-        builder.Property(project => project.HealthCheckCommand)
-            .HasMaxLength(4000);
+            builder.Property(project => project.HealthCheckCommand)
+                .HasMaxLength(4000);
 
-        builder.Property(project => project.MaxStoredVersions)
-            .HasDefaultValue(10);
+            builder.Property(project => project.MaxStoredVersions)
+                .HasDefaultValue(10);
 
-        builder.HasMany(project => project.EnvironmentVariables)
-            .WithOne(variable => variable.Project)
-            .HasForeignKey(variable => variable.KKProjectId)
-            .OnDelete(DeleteBehavior.Cascade);
+            builder.HasMany(project => project.EnvironmentVariables)
+                .WithOne(variable => variable.Project)
+                .HasForeignKey(variable => variable.KKProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(project => project.Versions)
-            .WithOne(version => version.Project)
-            .HasForeignKey(version => version.KKProjectId)
-            .OnDelete(DeleteBehavior.Cascade);
+            builder.HasMany(project => project.Versions)
+                .WithOne(version => version.Project)
+                .HasForeignKey(version => version.KKProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(project => project.Deployments)
-            .WithOne(deployment => deployment.Project)
-            .HasForeignKey(deployment => deployment.KKProjectId)
-            .OnDelete(DeleteBehavior.Cascade);
+            builder.HasMany(project => project.Deployments)
+                .WithOne(deployment => deployment.Project)
+                .HasForeignKey(deployment => deployment.KKProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+        }
     }
 }

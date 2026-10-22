@@ -1,124 +1,119 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using KK.Var.Constants;
 using KK.Var.Enums;
 using KK.Var.Models;
 
-namespace KK.Var.ViewModels;
-
-public partial class MainViewModel
+namespace KK.Var.ViewModels
 {
-    private CancellationTokenSource? _preflightCancellation;
-    private Guid? _preflightProjectId;
-    private readonly Dictionary<Guid, int> _preflightRevisions = new Dictionary<Guid, int>();
-
-    [ObservableProperty]
-    public partial bool IsPreflightChecking { get; set; }
-
-    public bool CanCheckDeployment =>
-        SelectedProject is not null &&
-        !IsPreflightChecking &&
-        !IsProjectDetailsLoading &&
-        !IsSelectedProjectDeploymentActive &&
-        !HasUnsavedEnvironmentChanges &&
-        !IsEnvironmentSaving &&
-        (!IsSelectedProjectGitHub || DeploymentGitHubSource.HasCommit);
-
-    public IReadOnlyList<DeploymentPreflightItemViewModel> DeploymentPreflightItems =>
-        SelectedDeploymentState?.PreflightItems ?? [];
-
-    public async Task CheckSelectedDeploymentAsync()
+    public partial class MainViewModel
     {
-        if (_deploymentPreflightService is null || !CanCheckDeployment || SelectedProject is null)
-        {
-            return;
-        }
+        private CancellationTokenSource? _preflightCancellation;
 
-        var projectId = SelectedProject.Id;
-        var revision = GetPreflightRevision(projectId);
-        var state = new DeploymentUiState
-        {
-            ProjectId = projectId,
-            VersionTag = DeploymentVersionTag.Trim(),
-            QueueStatus = DeploymentQueueStatus.Completed,
-            PreflightRevision = revision,
-        };
-        _deploymentStates[projectId] = state;
-        var cancellation = new CancellationTokenSource();
-        _preflightCancellation = cancellation;
-        _preflightProjectId = projectId;
-        IsPreflightChecking = true;
-        ClearStatusNotification();
-        NotifySelectedDeploymentStateChanged();
+        private Guid? _preflightProjectId;
 
-        try
-        {
-            var result = await _deploymentPreflightService.CheckAsync(
-                new DeploymentRequest(projectId, state.VersionTag, DeploymentDescription,
-                    IsSelectedProjectGitHub ? DeploymentGitHubSource.BranchName : null,
-                    IsSelectedProjectGitHub ? DeploymentGitHubSource.Commit?.Sha : null),
-                cancellationToken: cancellation.Token);
+        [ObservableProperty]
+        public partial bool IsPreflightChecking { get; set; }
 
-            if (revision == GetPreflightRevision(projectId) &&
-                TryGetDeploymentState(projectId, state.OperationId, out var current))
+        public bool CanCheckDeployment =>
+            SelectedProject is not null &&
+            !IsPreflightChecking &&
+            !ProjectDetails.IsProjectDetailsLoading &&
+            !DeploymentWorkspace.IsSelectedProjectDeploymentActive &&
+            !EnvironmentEditor.HasUnsavedEnvironmentChanges &&
+            !EnvironmentEditor.IsEnvironmentSaving &&
+            (!IsSelectedProjectGitHub || DeploymentGitHubSource.HasCommit);
+
+        public IReadOnlyList<DeploymentPreflightItemViewModel> DeploymentPreflightItems =>
+            DeploymentWorkspace.DeploymentPreflightItems;
+
+        public async Task CheckSelectedDeploymentAsync()
+        {
+            if (!CanCheckDeployment || SelectedProject is null)
             {
-                current.PreflightResult = result;
-                NotifySelectedDeploymentStateChanged();
+                return;
+            }
+
+            var projectId = SelectedProject.Id;
+            var revision = DeploymentWorkspace.GetPreflightRevision(projectId);
+            var state = new DeploymentUiState
+            {
+                ProjectId = projectId,
+                VersionTag = DeploymentVersionTag.Trim(),
+                QueueStatus = DeploymentQueueStatus.Completed,
+                PreflightRevision = revision,
+            };
+            DeploymentWorkspace.SetState(state);
+            var cancellation = new CancellationTokenSource();
+            _preflightCancellation = cancellation;
+            _preflightProjectId = projectId;
+            IsPreflightChecking = true;
+            ClearStatusNotification();
+            DeploymentWorkspace.NotifySelectedDeploymentStateChanged();
+
+            try
+            {
+                var result = await _deploymentPreflightService.CheckAsync(
+                    new DeploymentRequest(
+                        projectId,
+                        state.VersionTag,
+                        DeploymentDescription,
+                        IsSelectedProjectGitHub ? DeploymentGitHubSource.BranchName : null,
+                        IsSelectedProjectGitHub ? DeploymentGitHubSource.Commit?.Sha : null),
+                    cancellationToken: cancellation.Token);
+
+                if (revision == DeploymentWorkspace.GetPreflightRevision(projectId) &&
+                    DeploymentWorkspace.TryGetDeploymentState(projectId, state.OperationId, out var current))
+                {
+                    current.PreflightResult = result;
+                    DeploymentWorkspace.NotifySelectedDeploymentStateChanged();
+                }
+            }
+            catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+            {
+                return;
+            }
+            catch (Exception exception)
+            {
+                if (revision == DeploymentWorkspace.GetPreflightRevision(projectId) && SelectedProject?.Id == projectId)
+                {
+                    state.PreflightResult = new DeploymentPreflightResult(
+                        [new DeploymentPreflightCheck(
+                            PreflightCheckKeys.Check,
+                            PreflightStatus.Error,
+                            Localize("Не удалось выполнить проверку."),
+                            Localize(exception.Message))]);
+                    DeploymentWorkspace.NotifySelectedDeploymentStateChanged();
+                }
+            }
+            finally
+            {
+                _preflightCancellation = null;
+                _preflightProjectId = null;
+                cancellation.Dispose();
+                IsPreflightChecking = false;
             }
         }
-        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+
+        public void InvalidateDeploymentPreflight(Guid? projectId = null)
         {
-        }
-        catch (Exception exception)
-        {
-            if (revision == GetPreflightRevision(projectId) && SelectedProject?.Id == projectId)
+            if (projectId is null || projectId == _preflightProjectId)
             {
-                state.PreflightResult = new DeploymentPreflightResult(
-                    [new DeploymentPreflightCheck("check", PreflightStatus.Error,
-                        Localize("Не удалось выполнить проверку."), exception.Message)]);
-                NotifySelectedDeploymentStateChanged();
+                _preflightCancellation?.Cancel();
             }
+
+            DeploymentWorkspace.InvalidatePreflight(projectId);
+
+            DeploymentWorkspace.NotifySelectedDeploymentStateChanged();
         }
-        finally
+
+        partial void OnIsPreflightCheckingChanged(bool value)
         {
-            _preflightCancellation = null;
-            _preflightProjectId = null;
-            cancellation.Dispose();
-            IsPreflightChecking = false;
+            OnPropertyChanged(nameof(CanCheckDeployment));
+            NotifyOperationStateChanged();
         }
     }
-
-    public void InvalidateDeploymentPreflight(Guid? projectId = null)
-    {
-        if (projectId is null || projectId == _preflightProjectId)
-        {
-            _preflightCancellation?.Cancel();
-        }
-
-        var projectIds = projectId.HasValue ?
-            [projectId.Value] :
-            _deploymentStates.Keys.ToArray();
-        foreach (var id in projectIds)
-        {
-            _preflightRevisions[id] = GetPreflightRevision(id) + 1;
-            if (_deploymentStates.TryGetValue(id, out var state))
-            {
-                state.PreflightResult = null;
-            }
-        }
-
-        NotifySelectedDeploymentStateChanged();
-    }
-
-    private int GetPreflightRevision(Guid projectId) =>
-        _preflightRevisions.GetValueOrDefault(projectId);
-
-    partial void OnIsPreflightCheckingChanged(bool value) =>
-        OnPropertyChanged(nameof(CanCheckDeployment));
-
-    partial void OnHasUnsavedEnvironmentChangesChanged(bool value) =>
-        OnPropertyChanged(nameof(CanCheckDeployment));
 }

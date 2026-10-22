@@ -1,19 +1,18 @@
 using System;
 using KK.Var.Enums;
 
-namespace KK.Var.Services;
-
-public interface ILocalizationService
+namespace KK.Var.Services
 {
-    ApplicationLanguage CurrentLanguage { get; }
+    public interface ILocalizationService
+    {
+        ApplicationLanguage CurrentLanguage { get; }
 
-    event EventHandler? LanguageChanged;
+        event EventHandler? LanguageChanged;
 
-    string Get(string key);
+        string Get(string key);
 
-    string GetKey(string localizedText);
+        string Format(string key, params object?[] arguments);
 
-    string Format(string key, params object?[] arguments);
-
-    void SetLanguage(ApplicationLanguage language);
+        void SetLanguage(ApplicationLanguage language);
+    }
 }

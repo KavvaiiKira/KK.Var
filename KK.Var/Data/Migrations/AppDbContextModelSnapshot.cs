@@ -355,9 +355,8 @@ namespace KK.Var.Data.Migrations
                     b.Property<string>("Architecture")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("AuthenticationMethod")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<int>("AuthenticationMethod")
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");

@@ -4,38 +4,40 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using KK.Var.ViewModels;
 
-namespace KK.Var.Views.Pages;
-
-public partial class HistoryView : UserControl
+namespace KK.Var.Views.Pages
 {
-    private void ClearMachineFilter_OnClick(object? sender, RoutedEventArgs e)
+    public partial class HistoryView : UserControl
     {
-        if (DataContext is MainViewModel viewModel)
+        private void ClearMachineFilter_OnClick(object? sender, RoutedEventArgs e)
         {
-            viewModel.SelectedHistoryMachine = null;
+            if (DataContext is MainViewModel viewModel)
+            {
+                viewModel.SelectedHistoryMachine = null;
+            }
         }
-    }
-    public HistoryView()
-    {
-        InitializeComponent();
-    }
 
-    public event Action<DeploymentHistoryItemViewModel>? DeploymentSelected;
-
-    private void DeploymentItem_OnPointerPressed(object? sender, PointerPressedEventArgs e)
-    {
-        if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed &&
-            (sender as Control)?.DataContext is DeploymentHistoryItemViewModel item)
+        public HistoryView()
         {
-            DeploymentSelected?.Invoke(item);
+            InitializeComponent();
         }
-    }
 
-    private async void LoadMoreButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (DataContext is MainViewModel viewModel)
+        public event Action<DeploymentHistoryItemViewModel>? DeploymentSelected;
+
+        private void DeploymentItem_OnPointerPressed(object? sender, PointerPressedEventArgs e)
         {
-            await viewModel.LoadMoreHistoryAsync();
+            if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed &&
+                (sender as Control)?.DataContext is DeploymentHistoryItemViewModel item)
+            {
+                DeploymentSelected?.Invoke(item);
+            }
+        }
+
+        private async void LoadMoreButton_OnClick(object? sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainViewModel viewModel)
+            {
+                await viewModel.History.LoadMoreHistoryAsync();
+            }
         }
     }
 }

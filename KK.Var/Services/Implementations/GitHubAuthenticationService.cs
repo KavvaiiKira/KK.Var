@@ -3,64 +3,65 @@ using System.Threading;
 using System.Threading.Tasks;
 using KK.Var.Models;
 
-namespace KK.Var.Services.Implementations;
-
-public sealed class GitHubAuthenticationService(
-    IGitHubService gitHubService,
-    IGitHubTokenStore tokenStore) : IGitHubAuthenticationService
+namespace KK.Var.Services.Implementations
 {
-    private readonly SemaphoreSlim _refreshLock = new SemaphoreSlim(1, 1);
-
-    public async Task<GitHubToken?> GetTokenAsync(
-        CancellationToken cancellationToken = default)
+    public sealed class GitHubAuthenticationService(
+        IGitHubService gitHubService,
+        IGitHubTokenStore tokenStore) : IGitHubAuthenticationService
     {
-        var token = await tokenStore.LoadAsync(cancellationToken);
-        if (token?.AccessTokenExpiresAtUtc is null ||
-            token.AccessTokenExpiresAtUtc > DateTimeOffset.UtcNow.AddMinutes(2))
-        {
-            return token;
-        }
+        private readonly SemaphoreSlim _refreshLock = new SemaphoreSlim(1, 1);
 
-        await _refreshLock.WaitAsync(cancellationToken);
-        try
+        public async Task<GitHubToken?> GetTokenAsync(
+            CancellationToken cancellationToken = default)
         {
-            token = await tokenStore.LoadAsync(cancellationToken);
+            var token = await tokenStore.LoadAsync(cancellationToken);
             if (token?.AccessTokenExpiresAtUtc is null ||
                 token.AccessTokenExpiresAtUtc > DateTimeOffset.UtcNow.AddMinutes(2))
             {
                 return token;
             }
 
-            if (string.IsNullOrWhiteSpace(token.RefreshToken) ||
-                token.RefreshTokenExpiresAtUtc <= DateTimeOffset.UtcNow)
-            {
-                await tokenStore.DeleteAsync(cancellationToken);
-                return null;
-            }
-
+            await _refreshLock.WaitAsync(cancellationToken);
             try
             {
-                var refreshed = await gitHubService.RefreshAccessTokenAsync(
-                    token,
-                    cancellationToken);
+                token = await tokenStore.LoadAsync(cancellationToken);
+                if (token?.AccessTokenExpiresAtUtc is null ||
+                    token.AccessTokenExpiresAtUtc > DateTimeOffset.UtcNow.AddMinutes(2))
+                {
+                    return token;
+                }
 
-                await tokenStore.SaveAsync(refreshed, cancellationToken);
+                if (string.IsNullOrWhiteSpace(token.RefreshToken) ||
+                    token.RefreshTokenExpiresAtUtc <= DateTimeOffset.UtcNow)
+                {
+                    await tokenStore.DeleteAsync(cancellationToken);
+                    return null;
+                }
 
-                return refreshed;
+                try
+                {
+                    var refreshed = await gitHubService.RefreshAccessTokenAsync(
+                        token,
+                        cancellationToken);
+
+                    await tokenStore.SaveAsync(refreshed, cancellationToken);
+
+                    return refreshed;
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception)
+                {
+                    await tokenStore.DeleteAsync(cancellationToken);
+                    return null;
+                }
             }
-            catch (OperationCanceledException)
+            finally
             {
-                throw;
+                _refreshLock.Release();
             }
-            catch (Exception)
-            {
-                await tokenStore.DeleteAsync(cancellationToken);
-                return null;
-            }
-        }
-        finally
-        {
-            _refreshLock.Release();
         }
     }
 }

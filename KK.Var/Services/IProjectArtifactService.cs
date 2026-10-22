@@ -3,19 +3,20 @@ using System.Threading;
 using System.Threading.Tasks;
 using KK.Var.Models;
 
-namespace KK.Var.Services;
-
-public interface IProjectArtifactService
+namespace KK.Var.Services
 {
-    Task<ProjectArtifact> CreateAsync(
-        KKProject project,
-        string versionTag,
-        string remoteArchitecture,
-        IProgress<DeploymentProgress>? progress = null,
-        string? sourceCommitSha = null,
-        CancellationToken cancellationToken = default);
+    public interface IProjectArtifactService
+    {
+        Task<ProjectArtifact> CreateAsync(
+            KKProject project,
+            string versionTag,
+            string remoteArchitecture,
+            IProgress<DeploymentProgress>? progress = null,
+            string? sourceCommitSha = null,
+            CancellationToken cancellationToken = default);
 
-    Task DeleteAllAsync(
-        Guid projectId,
-        CancellationToken cancellationToken = default);
+        Task DeleteAllAsync(
+            Guid projectId,
+            CancellationToken cancellationToken = default);
+    }
 }
