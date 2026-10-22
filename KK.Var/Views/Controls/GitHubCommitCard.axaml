@@ -1,0 +1,66 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:KK.Var.ViewModels"
+             xmlns:controls="using:KK.Var.Views.Controls"
+             x:Class="KK.Var.Views.Controls.GitHubCommitCard"
+             x:DataType="vm:GitHubSourceSelectionViewModel"
+             IsVisible="{Binding HasCommit}">
+    <UserControl.Styles>
+        <Style Selector="Border.commit-frame">
+            <Setter Property="Margin" Value="0,6,0,0" />
+            <Setter Property="Padding" Value="18" />
+            <Setter Property="Background" Value="{DynamicResource AppSurfaceRaisedBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+        </Style>
+        <Style Selector="controls|GitHubCommitCard.embedded Border.commit-frame">
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+    </UserControl.Styles>
+    <Border Classes="commit-frame">
+        <StackPanel Spacing="12">
+            <TextBlock Text="{DynamicResource 'Коммит ветки'}"
+                       FontSize="11"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource AppPrimaryHoverBrush}" />
+            <ScrollViewer MaxHeight="120"
+                          HorizontalScrollBarVisibility="Disabled"
+                          VerticalScrollBarVisibility="Auto">
+                <SelectableTextBlock Text="{Binding Commit.Message}"
+                                     FontSize="14"
+                                     FontWeight="SemiBold"
+                                     TextWrapping="Wrap"
+                                     Foreground="{DynamicResource AppTextBrush}" />
+            </ScrollViewer>
+            <Border Height="1" Background="{DynamicResource AppBorderBrush}" />
+            <Grid ColumnDefinitions="Auto,*"
+                  RowDefinitions="Auto,Auto"
+                  ColumnSpacing="16"
+                  RowSpacing="8">
+                <TextBlock Text="{DynamicResource 'Автор'}"
+                           FontSize="12"
+                           Foreground="{DynamicResource AppTextMutedBrush}" />
+                <SelectableTextBlock Grid.Column="1"
+                                     Text="{Binding Commit.Author}"
+                                     FontSize="12"
+                                     TextWrapping="Wrap"
+                                     Foreground="{DynamicResource AppTextBrush}" />
+                <TextBlock Grid.Row="1"
+                           Text="SHA"
+                           FontSize="12"
+                           Foreground="{DynamicResource AppTextMutedBrush}" />
+                <SelectableTextBlock Grid.Row="1"
+                                     Grid.Column="1"
+                                     Text="{Binding Commit.Sha}"
+                                     FontFamily="Cascadia Mono, Consolas"
+                                     FontSize="11"
+                                     TextWrapping="Wrap"
+                                     Foreground="{DynamicResource AppTextMutedBrush}" />
+            </Grid>
+        </StackPanel>
+    </Border>
+</UserControl>

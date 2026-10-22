@@ -9,7 +9,33 @@
              x:Class="KK.Var.Views.Pages.DeploymentDetailsView"
              x:DataType="vm:DeploymentDetailsViewModel">
 
-    <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="ScrollBarBackground" Color="{StaticResource AppSurfaceRaisedColor}" />
+        <SolidColorBrush x:Key="ScrollBarTrackFill" Color="{StaticResource AppSurfaceRaisedColor}" />
+        <SolidColorBrush x:Key="ScrollBarPanningThumbBackground" Color="{StaticResource AppPrimaryColor}" />
+        <SolidColorBrush x:Key="ScrollBarThumbFillPointerOver" Color="{StaticResource AppPrimaryHoverColor}" />
+        <SolidColorBrush x:Key="ScrollBarThumbFillPressed" Color="{StaticResource AppAccentColor}" />
+        <SolidColorBrush x:Key="ScrollBarButtonArrowForeground" Color="{StaticResource AppTextMutedColor}" />
+        <SolidColorBrush x:Key="ScrollBarButtonArrowForegroundPointerOver" Color="{StaticResource AppPrimaryHoverColor}" />
+        <SolidColorBrush x:Key="ScrollBarButtonArrowForegroundPressed" Color="{StaticResource AppAccentColor}" />
+        <SolidColorBrush x:Key="ScrollViewerScrollBarsSeparatorBackground" Color="{StaticResource AppSurfaceRaisedColor}" />
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="TextBox.operation-code">
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="Background" Value="{DynamicResource AppBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+        <Style Selector="TextBox.operation-code /template/ ScrollViewer">
+            <Setter Property="AllowAutoHide" Value="False" />
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer AllowAutoHide="False"
+                  HorizontalScrollBarVisibility="Disabled"
                   VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="30,26,30,28" Spacing="18">
             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
@@ -124,10 +150,11 @@
                     <TextBlock Text="{DynamicResource 'Сохранённые значения не предназначены для секретов.'}"
                                FontSize="12"
                                Foreground="{DynamicResource AppTextMutedBrush}" />
-                    <TextBox Height="180"
-                             Padding="12"
+                    <TextBox Classes="operation-code"
+                             Height="240"
                              IsReadOnly="True"
                              AcceptsReturn="True"
+                             TextWrapping="NoWrap"
                              Text="{Binding VariablesSnapshotDisplay}"
                              FontFamily="Cascadia Mono, Consolas"
                              ScrollViewer.HorizontalScrollBarVisibility="Auto"
@@ -142,10 +169,11 @@
                     CornerRadius="12">
                 <StackPanel Spacing="9">
                     <TextBlock Text="{DynamicResource 'Лог операции'}" FontWeight="SemiBold" />
-                    <TextBox Height="280"
-                             Padding="12"
+                    <TextBox Classes="operation-code"
+                             Height="280"
                              IsReadOnly="True"
                              AcceptsReturn="True"
+                             TextWrapping="NoWrap"
                              Text="{Binding LogDisplay}"
                              FontFamily="Cascadia Mono, Consolas"
                              ScrollViewer.HorizontalScrollBarVisibility="Auto"

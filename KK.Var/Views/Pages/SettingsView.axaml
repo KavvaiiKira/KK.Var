@@ -61,14 +61,6 @@
                            Foreground="{DynamicResource AppTextMutedBrush}" />
             </StackPanel>
 
-            <StackPanel Grid.Column="1"
-                        VerticalAlignment="Center"
-                        Orientation="Horizontal"
-                        Spacing="12">
-                <Button Classes="settings-primary"
-                        Content="{DynamicResource 'Сохранить'}"
-                        Command="{Binding SaveSettingsCommand}" />
-            </StackPanel>
         </Grid>
 
         <ScrollViewer Grid.Row="1"
@@ -79,11 +71,14 @@
             <StackPanel MaxWidth="1050"
                         HorizontalAlignment="Stretch"
                         Spacing="18">
-                <Border Padding="24" Background="{DynamicResource AppSurfaceBrush}"
-                        BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="14">
-                    <StackPanel Spacing="10">
+                <Border Padding="24"
+                        Background="{DynamicResource AppSurfaceBrush}"
+                        BorderBrush="{DynamicResource AppBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="14">
+                    <StackPanel Spacing="20">
                         <TextBlock Text="{DynamicResource 'Профили удалённых машин'}" FontSize="19" FontWeight="Bold" />
-                        <ComboBox ItemsSource="{Binding MachineEditor.MachineProfiles}" SelectedItem="{Binding MachineEditor.SelectedMachineProfile}"
+                        <ComboBox Classes="settings-field" IsVisible="{Binding !!MachineEditor.MachineProfiles.Count}" ItemsSource="{Binding MachineEditor.MachineProfiles}" SelectedItem="{Binding MachineEditor.SelectedMachineProfile}"
                                   IsEnabled="{Binding !MachineEditor.IsConnectionCheckRunning}" HorizontalAlignment="Stretch">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate x:DataType="models:RemoteMachine">
@@ -95,23 +90,196 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
                         <WrapPanel ItemSpacing="10" LineSpacing="8">
-                            <Button Classes="settings-secondary" Content="{DynamicResource 'Добавить профиль'}" Command="{Binding MachineEditor.AddMachineProfileCommand}" />
-                            <Button Classes="settings-secondary" Content="{Binding MachineEditor.ArchiveMachineCaption}" Command="{Binding MachineEditor.ArchiveMachineProfileCommand}" />
+                            <Button Classes="settings-secondary" Content="{DynamicResource 'Добавить профиль'}" IsEnabled="{Binding !MachineEditor.IsConnectionCheckRunning}" Command="{Binding MachineEditor.AddMachineProfileCommand}" Click="AddMachineProfileButton_OnClick" />
+                            <Button Classes="settings-secondary" IsVisible="{Binding !!MachineEditor.SelectedMachineProfile}" Content="{Binding MachineEditor.ArchiveMachineCaption}" Command="{Binding MachineEditor.ArchiveMachineProfileCommand}" />
                         </WrapPanel>
-                        <TextBlock Text="{DynamicResource 'Имя профиля машины'}" />
-                        <TextBox Classes="settings-field" Text="{Binding MachineEditor.MachineProfileName}" IsEnabled="{Binding !MachineEditor.IsConnectionCheckRunning}" />
-                        <TextBlock Text="{DynamicResource 'Проекты этого профиля'}" FontWeight="SemiBold" />
-                        <TextBlock Text="{Binding MachineEditor.MachineProjectsDisplay}" TextWrapping="Wrap" />
-                    </StackPanel>
-                </Border>
-                <Border Padding="24" Background="{DynamicResource AppSurfaceBrush}"
-                        BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="14">
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="{DynamicResource 'Уведомления Windows'}" FontSize="19" FontWeight="Bold" />
-                        <CheckBox Content="{DynamicResource 'Уведомлять о завершении Deploy и rollback'}"
-                                  IsChecked="{Binding AppSettings.DeploymentNotificationsEnabled, Mode=TwoWay}" />
-                        <TextBlock Text="{DynamicResource 'Показывать краткий результат, когда окно свёрнуто или открыта другая страница. Настройка сохраняется сразу.'}"
+                        <TextBlock IsVisible="{Binding MachineEditor.IsNewMachineProfile}"
+                                   Text="{DynamicResource 'Новый профиль'}" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource AppPrimaryHoverBrush}" />
+                        <TextBlock Text="{DynamicResource 'Укажите имя, заполните SSH-подключение ниже и нажмите «Проверить и сохранить профиль». При первом подключении сверьте и подтвердите fingerprint сервера.'}"
                                    TextWrapping="Wrap" Foreground="{DynamicResource AppTextMutedBrush}" />
+                        <TextBlock Text="{DynamicResource 'Имя профиля машины'}" />
+                        <TextBox x:Name="MachineProfileNameInput" Classes="settings-field" Text="{Binding MachineEditor.MachineProfileName, Mode=TwoWay}" IsEnabled="{Binding !MachineEditor.IsConnectionCheckRunning}" />
+                        <Border Height="1" Background="{DynamicResource AppBorderBrush}" />
+                        <StackPanel Spacing="5">
+                            <TextBlock Text="{DynamicResource 'Настройки подключения'}"
+                                       FontSize="19"
+                                       FontWeight="Bold" />
+                            <TextBlock Text="{DynamicResource 'Параметры выбранного профиля. Адрес сохраняется только после проверки и подтверждения.'}"
+                                       FontSize="12"
+                                           Foreground="{DynamicResource AppTextMutedBrush}" />
+                        </StackPanel>
+
+                        <Border IsVisible="{Binding AppSettings.IsFirstRunSetupRequired}"
+                                Padding="14"
+                                Background="#2A172A"
+                                BorderBrush="{DynamicResource AppDangerBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="{DynamicResource 'Завершите обязательную настройку'}"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource AppDangerBrush}" />
+                                <TextBlock Text="{DynamicResource 'Заполните отмеченные поля подключения к удалённой машине и сохраните настройки.'}"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource AppTextMutedBrush}" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Height="1" Background="{DynamicResource AppBorderBrush}" />
+
+                        <Grid ColumnDefinitions="*,24,*" RowDefinitions="Auto,18,Auto,18,Auto" IsEnabled="{Binding !MachineEditor.IsConnectionCheckRunning}">
+                            <StackPanel Grid.Row="0" Grid.Column="0" Spacing="7">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{DynamicResource 'Адрес или IP'}" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                    <TextBlock Text=" *" IsVisible="{Binding AppSettings.IsFirstRunSetupRequired}" FontSize="12" Foreground="{DynamicResource AppDangerBrush}" />
+                                </StackPanel>
+                                <TextBox Classes="settings-field"
+                                         PlaceholderText="server.example.com"
+                                         Text="{Binding MachineEditor.MachineConnection.Host, Mode=TwoWay}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="0" Grid.Column="2" Spacing="7">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{DynamicResource 'SSH-порт'}" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                    <TextBlock Text=" *" IsVisible="{Binding AppSettings.IsFirstRunSetupRequired}" FontSize="12" Foreground="{DynamicResource AppDangerBrush}" />
+                                </StackPanel>
+                                <TextBox Classes="settings-field"
+                                         PlaceholderText="22"
+                                         Text="{Binding MachineEditor.MachineConnection.Port, Mode=TwoWay}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="2" Grid.Column="0" Spacing="7">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{DynamicResource 'Пользователь'}" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                    <TextBlock Text=" *" IsVisible="{Binding AppSettings.IsFirstRunSetupRequired}" FontSize="12" Foreground="{DynamicResource AppDangerBrush}" />
+                                </StackPanel>
+                                <TextBox Classes="settings-field"
+                                         PlaceholderText="deploy"
+                                         Text="{Binding MachineEditor.MachineConnection.UserName, Mode=TwoWay}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="2" Grid.Column="2" Spacing="7">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{DynamicResource 'Способ входа'}" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                    <TextBlock Text=" *" IsVisible="{Binding AppSettings.IsFirstRunSetupRequired}" FontSize="12" Foreground="{DynamicResource AppDangerBrush}" />
+                                </StackPanel>
+                                <ComboBox Classes="settings-field"
+                                          ItemsSource="{Binding MachineEditor.AuthenticationMethods}"
+                                          SelectedValue="{Binding MachineEditor.AuthenticationMethod, Mode=TwoWay}"
+                                          SelectedValueBinding="{CompiledBinding Value, DataType={x:Type models:EnumOption}}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="models:EnumOption">
+                                            <TextBlock Text="{Binding Label}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="4" Grid.Column="0" Spacing="7">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{DynamicResource 'Путь к приватному SSH-ключу'}" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                    <TextBlock Text=" *" IsVisible="{Binding AppSettings.IsFirstRunSetupRequired}" FontSize="12" Foreground="{DynamicResource AppDangerBrush}" />
+                                </StackPanel>
+                                <TextBox Classes="settings-field"
+                                         PlaceholderText="C:\Users\user\.ssh\id_ed25519"
+                                         IsEnabled="{Binding MachineEditor.IsPrivateKeyAuthentication}"
+                                         Text="{Binding MachineEditor.MachineConnection.PrivateKeyPath, Mode=TwoWay}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="4" Grid.Column="2" Spacing="7">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{DynamicResource 'Пароль'}" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                    <TextBlock Text=" *" IsVisible="{Binding AppSettings.IsFirstRunSetupRequired}" FontSize="12" Foreground="{DynamicResource AppDangerBrush}" />
+                                </StackPanel>
+                                <TextBox Classes="settings-field"
+                                         PasswordChar="●"
+                                         IsEnabled="{Binding MachineEditor.IsPasswordAuthentication}"
+                                         Text="{Binding MachineEditor.MachineConnection.Password, Mode=TwoWay}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Border Padding="14"
+                                Background="{DynamicResource AppSurfaceRaisedBrush}"
+                                CornerRadius="10">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <StackPanel Grid.Column="0"
+                                            Margin="0,0,20,0"
+                                            VerticalAlignment="Center"
+                                            Spacing="5">
+                                    <TextBlock Text="{DynamicResource 'Архитектура удалённой машины'}"
+                                               FontSize="12"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding MachineEditor.RemoteMachineArchitecture}"
+                                               TextWrapping="Wrap"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource AppTextMutedBrush}" />
+                                </StackPanel>
+
+                                <Button Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        Classes="settings-primary"
+                                        Content="{DynamicResource 'Проверить и сохранить профиль'}"
+                                        IsEnabled="{Binding !MachineEditor.IsConnectionCheckRunning}"
+                                        Command="{Binding CheckRemoteConnectionCommand}" />
+                            </Grid>
+                        </Border>
+
+                        <Border IsVisible="{Binding MachineEditor.IsHostKeyConfirmationRequired}"
+                                Padding="14"
+                                Background="#241A3A"
+                                BorderBrush="{DynamicResource AppPrimaryBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="20">
+                                <StackPanel Spacing="5">
+                                    <TextBlock Text="{DynamicResource 'Подтвердите SSH-сервер'}"
+                                               FontSize="12"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="{DynamicResource 'Сверьте отпечаток с данными администратора удалённой машины.'}"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource AppTextMutedBrush}" />
+                                    <TextBlock Text="{Binding MachineEditor.MachineIdentityMessage}"
+                                               FontSize="12"
+                                               FontFamily="Consolas"
+                                               TextWrapping="Wrap" />
+                                    <TextBlock IsVisible="{Binding MachineEditor.HasMachineIdentityWarning}"
+                                               Text="{DynamicResource 'Fingerprint отличается или ещё не подтверждён. Возможна переустановка, замена SSH-ключей или другой сервер.'}"
+                                               TextWrapping="Wrap" FontWeight="SemiBold" Foreground="{DynamicResource AppDangerBrush}" />
+                                    <TextBlock IsVisible="{Binding MachineEditor.IsMachineFingerprintMatch}"
+                                               Text="{DynamicResource 'Fingerprint совпадает: это сильное подтверждение идентичности машины. Подтвердите выбор.'}"
+                                               TextWrapping="Wrap" Foreground="{DynamicResource AppSuccessBrush}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1"
+                                            VerticalAlignment="Center"
+                                            Orientation="Vertical"
+                                            IsEnabled="{Binding !MachineEditor.IsConnectionCheckRunning}"
+                                            Spacing="8">
+                                    <Button Classes="settings-secondary"
+                                            Content="{DynamicResource 'Отмена'}"
+                                            Command="{Binding CancelHostKeyConfirmationCommand}" />
+                                    <Button Classes="settings-primary"
+                                            Content="{Binding MachineEditor.ConfirmMachineIdentityCaption}"
+                                            Command="{Binding ConfirmHostKeyCommand}" />
+                                    <Button Classes="settings-secondary" Content="{DynamicResource 'Нет, создать новую'}"
+                                            Command="{Binding MachineEditor.CreateNewMachineFromCandidateCommand}" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        <Border Height="1" Background="{DynamicResource AppBorderBrush}" />
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="{DynamicResource 'Проекты этого профиля'}"
+                                       FontSize="19"
+                                       FontWeight="Bold" />
+                            <TextBlock IsVisible="{Binding !!MachineEditor.MachineProjectsDisplay}"
+                                       Text="{Binding MachineEditor.MachineProjectsDisplay}"
+                                       TextWrapping="Wrap" />
+                            <TextBlock IsVisible="{Binding !MachineEditor.MachineProjectsDisplay}"
+                                       Text="{DynamicResource 'К этому профилю пока не привязаны проекты.'}"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource AppTextMutedBrush}" />
+                        </StackPanel>
                     </StackPanel>
                 </Border>
                 <Border Padding="24"
@@ -237,6 +405,16 @@
                     </Grid>
                 </Border>
 
+                <Border Padding="24" Background="{DynamicResource AppSurfaceBrush}"
+                        BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="14">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="{DynamicResource 'Уведомления Windows'}" FontSize="19" FontWeight="Bold" />
+                        <CheckBox Content="{DynamicResource 'Уведомлять о завершении Deploy и rollback'}"
+                                  IsChecked="{Binding AppSettings.DeploymentNotificationsEnabled, Mode=TwoWay}" />
+                        <TextBlock Text="{DynamicResource 'Показывать краткий результат, когда окно свёрнуто или открыта другая страница. Настройка сохраняется сразу.'}"
+                                   TextWrapping="Wrap" Foreground="{DynamicResource AppTextMutedBrush}" />
+                    </StackPanel>
+                </Border>
                 <Border Padding="24"
                         Background="{DynamicResource AppSurfaceBrush}"
                         BorderBrush="{DynamicResource AppBorderBrush}"
@@ -329,180 +507,6 @@
                     </StackPanel>
                 </Border>
 
-                <Border Padding="24"
-                        Background="{DynamicResource AppSurfaceBrush}"
-                        BorderBrush="{DynamicResource AppBorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="14">
-                    <StackPanel Spacing="20">
-                        <StackPanel Spacing="5">
-                            <TextBlock Text="{DynamicResource 'Удалённая Linux-машина'}"
-                                       FontSize="19"
-                                       FontWeight="Bold" />
-                            <TextBlock Text="{DynamicResource 'Параметры выбранного профиля. Адрес сохраняется только после проверки и подтверждения.'}"
-                                       FontSize="12"
-                                           Foreground="{DynamicResource AppTextMutedBrush}" />
-                        </StackPanel>
-
-                        <Border IsVisible="{Binding AppSettings.IsFirstRunSetupRequired}"
-                                Padding="14"
-                                Background="#2A172A"
-                                BorderBrush="{DynamicResource AppDangerBrush}"
-                                BorderThickness="1"
-                                CornerRadius="10">
-                            <StackPanel Spacing="4">
-                                <TextBlock Text="{DynamicResource 'Завершите обязательную настройку'}"
-                                           FontSize="13"
-                                           FontWeight="SemiBold"
-                                           Foreground="{DynamicResource AppDangerBrush}" />
-                                <TextBlock Text="{DynamicResource 'Заполните отмеченные поля подключения к удалённой машине и сохраните настройки.'}"
-                                           FontSize="11"
-                                           Foreground="{DynamicResource AppTextMutedBrush}" />
-                            </StackPanel>
-                        </Border>
-
-                        <Border Height="1" Background="{DynamicResource AppBorderBrush}" />
-
-                        <Grid ColumnDefinitions="*,24,*" RowDefinitions="Auto,18,Auto,18,Auto" IsEnabled="{Binding !MachineEditor.IsConnectionCheckRunning}">
-                            <StackPanel Grid.Row="0" Grid.Column="0" Spacing="7">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{DynamicResource 'Адрес или IP'}" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
-                                    <TextBlock Text=" *" IsVisible="{Binding AppSettings.IsFirstRunSetupRequired}" FontSize="12" Foreground="{DynamicResource AppDangerBrush}" />
-                                </StackPanel>
-                                <TextBox Classes="settings-field"
-                                         PlaceholderText="server.example.com"
-                                         Text="{Binding MachineEditor.MachineConnection.Host, Mode=TwoWay}" />
-                            </StackPanel>
-
-                            <StackPanel Grid.Row="0" Grid.Column="2" Spacing="7">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{DynamicResource 'SSH-порт'}" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
-                                    <TextBlock Text=" *" IsVisible="{Binding AppSettings.IsFirstRunSetupRequired}" FontSize="12" Foreground="{DynamicResource AppDangerBrush}" />
-                                </StackPanel>
-                                <TextBox Classes="settings-field"
-                                         PlaceholderText="22"
-                                         Text="{Binding MachineEditor.MachineConnection.Port, Mode=TwoWay}" />
-                            </StackPanel>
-
-                            <StackPanel Grid.Row="2" Grid.Column="0" Spacing="7">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{DynamicResource 'Пользователь'}" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
-                                    <TextBlock Text=" *" IsVisible="{Binding AppSettings.IsFirstRunSetupRequired}" FontSize="12" Foreground="{DynamicResource AppDangerBrush}" />
-                                </StackPanel>
-                                <TextBox Classes="settings-field"
-                                         PlaceholderText="deploy"
-                                         Text="{Binding MachineEditor.MachineConnection.UserName, Mode=TwoWay}" />
-                            </StackPanel>
-
-                            <StackPanel Grid.Row="2" Grid.Column="2" Spacing="7">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{DynamicResource 'Способ входа'}" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
-                                    <TextBlock Text=" *" IsVisible="{Binding AppSettings.IsFirstRunSetupRequired}" FontSize="12" Foreground="{DynamicResource AppDangerBrush}" />
-                                </StackPanel>
-                                <ComboBox Classes="settings-field"
-                                          ItemsSource="{Binding MachineEditor.AuthenticationMethods}"
-                                          SelectedValue="{Binding MachineEditor.AuthenticationMethod, Mode=TwoWay}"
-                                          SelectedValueBinding="{CompiledBinding Value, DataType={x:Type models:EnumOption}}">
-                                    <ComboBox.ItemTemplate>
-                                        <DataTemplate x:DataType="models:EnumOption">
-                                            <TextBlock Text="{Binding Label}" />
-                                        </DataTemplate>
-                                    </ComboBox.ItemTemplate>
-                                </ComboBox>
-                            </StackPanel>
-
-                            <StackPanel Grid.Row="4" Grid.Column="0" Spacing="7">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{DynamicResource 'Путь к приватному SSH-ключу'}" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
-                                    <TextBlock Text=" *" IsVisible="{Binding AppSettings.IsFirstRunSetupRequired}" FontSize="12" Foreground="{DynamicResource AppDangerBrush}" />
-                                </StackPanel>
-                                <TextBox Classes="settings-field"
-                                         PlaceholderText="C:\Users\user\.ssh\id_ed25519"
-                                         IsEnabled="{Binding MachineEditor.IsPrivateKeyAuthentication}"
-                                         Text="{Binding MachineEditor.MachineConnection.PrivateKeyPath, Mode=TwoWay}" />
-                            </StackPanel>
-
-                            <StackPanel Grid.Row="4" Grid.Column="2" Spacing="7">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{DynamicResource 'Пароль'}" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
-                                    <TextBlock Text=" *" IsVisible="{Binding AppSettings.IsFirstRunSetupRequired}" FontSize="12" Foreground="{DynamicResource AppDangerBrush}" />
-                                </StackPanel>
-                                <TextBox Classes="settings-field"
-                                         PasswordChar="●"
-                                         IsEnabled="{Binding MachineEditor.IsPasswordAuthentication}"
-                                         Text="{Binding MachineEditor.MachineConnection.Password, Mode=TwoWay}" />
-                            </StackPanel>
-                        </Grid>
-
-                        <Border Padding="14"
-                                Background="{DynamicResource AppSurfaceRaisedBrush}"
-                                CornerRadius="10">
-                            <Grid ColumnDefinitions="*,Auto">
-                                <StackPanel Grid.Column="0"
-                                            Margin="0,0,20,0"
-                                            VerticalAlignment="Center"
-                                            Spacing="5">
-                                    <TextBlock Text="{DynamicResource 'Архитектура удалённой машины'}"
-                                               FontSize="12"
-                                               FontWeight="SemiBold" />
-                                    <TextBlock Text="{Binding MachineEditor.RemoteMachineArchitecture}"
-                                               TextWrapping="Wrap"
-                                               FontSize="11"
-                                               Foreground="{DynamicResource AppTextMutedBrush}" />
-                                </StackPanel>
-
-                                <Button Grid.Column="1"
-                                        VerticalAlignment="Center"
-                                        Classes="settings-secondary"
-                                        Content="{DynamicResource 'Проверить подключение'}"
-                                        IsEnabled="{Binding !MachineEditor.IsConnectionCheckRunning}"
-                                        Command="{Binding CheckRemoteConnectionCommand}" />
-                            </Grid>
-                        </Border>
-
-                        <Border IsVisible="{Binding MachineEditor.IsHostKeyConfirmationRequired}"
-                                Padding="14"
-                                Background="#241A3A"
-                                BorderBrush="{DynamicResource AppPrimaryBrush}"
-                                BorderThickness="1"
-                                CornerRadius="10">
-                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="20">
-                                <StackPanel Spacing="5">
-                                    <TextBlock Text="{DynamicResource 'Подтвердите SSH-сервер'}"
-                                               FontSize="12"
-                                               FontWeight="SemiBold" />
-                                    <TextBlock Text="{DynamicResource 'Сверьте отпечаток с данными администратора удалённой машины.'}"
-                                               FontSize="11"
-                                               Foreground="{DynamicResource AppTextMutedBrush}" />
-                                    <TextBlock Text="{Binding MachineEditor.MachineIdentityMessage}"
-                                               FontSize="12"
-                                               FontFamily="Consolas"
-                                               TextWrapping="Wrap" />
-                                    <TextBlock IsVisible="{Binding MachineEditor.HasMachineIdentityWarning}"
-                                               Text="{DynamicResource 'Fingerprint отличается или ещё не подтверждён. Возможна переустановка, замена SSH-ключей или другой сервер.'}"
-                                               TextWrapping="Wrap" FontWeight="SemiBold" Foreground="{DynamicResource AppDangerBrush}" />
-                                    <TextBlock IsVisible="{Binding MachineEditor.IsMachineFingerprintMatch}"
-                                               Text="{DynamicResource 'Fingerprint совпадает: это сильное подтверждение идентичности машины. Подтвердите выбор.'}"
-                                               TextWrapping="Wrap" Foreground="{DynamicResource AppSuccessBrush}" />
-                                </StackPanel>
-                                <StackPanel Grid.Column="1"
-                                            VerticalAlignment="Center"
-                                            Orientation="Vertical"
-                                            IsEnabled="{Binding !MachineEditor.IsConnectionCheckRunning}"
-                                            Spacing="8">
-                                    <Button Classes="settings-secondary"
-                                            Content="{DynamicResource 'Отмена'}"
-                                            Command="{Binding CancelHostKeyConfirmationCommand}" />
-                                    <Button Classes="settings-primary"
-                                            Content="{Binding MachineEditor.ConfirmMachineIdentityCaption}"
-                                            Command="{Binding ConfirmHostKeyCommand}" />
-                                    <Button Classes="settings-secondary" Content="{DynamicResource 'Нет, создать новую'}"
-                                            Command="{Binding MachineEditor.CreateNewMachineFromCandidateCommand}" />
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-                    </StackPanel>
-                </Border>
             </StackPanel>
         </ScrollViewer>
     </Grid>

@@ -88,7 +88,7 @@ namespace KK.Var.ViewModels
                 Description = DeploymentDescription,
                 OperationType = DeploymentOperationType.Deploy,
                 PreflightRevision = DeploymentWorkspace.GetPreflightRevision(projectId),
-                GitHubBranch = IsSelectedProjectGitHub ? DeploymentGitHubSource.BranchName : null,
+                GitHubBranch = IsSelectedProjectGitHub ? SelectedProject.GitHubBranch : null,
                 GitHubCommit = IsSelectedProjectGitHub ? DeploymentGitHubSource.Commit : null,
             };
 
@@ -173,7 +173,7 @@ namespace KK.Var.ViewModels
             DeploymentWorkspace.NotifySelectedDeploymentStateChanged();
             if (IsSelectedProjectGitHub)
             {
-                _ = DeploymentGitHubSource.RefreshCommitAsync();
+                _ = RefreshDeploymentCommitAsync();
             }
         }
 

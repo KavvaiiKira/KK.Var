@@ -41,7 +41,7 @@ namespace KK.Var.ViewModels
 
         public string StartedAtDisplay => Deployment.StartedAtUtc.ToLocalTime().ToString("G");
 
-        public string CompletedAtDisplay => Deployment.CompletedAtUtc?.ToLocalTime().ToString("G") ?? "—";
+        public string CompletedAtDisplay => Deployment.CompletedAtUtc?.ToLocalTime().ToString("G") ?? "-";
 
         public string DurationDisplay
         {
@@ -49,7 +49,7 @@ namespace KK.Var.ViewModels
             {
                 if (Deployment.CompletedAtUtc is not { } completedAtUtc)
                 {
-                    return "—";
+                    return "-";
                 }
 
                 var duration = completedAtUtc - Deployment.StartedAtUtc;

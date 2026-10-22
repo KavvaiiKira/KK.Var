@@ -11,7 +11,7 @@
         d:DesignHeight="900"
         x:Class="KK.Var.Views.MainWindow"
         x:DataType="vm:MainViewModel"
-        Icon="/Assets/Brand/kk-var.ico"
+        Icon="avares://KK.Var/Assets/Brand/kk-var.ico"
         Width="1920"
         Height="1080"
         MinWidth="1280"
@@ -57,6 +57,15 @@
         <Style Selector="Button.nav.active">
             <Setter Property="Background" Value="{DynamicResource AppSurfaceHoverBrush}" />
             <Setter Property="Foreground" Value="{DynamicResource AppPrimaryHoverBrush}" />
+        </Style>
+        <Style Selector="Button.project-action">
+            <Setter Property="MinHeight" Value="42" />
+            <Setter Property="Padding" Value="18,10" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="Background" Value="{DynamicResource AppSurfaceRaisedBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
         </Style>
         <Style Selector="Button.primary">
             <Setter Property="Background" Value="{DynamicResource AppPrimaryBrush}" />
@@ -219,7 +228,7 @@
                                        Foreground="{DynamicResource AppTextMutedBrush}" />
                         </StackPanel>
                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                            <Button Classes="nav" Content="{DynamicResource 'Импорт проекта'}"
+                            <Button Classes="project-action" Content="{DynamicResource 'Импорт проекта'}"
                                     IsEnabled="{Binding !IsProjectTransferBusy}" Click="ImportProjectButton_OnClick" />
                             <Button Classes="primary"
                                     Content="{DynamicResource '＋  Новый проект'}"
@@ -419,7 +428,7 @@
                                         HorizontalAlignment="Center"
                                         Content="{DynamicResource 'Открыть настройки'}"
                                         Click="OpenRequiredSettingsButton_OnClick" />
-                                <Button Classes="nav" HorizontalAlignment="Center"
+                                <Button Classes="project-action" HorizontalAlignment="Center"
                                         Content="{DynamicResource 'Импорт проекта'}" Click="ImportProjectButton_OnClick" />
                             </StackPanel>
                         </Border>

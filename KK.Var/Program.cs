@@ -34,6 +34,7 @@ namespace KK.Var
         [STAThread]
         public static void Main(string[] args)
         {
+            WindowsApplicationIdentity.Initialize();
             _host = CreateHost(args);
 
             try

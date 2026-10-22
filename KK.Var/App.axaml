@@ -31,6 +31,56 @@
             <SolidColorBrush x:Key="AppTextMutedBrush" Color="{StaticResource AppTextMutedColor}" />
             <SolidColorBrush x:Key="AppSuccessBrush" Color="{StaticResource AppSuccessColor}" />
             <SolidColorBrush x:Key="AppDangerBrush" Color="{StaticResource AppDangerColor}" />
+
+            <!-- KK form control states override the Fluent system colors. -->
+            <SolidColorBrush x:Key="TextControlBackground" Color="{StaticResource AppSurfaceRaisedColor}" />
+            <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="{StaticResource AppSurfaceHoverColor}" />
+            <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="{StaticResource AppSurfaceRaisedColor}" />
+            <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="{StaticResource AppPrimaryHoverColor}" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUnchecked" Color="{StaticResource AppSurfaceRaisedColor}" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUnchecked" Color="{StaticResource AppBorderColor}" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUncheckedPointerOver" Color="{StaticResource AppSurfaceHoverColor}" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPointerOver" Color="{StaticResource AppPrimaryHoverColor}" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUncheckedPressed" Color="{StaticResource AppSurfaceHoverColor}" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPressed" Color="{StaticResource AppPrimaryHoverColor}" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillChecked" Color="{StaticResource AppPrimaryColor}" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeChecked" Color="{StaticResource AppPrimaryColor}" />
+            <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundChecked" Color="{StaticResource AppTextColor}" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPointerOver" Color="{StaticResource AppPrimaryHoverColor}" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeCheckedPointerOver" Color="{StaticResource AppPrimaryHoverColor}" />
+            <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedPointerOver" Color="{StaticResource AppTextColor}" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPressed" Color="{StaticResource AppPrimaryColor}" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeCheckedPressed" Color="{StaticResource AppPrimaryColor}" />
+            <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedPressed" Color="{StaticResource AppTextColor}" />
+            <SolidColorBrush x:Key="ComboBoxBackground" Color="{StaticResource AppSurfaceRaisedColor}" />
+            <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="{StaticResource AppBorderColor}" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="{StaticResource AppSurfaceHoverColor}" />
+            <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver" Color="{StaticResource AppPrimaryHoverColor}" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="{StaticResource AppSurfaceHoverColor}" />
+            <SolidColorBrush x:Key="ComboBoxBorderBrushPressed" Color="{StaticResource AppPrimaryHoverColor}" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundUnfocused" Color="{StaticResource AppSurfaceRaisedColor}" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundBorderBrushUnfocused" Color="{StaticResource AppBorderColor}" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundBorderBrushFocused" Color="{StaticResource AppPrimaryHoverColor}" />
+            <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="{StaticResource AppSurfaceRaisedColor}" />
+            <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="{StaticResource AppBorderColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemBackground" Color="{StaticResource AppSurfaceRaisedColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemForeground" Color="{StaticResource AppTextColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver" Color="{StaticResource AppSurfaceHoverColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemForegroundPointerOver" Color="{StaticResource AppTextColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemBorderBrushPointerOver" Color="{StaticResource AppBorderColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemBackgroundPressed" Color="{StaticResource AppSurfaceHoverColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemForegroundPressed" Color="{StaticResource AppTextColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemBorderBrushPressed" Color="{StaticResource AppBorderColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected" Color="{StaticResource AppSurfaceHoverColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemForegroundSelected" Color="{StaticResource AppTextColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelected" Color="{StaticResource AppPrimaryHoverColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedPointerOver" Color="{StaticResource AppSurfaceHoverColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedPointerOver" Color="{StaticResource AppTextColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelectedPointerOver" Color="{StaticResource AppPrimaryHoverColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedPressed" Color="{StaticResource AppSurfaceHoverColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedPressed" Color="{StaticResource AppTextColor}" />
+            <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelectedPressed" Color="{StaticResource AppPrimaryHoverColor}" />
+
             <FontFamily x:Key="BrandFontFamily">avares://KK.Var/Assets/Fonts#Exo 2</FontFamily>
         </ResourceDictionary>
     </Application.Resources>
@@ -40,6 +90,36 @@
     </Application.DataTemplates>
 
     <Application.Styles>
-        <FluentTheme />
+        <FluentTheme>
+            <FluentTheme.Palettes>
+                <ColorPaletteResources x:Key="Dark" Accent="#8B5CF6" />
+            </FluentTheme.Palettes>
+        </FluentTheme>
+        <Style Selector=":is(Window)">
+            <Setter Property="Icon" Value="avares://KK.Var/Assets/Brand/kk-var.ico" />
+        </Style>
+        <Style Selector="ComboBox">
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+        <Style Selector="ComboBox /template/ Popup#PART_Popup">
+            <Setter Property="VerticalOffset" Value="6" />
+            <Setter Property="WindowManagerAddShadowHint" Value="True" />
+        </Style>
+        <Style Selector="ComboBox /template/ Border#PopupBorder">
+            <Setter Property="Padding" Value="6" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AppPrimaryHoverBrush}" />
+        </Style>
+        <Style Selector="ComboBox[IsDropDownOpen=True] /template/ Border#Background">
+            <Setter Property="BorderBrush" Value="{DynamicResource AppPrimaryHoverBrush}" />
+        </Style>
+        <Style Selector="ComboBoxItem">
+            <Setter Property="MinHeight" Value="38" />
+            <Setter Property="Margin" Value="0,2" />
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="BorderThickness" Value="3,0,0,0" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+        </Style>
     </Application.Styles>
 </Application>

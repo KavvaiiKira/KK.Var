@@ -42,6 +42,7 @@ namespace KK.Var.ViewModels
             {
                 _preflightResult = value;
                 PreflightItems = value?.Checks
+                    .OrderByDescending(check => check.Status)
                     .Select(check => new DeploymentPreflightItemViewModel(check)).ToArray() ?? [];
             }
         }

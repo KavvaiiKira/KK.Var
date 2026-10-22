@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using KK.Var.Enums;
 using KK.Var.Models;
 
@@ -16,6 +17,18 @@ namespace KK.Var.ViewModels
         public GitHubSourceSelectionViewModel DeploymentGitHubSource { get; }
 
         public bool IsSelectedProjectGitHub => SelectedProject?.SourceType == ProjectSourceType.GitHubRepository;
+
+        public async Task RefreshDeploymentCommitAsync()
+        {
+            if (SelectedProject is not { SourceType: ProjectSourceType.GitHubRepository } project ||
+                DeploymentWorkspace.IsSelectedProjectDeploymentActive)
+            {
+                return;
+            }
+
+            DeploymentGitHubSource.Configure(project.GitHubRepositoryFullName, project.GitHubBranch);
+            await DeploymentGitHubSource.RefreshCommitAsync();
+        }
 
         private void ConfigureDeploymentGitHubSource(KKProject? project)
         {

@@ -37,6 +37,7 @@ namespace KK.Var.ViewModels
         public ObservableCollection<RemoteMachine> AvailableMachines { get; } = [];
 
         [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsNewMachineProfile))]
         public partial RemoteMachine? SelectedMachineProfile { get; set; }
 
         [ObservableProperty]
@@ -47,6 +48,8 @@ namespace KK.Var.ViewModels
 
         [ObservableProperty]
         public partial string MachineIdentityMessage { get; private set; } = string.Empty;
+
+        public bool IsNewMachineProfile => SelectedMachineProfile is null;
 
         public string MachineProjectsDisplay => SelectedMachineProfile is { } machine ?
             string.Join(", ", machine.Projects.Select(project => project.Name)) : string.Empty;
@@ -95,6 +98,8 @@ namespace KK.Var.ViewModels
         {
             var revision = ++_machineEditorRevision;
             InvalidatePendingMachineVerification();
+            SettingsError = string.Empty;
+            SettingsStatus = string.Empty;
             IsMachineProfileLoading = true;
             try
             {
@@ -166,8 +171,14 @@ namespace KK.Var.ViewModels
             {
                 return;
             }
-            SelectedMachineProfile = null;
-            _ = LoadMachineEditorAsync(null);
+            if (SelectedMachineProfile is null)
+            {
+                _ = LoadMachineEditorAsync(null);
+            }
+            else
+            {
+                SelectedMachineProfile = null;
+            }
         }
 
         public void InvalidatePendingMachineVerification()
@@ -246,9 +257,9 @@ namespace KK.Var.ViewModels
                     PendingHostKeyFingerprint = result.HostKeyFingerprint;
                     MachineIdentityMessage = LocalizeFormat(
                         "Старый адрес: {0}\nНовый адрес: {1}\nСтарый fingerprint: {2}\nНовый fingerprint: {3}",
-                        original is null ? "—" : $"{original.Host}:{original.Port}",
+                        original is null ? "-" : $"{original.Host}:{original.Port}",
                         $"{connection.Host}:{connection.Port}",
-                        original?.HostKeyFingerprint ?? "—",
+                        original?.HostKeyFingerprint ?? "-",
                         result.HostKeyFingerprint);
                     IsHostKeyConfirmationRequired = true;
                     OnPropertyChanged(nameof(ConfirmMachineIdentityCaption));

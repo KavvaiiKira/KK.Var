@@ -14,6 +14,12 @@ namespace KK.Var.Views.Pages
             AddHandler(TextBox.TextChangedEvent, SettingsInput_OnChanged);
         }
 
+        private void AddMachineProfileButton_OnClick(object? sender, RoutedEventArgs e)
+        {
+            MachineProfileNameInput.BringIntoView();
+            MachineProfileNameInput.Focus();
+        }
+
         private void SettingsInput_OnChanged(object? sender, TextChangedEventArgs e)
         {
             if (DataContext is MainViewModel viewModel)

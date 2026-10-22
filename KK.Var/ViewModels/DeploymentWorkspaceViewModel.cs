@@ -60,7 +60,7 @@ namespace KK.Var.ViewModels
                                     })}: {check.Message}" +
                                     (string.IsNullOrWhiteSpace(check.Detail) ?
                                         string.Empty :
-                                        $" — {check.Detail}"))) :
+                                        $" - {check.Detail}"))) :
                 string.Empty;
 
         public bool HasVisibleDeploymentLog => !string.IsNullOrWhiteSpace(VisibleDeploymentLogText);
@@ -174,13 +174,13 @@ namespace KK.Var.ViewModels
         {
             if (result.FirstError is { } error)
             {
-                return LocalizeFormat("Preflight: ошибка — {0}", error.Message);
+                return LocalizeFormat("Preflight: ошибка - {0}", error.Message);
             }
 
             var warnings = result.Checks.Count(check => check.Status == PreflightStatus.Warning);
             return warnings == 0 ?
                 Localize("Preflight: проверка пройдена.") :
-                LocalizeFormat("Preflight: предупреждений — {0}.", warnings);
+                LocalizeFormat("Preflight: предупреждений - {0}.", warnings);
         }
 
         private void DeploymentOperationQueue_OnQueueChanged(object? sender, EventArgs e)

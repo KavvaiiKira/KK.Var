@@ -65,9 +65,6 @@ namespace KK.Var.ViewModels
 
         public bool HasError => ErrorMessage.Length > 0;
 
-        public string CommitDisplay => Commit is { } commit ?
-            $"{commit.Sha}{Environment.NewLine}{commit.Author}{Environment.NewLine}{commit.Message}" : string.Empty;
-
         public void Configure(string? repository, string? branch)
         {
             _configuring = true;
@@ -221,7 +218,6 @@ namespace KK.Var.ViewModels
         partial void OnCommitChanged(GitHubCommit? value)
         {
             OnPropertyChanged(nameof(HasCommit));
-            OnPropertyChanged(nameof(CommitDisplay));
         }
 
         partial void OnIsResolvingChanged(bool value) => OnPropertyChanged(nameof(HasCommit));

@@ -28,7 +28,7 @@ namespace KK.Var.ViewModels
             {
                 if (!ArtifactExists)
                 {
-                    return "—";
+                    return "-";
                 }
 
                 var size = artifactSize ?? Version.ArtifactSize;

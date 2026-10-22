@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:KK.Var.ViewModels"
              xmlns:models="using:KK.Var.Models"
+             xmlns:controls="using:KK.Var.Views.Controls"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
@@ -11,6 +12,39 @@
              x:DataType="vm:MainViewModel">
 
     <UserControl.Styles>
+        <Style Selector="ToggleButton.preflight-detail">
+            <Setter Property="MinHeight" Value="30" />
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="Background" Value="{DynamicResource AppSurfaceRaisedBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource AppTextMutedBrush}" />
+        </Style>
+        <Style Selector="ToggleButton.preflight-detail:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource AppSurfaceHoverBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AppPrimaryHoverBrush}" />
+        </Style>
+        <Style Selector="ToggleButton.preflight-detail:checked /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource AppSurfaceHoverBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AppPrimaryHoverBrush}" />
+        </Style>
+        <Style Selector="ToggleButton.preflight-detail:checked PathIcon">
+            <Setter Property="RenderTransform">
+                <RotateTransform Angle="90" />
+            </Setter>
+        </Style>
+        <Style Selector="TextBox.deploy-input">
+            <Setter Property="MinHeight" Value="42" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Background" Value="{DynamicResource AppSurfaceRaisedBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
         <Style Selector="Button.details-secondary">
             <Setter Property="Padding" Value="16,10" />
             <Setter Property="Background" Value="{DynamicResource AppSurfaceRaisedBrush}" />
@@ -303,37 +337,65 @@
                         <TextBlock Text="{DynamicResource 'KK.Var соберёт исходный код, создаст локальную версию, передаст файлы на Linux-машину и перезапустит systemd-сервис.'}"
                                    MaxWidth="680" HorizontalAlignment="Left" TextWrapping="Wrap" LineHeight="20"
                                    Foreground="{DynamicResource AppTextMutedBrush}" />
-                                <StackPanel IsVisible="{Binding IsSelectedProjectGitHub}" Spacing="8">
-                                    <TextBlock Text="{DynamicResource 'Ветка для этого Deploy'}" Foreground="{DynamicResource AppTextMutedBrush}" />
-                                    <ComboBox IsEnabled="{Binding !DeploymentWorkspace.IsSelectedProjectDeploymentActive}"
-                                              HorizontalAlignment="Stretch"
-                                              ItemsSource="{Binding DeploymentGitHubSource.Branches}"
-                                              SelectedItem="{Binding DeploymentGitHubSource.SelectedBranch, Mode=TwoWay}"
-                                              DropDownOpened="DeploymentBranches_OnOpened">
-                                        <ComboBox.ItemTemplate>
-                                            <DataTemplate x:DataType="models:GitHubBranchOption">
-                                                <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
-                                            </DataTemplate>
-                                        </ComboBox.ItemTemplate>
-                                    </ComboBox>
-                                    <Button IsEnabled="{Binding !DeploymentWorkspace.IsSelectedProjectDeploymentActive}"
-                                            Classes="details-secondary" HorizontalAlignment="Left"
-                                            Content="{DynamicResource 'Обновить коммит'}" Click="DeploymentCommit_OnClick" />
-                                    <TextBlock IsVisible="{Binding DeploymentGitHubSource.IsLoadingBranches}" Text="{DynamicResource 'Загрузка веток…'}" />
-                                    <TextBlock IsVisible="{Binding DeploymentGitHubSource.IsResolving}" Text="{DynamicResource 'Загрузка коммита…'}" />
-                                    <TextBlock IsVisible="{Binding DeploymentGitHubSource.HasError}" Text="{Binding DeploymentGitHubSource.ErrorMessage}"
-                                               TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}" />
-                                    <ScrollViewer IsVisible="{Binding DeploymentGitHubSource.HasCommit}" MaxHeight="160" HorizontalScrollBarVisibility="Disabled">
-                                        <TextBlock Text="{Binding DeploymentGitHubSource.CommitDisplay}" TextWrapping="Wrap" FontSize="12" />
-                                    </ScrollViewer>
-                                </StackPanel>
+                        <Border Padding="16"
+                                Background="{DynamicResource AppSurfaceRaisedBrush}"
+                                BorderBrush="{DynamicResource AppBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="{DynamicResource 'Исходный код'}"
+                                           FontWeight="SemiBold" />
+                                <SelectableTextBlock Text="{Binding SelectedProjectSourceDisplay}"
+                                                     TextWrapping="Wrap" />
+                                <TextBlock Text="{DynamicResource 'Источник задан в настройках проекта.'}"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource AppTextMutedBrush}" />
+                            </StackPanel>
+                        </Border>
+                        <Border IsVisible="{Binding IsSelectedProjectGitHub}"
+                                Padding="18"
+                                Background="{DynamicResource AppSurfaceRaisedBrush}"
+                                BorderBrush="{DynamicResource AppBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10">
+                            <StackPanel Spacing="14">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                                    <StackPanel VerticalAlignment="Center" Spacing="5">
+                                        <TextBlock Text="{DynamicResource 'Ветка проекта GitHub'}"
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource AppTextMutedBrush}" />
+                                        <TextBlock Text="{Binding DeploymentGitHubSource.SelectedBranch.Label}"
+                                                   FontWeight="SemiBold"
+                                                   TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <Button Grid.Column="1"
+                                            IsEnabled="{Binding !DeploymentWorkspace.IsSelectedProjectDeploymentActive}"
+                                            Classes="details-secondary"
+                                            VerticalAlignment="Center"
+                                            Content="{DynamicResource 'Обновить коммит'}"
+                                            Click="DeploymentCommit_OnClick" />
+                                </Grid>
+                                <TextBlock IsVisible="{Binding DeploymentGitHubSource.IsResolving}"
+                                           Text="{DynamicResource 'Загрузка коммита…'}"
+                                           Foreground="{DynamicResource AppTextMutedBrush}" />
+                                <TextBlock IsVisible="{Binding DeploymentGitHubSource.HasError}"
+                                           Text="{Binding DeploymentGitHubSource.ErrorMessage}"
+                                           TextWrapping="Wrap"
+                                           Foreground="{DynamicResource AppDangerBrush}" />
+                                <Border IsVisible="{Binding DeploymentGitHubSource.HasCommit}"
+                                        Height="1"
+                                        Background="{DynamicResource AppBorderBrush}" />
+                                <controls:GitHubCommitCard Classes="embedded"
+                                                           DataContext="{Binding DeploymentGitHubSource}" />
+                            </StackPanel>
+                        </Border>
                         <Grid Margin="0,12,0,0" ColumnDefinitions="220,*" RowDefinitions="Auto,Auto" RowSpacing="12">
-                            <TextBlock Text="{DynamicResource 'Следующая версия'}" Foreground="{DynamicResource AppTextMutedBrush}" />
-                            <TextBox x:Name="DeploymentTagInput" Grid.Column="1" PlaceholderText="{DynamicResource 'Например, release-1'}"
+                            <TextBlock VerticalAlignment="Center" Text="{DynamicResource 'Следующая версия'}" Foreground="{DynamicResource AppTextMutedBrush}" />
+                            <TextBox x:Name="DeploymentTagInput" Classes="deploy-input" Grid.Column="1" PlaceholderText="{DynamicResource 'Например, release-1'}"
                                      IsReadOnly="{Binding DeploymentWorkspace.IsSelectedProjectDeploymentActive}"
                                      Text="{Binding DeploymentVersionTag}" />
-                            <TextBlock Grid.Row="1" Text="{DynamicResource 'Описание'}" Foreground="{DynamicResource AppTextMutedBrush}" />
-                            <TextBox Grid.Row="1" Grid.Column="1" PlaceholderText="{DynamicResource 'Что изменилось в этой версии'}"
+                            <TextBlock Grid.Row="1" VerticalAlignment="Center" Text="{DynamicResource 'Описание'}" Foreground="{DynamicResource AppTextMutedBrush}" />
+                            <TextBox Classes="deploy-input" Grid.Row="1" Grid.Column="1" PlaceholderText="{DynamicResource 'Что изменилось в этой версии'}"
                                      IsReadOnly="{Binding DeploymentWorkspace.IsSelectedProjectDeploymentActive}"
                                      Text="{Binding DeploymentDescription}" />
                         </Grid>
@@ -364,24 +426,28 @@
                                 BorderBrush="{DynamicResource AppBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="8">
-                            <StackPanel Spacing="8">
-                                <TextBlock Text="{Binding DeploymentWorkspace.DeploymentPreflightSummary}"
-                                           TextWrapping="Wrap"
-                                           Foreground="{DynamicResource AppTextMutedBrush}" />
-                                <ListBox x:Name="PreflightResults"
-                                         MaxHeight="260"
-                                         HorizontalAlignment="Stretch"
-                                         Background="Transparent"
-                                         ItemsSource="{Binding DeploymentPreflightItems}"
-                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                                    <ListBox.Styles>
-                                        <Style Selector="ListBoxItem">
-                                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                        </Style>
-                                    </ListBox.Styles>
-                                    <ListBox.ItemTemplate>
+                            <Expander x:Name="PreflightExpander"
+                                      IsExpanded="True"
+                                      HorizontalAlignment="Stretch"
+                                      HorizontalContentAlignment="Stretch"
+                                      Background="Transparent"
+                                      BorderThickness="0">
+                                <Expander.Header>
+                                    <TextBlock Text="{Binding DeploymentWorkspace.DeploymentPreflightSummary}"
+                                               TextWrapping="Wrap"
+                                               Foreground="{DynamicResource AppTextMutedBrush}" />
+                                </Expander.Header>
+                                <ScrollViewer IsVisible="{Binding !!DeploymentWorkspace.DeploymentPreflightItems.Count}"
+                                              MaxHeight="260"
+                                              AllowAutoHide="False"
+                                              HorizontalScrollBarVisibility="Disabled"
+                                              VerticalScrollBarVisibility="Auto">
+                                    <ItemsControl x:Name="PreflightResults"
+                                                  HorizontalAlignment="Stretch"
+                                                  ItemsSource="{Binding DeploymentWorkspace.DeploymentPreflightItems}">
+                                    <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="vm:DeploymentPreflightItemViewModel">
-                                            <Grid ColumnDefinitions="130,*" ColumnSpacing="12" Margin="0,4">
+                                            <Grid ColumnDefinitions="130,*" ColumnSpacing="12" Margin="0,4" Focusable="True">
                                                 <TextBlock IsVisible="{Binding IsSuccess}"
                                                            Text="{DynamicResource 'Успешно'}"
                                                            Foreground="{DynamicResource AppSuccessBrush}" />
@@ -393,19 +459,36 @@
                                                            Foreground="{DynamicResource AppDangerBrush}" />
                                                 <StackPanel Grid.Column="1" Spacing="6">
                                                     <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
-                                                    <Expander IsVisible="{Binding HasDetail}"
-                                                              Header="{DynamicResource 'Технические подробности'}"
-                                                              HorizontalAlignment="Stretch"
-                                                              HorizontalContentAlignment="Stretch">
-                                                        <TextBlock Text="{Binding Detail}"
-                                                                   TextWrapping="Wrap" FontSize="12" />
-                                                    </Expander>
+                                                    <StackPanel IsVisible="{Binding HasDetail}" Spacing="6">
+                                                        <ToggleButton Classes="preflight-detail"
+                                                                      IsChecked="{Binding IsDetailExpanded, Mode=TwoWay}">
+                                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                <PathIcon Width="10" Height="10"
+                                                                          Data="M3,1 L8,6 L3,11 Z"
+                                                                          RenderTransformOrigin="50%,50%"
+                                                                          Foreground="{DynamicResource AppPrimaryHoverBrush}" />
+                                                                <TextBlock Text="{DynamicResource 'Технические подробности'}" />
+                                                            </StackPanel>
+                                                        </ToggleButton>
+                                                        <Border IsVisible="{Binding IsDetailExpanded}"
+                                                                Padding="12"
+                                                                Background="{DynamicResource AppBackgroundBrush}"
+                                                                BorderBrush="{DynamicResource AppBorderBrush}"
+                                                                BorderThickness="1"
+                                                                CornerRadius="8">
+                                                            <SelectableTextBlock Text="{Binding Detail}"
+                                                                                 FontFamily="Cascadia Mono, Consolas"
+                                                                                 TextWrapping="Wrap"
+                                                                                 FontSize="12" />
+                                                        </Border>
+                                                    </StackPanel>
                                                 </StackPanel>
                                             </Grid>
                                         </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                </ListBox>
-                            </StackPanel>
+                                    </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </Expander>
                         </Border>
                         <Border IsVisible="{Binding DeploymentWorkspace.HasVisibleDeploymentLog}"
                                 Height="210" Padding="12"

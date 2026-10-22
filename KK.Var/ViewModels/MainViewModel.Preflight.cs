@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -26,9 +25,6 @@ namespace KK.Var.ViewModels
             !EnvironmentEditor.HasUnsavedEnvironmentChanges &&
             !EnvironmentEditor.IsEnvironmentSaving &&
             (!IsSelectedProjectGitHub || DeploymentGitHubSource.HasCommit);
-
-        public IReadOnlyList<DeploymentPreflightItemViewModel> DeploymentPreflightItems =>
-            DeploymentWorkspace.DeploymentPreflightItems;
 
         public async Task CheckSelectedDeploymentAsync()
         {
@@ -61,7 +57,7 @@ namespace KK.Var.ViewModels
                         projectId,
                         state.VersionTag,
                         DeploymentDescription,
-                        IsSelectedProjectGitHub ? DeploymentGitHubSource.BranchName : null,
+                        IsSelectedProjectGitHub ? SelectedProject.GitHubBranch : null,
                         IsSelectedProjectGitHub ? DeploymentGitHubSource.Commit?.Sha : null),
                     cancellationToken: cancellation.Token);
 

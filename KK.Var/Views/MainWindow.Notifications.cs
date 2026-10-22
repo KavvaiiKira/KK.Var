@@ -53,7 +53,7 @@ namespace KK.Var.Views
             }
             _windowsNotifications?.Show(
                 notice,
-                "KK.Var — " + viewModel.NotificationTitle(notice),
+                "KK.Var - " + viewModel.NotificationTitle(notice),
                 string.IsNullOrWhiteSpace(notice.ProjectName) ?
                     viewModel.Localize("Откройте подробности операции.") :
                     notice.ProjectName);
