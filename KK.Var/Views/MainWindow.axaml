@@ -3,7 +3,6 @@
         xmlns:vm="using:KK.Var.ViewModels"
         xmlns:models="using:KK.Var.Models"
         xmlns:controls="using:KK.Var.Views.Controls"
-        xmlns:pages="using:KK.Var.Views.Pages"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
@@ -262,7 +261,7 @@
                                                 CornerRadius="14">
                                             <Grid RowDefinitions="Auto,Auto,*,Auto">
                                                 <StackPanel Spacing="5">
-                                                    <TextBlock Text="{Binding Project.Name}"
+                                                    <TextBlock Text="{Binding ProjectName}"
                                                                FontSize="20"
                                                                FontWeight="Bold" />
                                                     <TextBlock Text="{Binding SourceDisplay}"
@@ -305,10 +304,10 @@
                                                         <TextBlock Text="{DynamicResource SystemdService}"
                                                                    FontSize="11"
                                                                    Foreground="{DynamicResource AppTextMutedBrush}" />
-                                                        <TextBlock Text="{Binding Project.RemoteServiceName}"
+                                                        <TextBlock Text="{Binding RemoteServiceName}"
                                                                    MaxWidth="145"
                                                                    TextTrimming="CharacterEllipsis"
-                                                                   ToolTip.Tip="{Binding Project.RemoteServiceName}"
+                                                                   ToolTip.Tip="{Binding RemoteServiceName}"
                                                                    FontFamily="Consolas"
                                                                    FontSize="12" />
                                                     </StackPanel>
@@ -319,10 +318,10 @@
                                                         <TextBlock Text="{DynamicResource ServiceFile}"
                                                                    FontSize="11"
                                                                    Foreground="{DynamicResource AppTextMutedBrush}" />
-                                                        <TextBlock Text="{Binding Project.RemoteExecutablePath}"
+                                                        <TextBlock Text="{Binding RemoteExecutablePath}"
                                                                    MaxWidth="145"
                                                                    TextTrimming="CharacterEllipsis"
-                                                                   ToolTip.Tip="{Binding Project.RemoteExecutablePath}"
+                                                                   ToolTip.Tip="{Binding RemoteExecutablePath}"
                                                                    FontFamily="Consolas"
                                                                    FontSize="12" />
                                                     </StackPanel>
@@ -435,28 +434,9 @@
                     </Border>
                 </Grid>
 
-                <pages:CreateProjectView x:Name="CreateProjectPage"
-                                         Grid.Column="1"
-                                         IsVisible="False"
-                                         DataContext="{Binding ProjectEditor}" />
-
-                <pages:ProjectDetailsView x:Name="ProjectDetailsPage"
-                                          Grid.Column="1"
-                                          IsVisible="False"
-                                          DataContext="{Binding}" />
-
-                <pages:HistoryView x:Name="HistoryPage"
-                                   Grid.Column="1"
-                                   IsVisible="False" />
-
-                <pages:DeploymentDetailsView x:Name="DeploymentDetailsPage"
-                                             Grid.Column="1"
-                                             IsVisible="False"
-                                             DataContext="{Binding SelectedDeploymentDetails}" />
-
-                <pages:SettingsView x:Name="SettingsPage"
-                                    Grid.Column="1"
-                                    IsVisible="False" />
+                <ContentControl x:Name="SecondaryPageHost"
+                                Grid.Column="1"
+                                IsVisible="False" />
             </Grid>
 
             <Border x:Name="StatusBar"
@@ -533,6 +513,23 @@
                     IsVisible="False"
                     Background="#A6000000"
                     CornerRadius="14" />
+
+            <Border Grid.RowSpan="3"
+                    IsVisible="{Binding IsStartupLoading}"
+                    Background="#E60C0814"
+                    CornerRadius="14"
+                    ZIndex="900">
+                <StackPanel HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Spacing="18">
+                    <ProgressBar Width="240"
+                                 Height="4"
+                                 IsIndeterminate="True" />
+                    <TextBlock Text="{DynamicResource StartingApplication}"
+                               HorizontalAlignment="Center"
+                               Foreground="{DynamicResource AppTextMutedBrush}" />
+                </StackPanel>
+            </Border>
 
             <Border IsVisible="{Binding HasPendingProjectImport}" Grid.RowSpan="3"
                     Background="#C9080510" Padding="24">

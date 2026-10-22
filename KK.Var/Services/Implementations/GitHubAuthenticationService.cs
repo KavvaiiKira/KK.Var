@@ -15,6 +15,7 @@ namespace KK.Var.Services.Implementations
             CancellationToken cancellationToken = default)
         {
             var token = await tokenStore.LoadAsync(cancellationToken);
+
             if (token?.AccessTokenExpiresAtUtc is null ||
                 token.AccessTokenExpiresAtUtc > DateTimeOffset.UtcNow.AddMinutes(2))
             {

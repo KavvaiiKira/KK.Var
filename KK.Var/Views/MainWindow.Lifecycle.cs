@@ -45,9 +45,17 @@ namespace KK.Var.Views
 
             _firstRunHandled = true;
             InitializeDeploymentNotifications(viewModel);
-            await viewModel.LoadSettingsAsync();
-            UpdateProjectsAccessState(viewModel);
 
+            try
+            {
+                await viewModel.LoadSettingsAsync();
+            }
+            finally
+            {
+                viewModel.CompleteStartupLoading();
+            }
+
+            UpdateProjectsAccessState(viewModel);
             if (viewModel.AppSettings.Settings.IsFirstRunCompleted)
             {
                 return;

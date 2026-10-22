@@ -64,6 +64,12 @@ namespace KK.Var.ViewModels
 
         public bool HasCommit => Commit is not null && !IsResolving && !IsLoadingBranches && ErrorMessage.Length == 0;
 
+        public string CommitMessage => Commit?.Message ?? string.Empty;
+
+        public string CommitAuthor => Commit?.Author ?? string.Empty;
+
+        public string CommitSha => Commit?.Sha ?? string.Empty;
+
         public bool HasError => ErrorMessage.Length > 0;
 
         public void Configure(string? repository, string? branch)
@@ -219,6 +225,9 @@ namespace KK.Var.ViewModels
         partial void OnCommitChanged(GitHubCommit? value)
         {
             OnPropertyChanged(nameof(HasCommit));
+            OnPropertyChanged(nameof(CommitMessage));
+            OnPropertyChanged(nameof(CommitAuthor));
+            OnPropertyChanged(nameof(CommitSha));
         }
 
         partial void OnIsResolvingChanged(bool value) => OnPropertyChanged(nameof(HasCommit));

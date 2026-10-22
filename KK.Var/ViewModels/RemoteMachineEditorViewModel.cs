@@ -55,6 +55,10 @@ namespace KK.Var.ViewModels
         public string MachineProjectsDisplay => SelectedMachineProfile is { } machine ?
             string.Join(", ", machine.Projects.Select(project => project.Name)) : string.Empty;
 
+        public bool HasMachineProjects => !string.IsNullOrWhiteSpace(MachineProjectsDisplay);
+
+        public bool HasNoMachineProjects => !HasMachineProjects;
+
         public string ConfirmMachineIdentityCaption => Localize(_pendingMachineCandidate?.Result.RequiresHostKeyConfirmation == true ?
             Texts.ConfirmFingerprintVerifyLogin : _machineEditorOriginal is null ?
                 Texts.ConfirmSaveProfile :
@@ -85,12 +89,11 @@ namespace KK.Var.ViewModels
             }
             SelectedMachineProfile = MachineProfiles.FirstOrDefault(machine => machine.Id == selectedId) ??
                 MachineProfiles.FirstOrDefault(machine => !machine.IsArchived);
-            if (ProfilesReloaded is { } reloaded)
-            {
-                await reloaded();
-            }
+            ProfilesReloaded?.Invoke();
             OnPropertyChanged(nameof(IsRemoteMachineConfigured));
             OnPropertyChanged(nameof(MachineProjectsDisplay));
+            OnPropertyChanged(nameof(HasMachineProjects));
+            OnPropertyChanged(nameof(HasNoMachineProjects));
         }
 
         partial void OnSelectedMachineProfileChanged(RemoteMachine? value) => _ = LoadMachineEditorAsync(value);
@@ -130,6 +133,8 @@ namespace KK.Var.ViewModels
                 RemoteMachineArchitecture = FormatArchitecture(machine?.Architecture);
                 OnPropertyChanged(nameof(MachineConnection));
                 OnPropertyChanged(nameof(MachineProjectsDisplay));
+                OnPropertyChanged(nameof(HasMachineProjects));
+                OnPropertyChanged(nameof(HasNoMachineProjects));
                 OnPropertyChanged(nameof(ConfirmMachineIdentityCaption));
                 OnPropertyChanged(nameof(ArchiveMachineCaption));
             }
@@ -504,7 +509,7 @@ namespace KK.Var.ViewModels
 
         public event Action? PreflightInvalidated;
 
-        public event Func<Task>? ProfilesReloaded;
+        public event Action? ProfilesReloaded;
 
         public event Func<Task>? ProfileVerified;
     }

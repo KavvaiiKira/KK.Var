@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using KK.Var.Configuration;
+using KK.Var.Models;
 using KK.Var.Services;
 using Texts = KK.Var.Resources.Strings;
 
@@ -11,7 +12,6 @@ namespace KK.Var.ViewModels
         IUserSettingsService settingsService,
         IApplicationStartupService startupService,
         RemoteMachineEditorViewModel machineEditor,
-        ArtifactStorageViewModel artifactStorage,
         GitHubAccountViewModel gitHubAccount,
         ILocalizationService localizationService) : LocalizedViewModel(localizationService)
     {
@@ -29,15 +29,18 @@ namespace KK.Var.ViewModels
         public async Task LoadAsync()
         {
             Settings = await settingsService.LoadAsync();
+
             _loadingNotificationPreference = true;
             DeploymentNotificationsEnabled = Settings.DeploymentNotificationsEnabled;
             _loadingNotificationPreference = false;
+
             await machineEditor.ReloadMachineProfilesAsync();
-            await artifactStorage.RefreshArtifactStorageSummaryAsync();
+
             machineEditor.RemoteMachineArchitecture = machineEditor.FormatArchitecture(machineEditor.MachineConnection.Architecture);
             machineEditor.AuthenticationMethod = machineEditor.MachineConnection.AuthenticationMethod;
 
             var startup = await startupService.RecoverDeploymentsAsync(Settings.IsFirstRunCompleted);
+
             if (startup.RecoveryError is not null)
             {
                 PublishNotification(startup.RecoveryError, isError: true);

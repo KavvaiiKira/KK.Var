@@ -100,8 +100,8 @@
             </Button>
 
             <StackPanel Grid.Column="1" Spacing="5">
-                <TextBlock Text="{Binding SelectedProject.Name}" FontSize="30" FontWeight="Bold" />
-                <TextBlock Text="{Binding SelectedProject.EffectiveDescription}" FontSize="13"
+                <TextBlock Text="{Binding SelectedProjectName}" FontSize="30" FontWeight="Bold" />
+                <TextBlock Text="{Binding SelectedProjectDescription}" FontSize="13"
                            Foreground="{DynamicResource AppTextMutedBrush}" />
             </StackPanel>
 
@@ -139,7 +139,7 @@
                             </StackPanel>
                             <StackPanel Grid.Column="1">
                                 <TextBlock Classes="details-label" Text="{DynamicResource BuildType}" />
-                                <TextBlock Classes="details-value" Text="{Binding SelectedProject.BuildProvider}" />
+                                <TextBlock Classes="details-value" Text="{Binding SelectedProjectBuildProvider}" />
                             </StackPanel>
                             <StackPanel Grid.Row="1">
                                 <TextBlock Classes="details-label" Text="{DynamicResource LastDeploy}" />
@@ -159,17 +159,17 @@
                             <StackPanel>
                                 <TextBlock Classes="details-label" Text="{DynamicResource SystemdService}" />
                                 <TextBlock Classes="details-value" FontFamily="Consolas"
-                                           Text="{Binding SelectedProject.RemoteServiceName}" />
+                                           Text="{Binding SelectedProjectRemoteServiceName}" />
                             </StackPanel>
                             <StackPanel Grid.Column="1">
                                 <TextBlock Classes="details-label" Text="{DynamicResource ServiceFile}" />
                                 <TextBlock Classes="details-value" FontFamily="Consolas"
-                                           Text="{Binding SelectedProject.RemoteExecutablePath}" />
+                                           Text="{Binding SelectedProjectRemoteExecutablePath}" />
                             </StackPanel>
                             <StackPanel Grid.Row="1" Grid.ColumnSpan="2">
                                 <TextBlock Classes="details-label" Text="{DynamicResource EnvironmentVariablesFile}" />
                                 <TextBlock Classes="details-value" FontFamily="Consolas"
-                                           Text="{Binding SelectedProject.ProjectEnvironmentFilePath}" />
+                                           Text="{Binding SelectedProjectEnvironmentFilePath}" />
                             </StackPanel>
                         </Grid>
                     </Border>

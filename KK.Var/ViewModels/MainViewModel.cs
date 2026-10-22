@@ -61,11 +61,11 @@ namespace KK.Var.ViewModels
             };
             MachineEditor = machineEditor;
             MachineEditor.PreflightInvalidated += () => InvalidateDeploymentPreflight();
-            MachineEditor.ProfilesReloaded += async () =>
+            MachineEditor.ProfilesReloaded += () =>
             {
                 var historyMachineId = SelectedHistoryMachine?.Id;
                 SelectedHistoryMachine = MachineEditor.MachineProfiles.FirstOrDefault(machine => machine.Id == historyMachineId);
-                await projectEditor.ReloadMachinesAsync();
+                projectEditor.SetMachines(MachineEditor.AvailableMachines);
                 AppSettings.UpdateFirstRunRequirement();
             };
             MachineEditor.ProfileVerified += AppSettings.MarkProfileVerifiedAsync;

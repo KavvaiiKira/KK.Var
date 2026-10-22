@@ -20,12 +20,19 @@ namespace KK.Var.Repositories.Implementations
         {
             await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-            return await db.Projects
+            var projects = await db.Projects
                 .AsNoTracking()
-                .Include(project => project.Versions)
-                .Include(project => project.Deployments)
+                .Include(project => project.Versions
+                    .OrderByDescending(version => version.CreatedAtUtc)
+                    .Take(1))
+                .Include(project => project.Deployments
+                    .OrderByDescending(deployment => deployment.StartedAtUtc)
+                    .Take(1))
+                .AsSplitQuery()
                 .OrderBy(project => project.Name)
                 .ToListAsync(cancellationToken);
+
+            return projects;
         }
 
         public async Task<KKProject?> GetByIdAsync(

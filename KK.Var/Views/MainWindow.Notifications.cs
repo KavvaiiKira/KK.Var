@@ -44,9 +44,9 @@ namespace KK.Var.Views
             {
                 return;
             }
-            var isCurrentDetails = DeploymentDetailsPage.IsVisible && notice.DeploymentId is { } id &&
+            var isCurrentDetails = _deploymentDetailsPage is { IsVisible: true } && notice.DeploymentId is { } id &&
                 viewModel.SelectedDeploymentDetails?.Deployment.Id == id;
-            var isCurrentDeploy = ProjectDetailsPage.IsVisible && ProjectDetailsPage.IsDeploySectionVisible &&
+            var isCurrentDeploy = _projectDetailsPage is { IsVisible: true, IsDeploySectionVisible: true } &&
                 viewModel.SelectedProject?.Id == notice.ProjectId;
             if (IsActive && WindowState != WindowState.Minimized && (isCurrentDetails || isCurrentDeploy))
             {
@@ -70,15 +70,15 @@ namespace KK.Var.Views
                     WindowState = WindowState.Normal;
                 }
                 Activate();
-                if (ProjectDetailsPage.IsVisible &&
-                    !ProjectDetailsPage.CanNavigateAway(() => NavigateNotification(notice)))
+                if (_projectDetailsPage is { IsVisible: true } projectDetailsPage &&
+                    !projectDetailsPage.CanNavigateAway(() => NavigateNotification(notice)))
                 {
                     return;
                 }
-                if (CreateProjectPage.IsVisible)
+                if (_createProjectPage is { IsVisible: true } createProjectPage)
                 {
                     _pendingNotificationNavigation = notice;
-                    CreateProjectPage.RequestClose();
+                    createProjectPage.RequestClose();
                     return;
                 }
                 await ShowNotificationTargetAsync(notice);
@@ -104,7 +104,7 @@ namespace KK.Var.Views
             }
             else
             {
-                ProjectDetailsPage.ShowDeploySection(prepare: false);
+                EnsureProjectDetailsPage().ShowDeploySection(prepare: false);
                 ShowProjectDetailsPage();
             }
         }

@@ -40,6 +40,7 @@ namespace KK.Var
             try
             {
                 _host.Start();
+
                 try
                 {
                     StartupUserSettings = Services
@@ -53,14 +54,6 @@ namespace KK.Var
                     UserSettingsStartupException = exception;
                 }
 
-                try
-                {
-                    ApplyDatabaseMigrations();
-                }
-                catch (Exception exception)
-                {
-                    DatabaseStartupException = exception;
-                }
                 BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
             }
             finally
@@ -188,6 +181,22 @@ namespace KK.Var
                 .CreateDbContext();
 
             dbContext.Database.Migrate();
+        }
+
+        internal static async System.Threading.Tasks.Task<Exception?> InitializeDatabaseAsync()
+        {
+            try
+            {
+                await System.Threading.Tasks.Task.Run(ApplyDatabaseMigrations);
+
+                DatabaseStartupException = null;
+                return null;
+            }
+            catch (Exception exception)
+            {
+                DatabaseStartupException = exception;
+                return exception;
+            }
         }
 
         internal static void MarkDatabaseRecovered() =>

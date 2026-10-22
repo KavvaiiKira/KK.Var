@@ -19,18 +19,18 @@ namespace KK.Var.Views
 
         private void ProjectsNavigationButton_OnClick(object? sender, RoutedEventArgs e)
         {
-            if (ProjectDetailsPage.IsVisible &&
-                !ProjectDetailsPage.CanNavigateAway(
+            if (_projectDetailsPage is { IsVisible: true } projectDetailsPage &&
+                !projectDetailsPage.CanNavigateAway(
                     () => ProjectsNavigationButton_OnClick(sender, e)))
             {
                 return;
             }
 
-            if (CreateProjectPage.IsVisible)
+            if (_createProjectPage is { IsVisible: true } createProjectPage)
             {
                 _showSettingsAfterProjectEditorClose = false;
                 _showHistoryAfterProjectEditorClose = false;
-                CreateProjectPage.RequestClose();
+                createProjectPage.RequestClose();
                 return;
             }
 
@@ -42,27 +42,26 @@ namespace KK.Var.Views
             ShowSettingsPage(showSettings: false);
         }
 
-        private async void SettingsNavigationButton_OnClick(object? sender, RoutedEventArgs e)
+        private void SettingsNavigationButton_OnClick(object? sender, RoutedEventArgs e)
         {
-            if (ProjectDetailsPage.IsVisible &&
-                !ProjectDetailsPage.CanNavigateAway(
+            if (_projectDetailsPage is { IsVisible: true } projectDetailsPage &&
+                !projectDetailsPage.CanNavigateAway(
                     () => SettingsNavigationButton_OnClick(sender, e)))
             {
                 return;
             }
 
-            if (CreateProjectPage.IsVisible)
+            if (_createProjectPage is { IsVisible: true } createProjectPage)
             {
                 _showSettingsAfterProjectEditorClose = true;
                 _showHistoryAfterProjectEditorClose = false;
-                CreateProjectPage.RequestClose();
+                createProjectPage.RequestClose();
                 return;
             }
 
             if (DataContext is MainViewModel viewModel)
             {
                 viewModel.ClearStatusNotification();
-                await viewModel.ArtifactStorage.RefreshArtifactStorageSummaryAsync();
             }
 
             ShowSettingsPage(showSettings: true);
@@ -70,18 +69,18 @@ namespace KK.Var.Views
 
         private async void HistoryNavigationButton_OnClick(object? sender, RoutedEventArgs e)
         {
-            if (ProjectDetailsPage.IsVisible &&
-                !ProjectDetailsPage.CanNavigateAway(
+            if (_projectDetailsPage is { IsVisible: true } projectDetailsPage &&
+                !projectDetailsPage.CanNavigateAway(
                     () => HistoryNavigationButton_OnClick(sender, e)))
             {
                 return;
             }
 
-            if (CreateProjectPage.IsVisible)
+            if (_createProjectPage is { IsVisible: true } createProjectPage)
             {
                 _showSettingsAfterProjectEditorClose = false;
                 _showHistoryAfterProjectEditorClose = true;
-                CreateProjectPage.RequestClose();
+                createProjectPage.RequestClose();
                 return;
             }
 
@@ -96,7 +95,7 @@ namespace KK.Var.Views
 
         private async void CreateProjectPage_OnCloseRequested(object? sender, EventArgs e)
         {
-            CreateProjectPage.IsVisible = false;
+            HideSecondaryPage();
             if (_pendingNotificationNavigation is { } notice)
             {
                 _pendingNotificationNavigation = null;
@@ -110,7 +109,7 @@ namespace KK.Var.Views
             {
                 projectViewModel.SelectedProject = createdProject;
                 await projectViewModel.LoadProjectDetailsAsync(createdProject);
-                ProjectDetailsPage.ShowOverviewSection();
+                EnsureProjectDetailsPage().ShowOverviewSection();
                 ShowProjectDetailsPage();
                 _showHistoryAfterProjectEditorClose = false;
                 _showSettingsAfterProjectEditorClose = false;
@@ -174,7 +173,7 @@ namespace KK.Var.Views
         }
 
         private void ProjectDetailsPage_OnDeployRequested(object? sender, EventArgs e) =>
-            ProjectDetailsPage.ShowDeploySection();
+            EnsureProjectDetailsPage().ShowDeploySection();
 
         private async void ProjectDetailsPage_OnDeploymentSelected(
             DeploymentHistoryItemViewModel item) =>
@@ -208,7 +207,7 @@ namespace KK.Var.Views
 
             if (_deploymentDetailsReturnToProject)
             {
-                ProjectDetailsPage.ShowHistorySection();
+                EnsureProjectDetailsPage().ShowHistorySection();
                 ShowProjectDetailsPage();
                 return;
             }
@@ -239,7 +238,7 @@ namespace KK.Var.Views
             await viewModel.LoadProjectDetailsAsync(project);
             viewModel.PrepareRepeatDeployment(deployment);
             viewModel.ClearDeploymentDetails();
-            ProjectDetailsPage.ShowDeploySection();
+            EnsureProjectDetailsPage().ShowDeploySection();
             ShowProjectDetailsPage();
         }
 
@@ -252,18 +251,16 @@ namespace KK.Var.Views
 
             _showSettingsAfterProjectEditorClose = false;
             _showHistoryAfterProjectEditorClose = false;
-            CreateProjectPage.BeginEditing(project);
+            EnsureCreateProjectPage().BeginEditing(project);
             ShowProjectEditorPage();
         }
 
         private void ShowProjectEditorPage()
         {
             ProjectsPage.IsVisible = false;
-            SettingsPage.IsVisible = false;
-            ProjectDetailsPage.IsVisible = false;
-            HistoryPage.IsVisible = false;
-            DeploymentDetailsPage.IsVisible = false;
-            CreateProjectPage.IsVisible = true;
+            var page = EnsureCreateProjectPage();
+            page.IsVisible = true;
+            ShowSecondaryPage(page);
             SetNavigationState(ProjectsNavigationButton, isActive: true);
             SetNavigationState(HistoryNavigationButton, isActive: false);
             SetNavigationState(SettingsNavigationButton, isActive: false);
@@ -272,11 +269,9 @@ namespace KK.Var.Views
         private void ShowProjectDetailsPage()
         {
             ProjectsPage.IsVisible = false;
-            SettingsPage.IsVisible = false;
-            CreateProjectPage.IsVisible = false;
-            HistoryPage.IsVisible = false;
-            DeploymentDetailsPage.IsVisible = false;
-            ProjectDetailsPage.IsVisible = true;
+            var page = EnsureProjectDetailsPage();
+            page.IsVisible = true;
+            ShowSecondaryPage(page);
             SetNavigationState(ProjectsNavigationButton, isActive: true);
             SetNavigationState(HistoryNavigationButton, isActive: false);
             SetNavigationState(SettingsNavigationButton, isActive: false);
@@ -285,11 +280,9 @@ namespace KK.Var.Views
         private void ShowHistoryPage()
         {
             ProjectsPage.IsVisible = false;
-            SettingsPage.IsVisible = false;
-            CreateProjectPage.IsVisible = false;
-            ProjectDetailsPage.IsVisible = false;
-            DeploymentDetailsPage.IsVisible = false;
-            HistoryPage.IsVisible = true;
+            var page = EnsureHistoryPage();
+            page.IsVisible = true;
+            ShowSecondaryPage(page);
             SetNavigationState(ProjectsNavigationButton, isActive: false);
             SetNavigationState(HistoryNavigationButton, isActive: true);
             SetNavigationState(SettingsNavigationButton, isActive: false);
@@ -298,22 +291,20 @@ namespace KK.Var.Views
         private void ShowDeploymentDetailsPage()
         {
             ProjectsPage.IsVisible = false;
-            SettingsPage.IsVisible = false;
-            CreateProjectPage.IsVisible = false;
-            ProjectDetailsPage.IsVisible = false;
-            HistoryPage.IsVisible = false;
-            DeploymentDetailsPage.IsVisible = true;
+            var page = EnsureDeploymentDetailsPage();
+            page.DataContext = (DataContext as MainViewModel)?.SelectedDeploymentDetails;
+            page.IsVisible = true;
+            ShowSecondaryPage(page);
             SetNavigationState(ProjectsNavigationButton, isActive: _deploymentDetailsReturnToProject);
             SetNavigationState(HistoryNavigationButton, isActive: !_deploymentDetailsReturnToProject);
             SetNavigationState(SettingsNavigationButton, isActive: false);
         }
 
-        private async void OpenRequiredSettingsButton_OnClick(object? sender, RoutedEventArgs e)
+        private void OpenRequiredSettingsButton_OnClick(object? sender, RoutedEventArgs e)
         {
             if (DataContext is MainViewModel viewModel)
             {
                 viewModel.ClearStatusNotification();
-                await viewModel.ArtifactStorage.RefreshArtifactStorageSummaryAsync();
             }
 
             ShowSettingsPage(showSettings: true);
@@ -339,20 +330,29 @@ namespace KK.Var.Views
         {
             if (DataContext is MainViewModel viewModel)
             {
-                if (!showSettings && SettingsPage.IsVisible)
+                if (!showSettings && _settingsPage is { IsVisible: true })
                 {
                     viewModel.ClearSettingsStatus();
                 }
 
                 UpdateProjectsAccessState(viewModel);
+                if (showSettings)
+                {
+                    _ = viewModel.ArtifactStorage.RefreshArtifactStorageSummaryAsync();
+                }
             }
 
             ProjectsPage.IsVisible = !showSettings;
-            SettingsPage.IsVisible = showSettings;
-            CreateProjectPage.IsVisible = false;
-            ProjectDetailsPage.IsVisible = false;
-            HistoryPage.IsVisible = false;
-            DeploymentDetailsPage.IsVisible = false;
+            if (showSettings)
+            {
+                var page = EnsureSettingsPage();
+                page.IsVisible = true;
+                ShowSecondaryPage(page);
+            }
+            else
+            {
+                HideSecondaryPage();
+            }
             SetNavigationState(ProjectsNavigationButton, !showSettings);
             SetNavigationState(HistoryNavigationButton, false);
             SetNavigationState(SettingsNavigationButton, showSettings);

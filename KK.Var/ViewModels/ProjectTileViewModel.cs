@@ -22,6 +22,12 @@ namespace KK.Var.ViewModels
 
         public bool IsAddTile => Project is null;
 
+        public string ProjectName => Project?.Name ?? string.Empty;
+
+        public string RemoteServiceName => Project?.RemoteServiceName ?? string.Empty;
+
+        public string RemoteExecutablePath => Project?.RemoteExecutablePath ?? string.Empty;
+
         public string SourceDisplay =>
             Project?.SourceType == ProjectSourceType.GitHubRepository ?
                 $"GitHub · {Project.GitHubRepositoryFullName}" :

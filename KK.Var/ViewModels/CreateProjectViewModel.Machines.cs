@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -21,9 +22,15 @@ namespace KK.Var.ViewModels
 
         public async Task ReloadMachinesAsync()
         {
+            var machines = await _remoteMachineService.GetAllAsync();
+            SetMachines(machines);
+        }
+
+        public void SetMachines(IEnumerable<RemoteMachine> machines)
+        {
             var selectedId = SelectedProjectMachine?.Id ?? _editingProject?.RemoteMachineId;
             ProjectMachines.Clear();
-            foreach (var machine in await _remoteMachineService.GetAllAsync())
+            foreach (var machine in machines)
             {
                 if (machine.IsVerified && !machine.IsArchived)
                 {

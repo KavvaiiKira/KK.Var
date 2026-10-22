@@ -18,6 +18,20 @@ namespace KK.Var.ViewModels
         [ObservableProperty]
         public partial KKProject? SelectedProject { get; set; }
 
+        public string SelectedProjectName => SelectedProject?.Name ?? string.Empty;
+
+        public string SelectedProjectDescription => SelectedProject?.EffectiveDescription ?? string.Empty;
+
+        public string SelectedProjectBuildProvider =>
+            ProjectEditor.BuildProviders.FirstOrDefault(option => Equals(option.Value, SelectedProject?.BuildProvider))?.Label ??
+            string.Empty;
+
+        public string SelectedProjectRemoteServiceName => SelectedProject?.RemoteServiceName ?? string.Empty;
+
+        public string SelectedProjectRemoteExecutablePath => SelectedProject?.RemoteExecutablePath ?? string.Empty;
+
+        public string SelectedProjectEnvironmentFilePath => SelectedProject?.ProjectEnvironmentFilePath ?? string.Empty;
+
         public string SelectedProjectSourceDisplay =>
             SelectedProject is null ?
                 string.Empty :
@@ -154,6 +168,12 @@ namespace KK.Var.ViewModels
             OnPropertyChanged(nameof(CanExportProjectConfiguration));
             ConfigureDeploymentGitHubSource(value);
             OnPropertyChanged(nameof(SelectedProjectSourceDisplay));
+            OnPropertyChanged(nameof(SelectedProjectName));
+            OnPropertyChanged(nameof(SelectedProjectDescription));
+            OnPropertyChanged(nameof(SelectedProjectBuildProvider));
+            OnPropertyChanged(nameof(SelectedProjectRemoteServiceName));
+            OnPropertyChanged(nameof(SelectedProjectRemoteExecutablePath));
+            OnPropertyChanged(nameof(SelectedProjectEnvironmentFilePath));
             OnPropertyChanged(nameof(SelectedProjectLastDeploymentDisplay));
             OnPropertyChanged(nameof(SelectedProjectLatestVersionTag));
             DeploymentWorkspace.NotifySelectedDeploymentStateChanged();

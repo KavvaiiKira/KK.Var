@@ -15,8 +15,8 @@ namespace KK.Var.Views
 
         private void NewProjectButton_OnClick(object? sender, RoutedEventArgs e)
         {
-            if (ProjectDetailsPage.IsVisible &&
-                !ProjectDetailsPage.CanNavigateAway(
+            if (_projectDetailsPage is { IsVisible: true } projectDetailsPage &&
+                !projectDetailsPage.CanNavigateAway(
                     () => NewProjectButton_OnClick(sender, e)))
             {
                 return;
@@ -35,7 +35,7 @@ namespace KK.Var.Views
 
             _showSettingsAfterProjectEditorClose = false;
             viewModel.ClearStatusNotification();
-            CreateProjectPage.BeginCreation();
+            EnsureCreateProjectPage().BeginCreation();
             ShowProjectEditorPage();
         }
 
@@ -82,7 +82,7 @@ namespace KK.Var.Views
                 await viewModel.ConfirmProjectImportAsync() is { } project)
             {
                 await viewModel.LoadProjectDetailsAsync(project);
-                ProjectDetailsPage.ShowOverviewSection();
+                EnsureProjectDetailsPage().ShowOverviewSection();
                 ShowProjectDetailsPage();
             }
         }
@@ -99,7 +99,7 @@ namespace KK.Var.Views
             viewModel.ClearStatusNotification();
             viewModel.SelectedProject = project;
             await viewModel.LoadProjectDetailsAsync(project);
-            ProjectDetailsPage.ShowOverviewSection();
+            EnsureProjectDetailsPage().ShowOverviewSection();
             ShowProjectDetailsPage();
         }
 
@@ -115,7 +115,7 @@ namespace KK.Var.Views
             viewModel.ClearStatusNotification();
             viewModel.SelectedProject = project;
             await viewModel.LoadProjectDetailsAsync(project);
-            ProjectDetailsPage.ShowDeploySection();
+            EnsureProjectDetailsPage().ShowDeploySection();
             ShowProjectDetailsPage();
         }
 

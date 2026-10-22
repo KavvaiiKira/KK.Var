@@ -2007,4 +2007,7 @@ New fingerprint: {3}</value>
     <data name="YesSameMachine" xml:space="preserve">
         <value>Yes, this is the same machine</value>
     </data>
+    <data name="StartingApplication" xml:space="preserve">
+        <value>Preparing the application…</value>
+    </data>
 </root>

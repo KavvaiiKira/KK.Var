@@ -1,0 +1,52 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:KK.Var.Views.Controls"
+        x:Class="KK.Var.Views.StartupWindow"
+        Width="520"
+        Height="260"
+        WindowStartupLocation="CenterScreen"
+        WindowDecorations="None"
+        CanResize="False"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent"
+        Title="KK.Var">
+
+    <Border Background="{DynamicResource AppBackgroundBrush}"
+            BorderBrush="{DynamicResource AppBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="16">
+        <Grid RowDefinitions="54,*">
+            <Border Background="{DynamicResource AppSurfaceBrush}"
+                    CornerRadius="16,16,0,0">
+                <StackPanel Margin="18,0,0,0"
+                            Orientation="Horizontal"
+                            Spacing="10"
+                            VerticalAlignment="Center">
+                    <controls:BrandMark Width="30" Height="30" />
+                    <TextBlock Text="KK.Var"
+                               VerticalAlignment="Center"
+                               FontFamily="{DynamicResource BrandFontFamily}"
+                               FontWeight="Bold" />
+                </StackPanel>
+            </Border>
+
+            <StackPanel Grid.Row="1"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="18">
+                <TextBlock Text="KK.VAR"
+                           HorizontalAlignment="Center"
+                           FontFamily="{DynamicResource BrandFontFamily}"
+                           FontSize="30"
+                           FontWeight="Bold"
+                           Foreground="{DynamicResource AppPrimaryHoverBrush}" />
+                <ProgressBar Width="220"
+                             Height="4"
+                             IsIndeterminate="True" />
+                <TextBlock Text="{DynamicResource StartingApplication}"
+                           HorizontalAlignment="Center"
+                           Foreground="{DynamicResource AppTextMutedBrush}" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

@@ -9,6 +9,9 @@ namespace KK.Var.ViewModels
 {
     public partial class MainViewModel
     {
+        [ObservableProperty]
+        public partial bool IsStartupLoading { get; private set; } = true;
+
         public async Task LoadSettingsAsync()
         {
             await AppSettings.LoadAsync();
@@ -34,6 +37,8 @@ namespace KK.Var.ViewModels
 
             ClearStatusNotification();
         }
+
+        public void CompleteStartupLoading() => IsStartupLoading = false;
 
         private void HandleSettingsStatusChanged(string value)
         {

@@ -14,6 +14,8 @@ namespace KK.Var.ViewModels
         IArtifactStorageRelocationService _storageRelocation,
         ILocalizationService localizationService) : LocalizedViewModel(localizationService)
     {
+        private Task? _summaryRefreshTask;
+
         [ObservableProperty]
         public partial string ArtifactStorageEffectivePath { get; private set; } = string.Empty;
 
@@ -35,6 +37,8 @@ namespace KK.Var.ViewModels
 
         public bool HasPendingArtifactStorageMigration => PendingArtifactStorageMigration is not null;
 
+        public bool HasArtifactStorageWarning => !string.IsNullOrWhiteSpace(ArtifactStorageWarning);
+
         public string ArtifactStorageMigrationFileCountDisplay =>
             PendingArtifactStorageMigration is { } plan ?
                 LocalizeFormat(Texts.Files, plan.FileCount) :
@@ -44,6 +48,14 @@ namespace KK.Var.ViewModels
             PendingArtifactStorageMigration is { } plan ?
                 ByteSizeFormatter.Format(plan.TotalBytes, _localizationService) :
                 string.Empty;
+
+        public string PendingArtifactStorageSourceDisplay =>
+            PendingArtifactStorageMigration is { } plan ?
+                $"{plan.SourceRoot} →" :
+                string.Empty;
+
+        public string PendingArtifactStorageTargetDisplay =>
+            PendingArtifactStorageMigration?.TargetRoot ?? string.Empty;
 
         public async Task PrepareArtifactStorageMigrationAsync(string? targetPath)
         {
@@ -114,7 +126,12 @@ namespace KK.Var.ViewModels
             ArtifactStorageWarning = string.Empty;
         }
 
-        public async Task RefreshArtifactStorageSummaryAsync()
+        public Task RefreshArtifactStorageSummaryAsync() =>
+            _summaryRefreshTask is { IsCompleted: false } ?
+                _summaryRefreshTask :
+                _summaryRefreshTask = RefreshArtifactStorageSummaryCoreAsync();
+
+        private async Task RefreshArtifactStorageSummaryCoreAsync()
         {
             try
             {
@@ -138,7 +155,12 @@ namespace KK.Var.ViewModels
             OnPropertyChanged(nameof(HasPendingArtifactStorageMigration));
             OnPropertyChanged(nameof(ArtifactStorageMigrationFileCountDisplay));
             OnPropertyChanged(nameof(ArtifactStorageMigrationSizeDisplay));
+            OnPropertyChanged(nameof(PendingArtifactStorageSourceDisplay));
+            OnPropertyChanged(nameof(PendingArtifactStorageTargetDisplay));
         }
+
+        partial void OnArtifactStorageWarningChanged(string value) =>
+            OnPropertyChanged(nameof(HasArtifactStorageWarning));
 
         public event Action<string>? ErrorReported;
 

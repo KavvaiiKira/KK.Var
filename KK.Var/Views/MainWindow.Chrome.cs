@@ -73,8 +73,8 @@ namespace KK.Var.Views
                 return;
             }
 
-            if (ProjectDetailsPage.IsVisible &&
-                !ProjectDetailsPage.CanNavigateAway(Close))
+            if (_projectDetailsPage is { IsVisible: true } projectDetailsPage &&
+                !projectDetailsPage.CanNavigateAway(Close))
             {
                 return;
             }

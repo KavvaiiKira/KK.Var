@@ -30,7 +30,7 @@
             <ScrollViewer MaxHeight="120"
                           HorizontalScrollBarVisibility="Disabled"
                           VerticalScrollBarVisibility="Auto">
-                <SelectableTextBlock Text="{Binding Commit.Message}"
+                <SelectableTextBlock Text="{Binding CommitMessage}"
                                      FontSize="14"
                                      FontWeight="SemiBold"
                                      TextWrapping="Wrap"
@@ -45,7 +45,7 @@
                            FontSize="12"
                            Foreground="{DynamicResource AppTextMutedBrush}" />
                 <SelectableTextBlock Grid.Column="1"
-                                     Text="{Binding Commit.Author}"
+                                     Text="{Binding CommitAuthor}"
                                      FontSize="12"
                                      TextWrapping="Wrap"
                                      Foreground="{DynamicResource AppTextBrush}" />
@@ -55,7 +55,7 @@
                            Foreground="{DynamicResource AppTextMutedBrush}" />
                 <SelectableTextBlock Grid.Row="1"
                                      Grid.Column="1"
-                                     Text="{Binding Commit.Sha}"
+                                     Text="{Binding CommitSha}"
                                      FontFamily="Cascadia Mono, Consolas"
                                      FontSize="11"
                                      TextWrapping="Wrap"

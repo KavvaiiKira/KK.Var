@@ -272,10 +272,10 @@
                             <TextBlock Text="{DynamicResource ProjectsUsingProfile}"
                                        FontSize="19"
                                        FontWeight="Bold" />
-                            <TextBlock IsVisible="{Binding !!MachineEditor.MachineProjectsDisplay}"
+                            <TextBlock IsVisible="{Binding MachineEditor.HasMachineProjects}"
                                        Text="{Binding MachineEditor.MachineProjectsDisplay}"
                                        TextWrapping="Wrap" />
-                            <TextBlock IsVisible="{Binding !MachineEditor.MachineProjectsDisplay}"
+                            <TextBlock IsVisible="{Binding MachineEditor.HasNoMachineProjects}"
                                        Text="{DynamicResource NoProjectsLinkedProfileYet}"
                                        TextWrapping="Wrap"
                                        Foreground="{DynamicResource AppTextMutedBrush}" />
@@ -470,12 +470,12 @@
                                 <StackPanel Spacing="6">
                                     <TextBlock Text="{DynamicResource ArchiveMigrationPlan}"
                                                FontWeight="SemiBold" />
-                                    <TextBlock Text="{Binding ArtifactStorage.PendingArtifactStorageMigration.SourceRoot, StringFormat='{}{0} →'}"
+                                    <TextBlock Text="{Binding ArtifactStorage.PendingArtifactStorageSourceDisplay}"
                                                FontFamily="Cascadia Mono, Consolas"
                                                FontSize="11"
                                                TextWrapping="Wrap"
                                                Foreground="{DynamicResource AppTextMutedBrush}" />
-                                    <TextBlock Text="{Binding ArtifactStorage.PendingArtifactStorageMigration.TargetRoot}"
+                                    <TextBlock Text="{Binding ArtifactStorage.PendingArtifactStorageTargetDisplay}"
                                                FontFamily="Cascadia Mono, Consolas"
                                                FontSize="11"
                                                TextWrapping="Wrap" />
@@ -500,7 +500,7 @@
                             </Grid>
                         </Border>
 
-                        <TextBlock IsVisible="{Binding !!ArtifactStorage.ArtifactStorageWarning}"
+                        <TextBlock IsVisible="{Binding ArtifactStorage.HasArtifactStorageWarning}"
                                    Text="{Binding ArtifactStorage.ArtifactStorageWarning}"
                                    TextWrapping="Wrap"
                                    Foreground="{DynamicResource AppDangerBrush}" />

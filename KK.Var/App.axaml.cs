@@ -12,8 +12,7 @@ namespace KK.Var
 {
     public partial class App : Application
     {
-        public override void Initialize() =>
-            AvaloniaXamlLoader.Load(this);
+        public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
         public override void OnFrameworkInitializationCompleted()
         {
@@ -41,13 +40,13 @@ namespace KK.Var
                 return;
             }
 
-            OpenApplicationWindow(
+            OpenStartupWindow(
                 desktop,
                 Program.StartupUserSettings ?? new UserSettings(),
                 showImmediately: false);
         }
 
-        private static void OpenApplicationWindow(
+        private static void OpenStartupWindow(
             IClassicDesktopStyleApplicationLifetime desktop,
             UserSettings settings,
             bool showImmediately)
@@ -56,16 +55,43 @@ namespace KK.Var
                 .GetRequiredService<ILocalizationService>()
                 .SetLanguage(settings.Language);
 
-            if (Program.DatabaseStartupException is { } databaseException)
+            var startupWindow = new StartupWindow();
+            var initializationStarted = false;
+            startupWindow.Opened += async (_, _) =>
             {
-                OpenRecoveryWindow(
-                    desktop,
-                    StartupRecoveryKind.Database,
-                    databaseException,
-                    showImmediately);
-                return;
-            }
+                if (initializationStarted)
+                {
+                    return;
+                }
 
+                initializationStarted = true;
+                var databaseException = await Program.InitializeDatabaseAsync();
+                if (databaseException is not null)
+                {
+                    OpenRecoveryWindow(
+                        desktop,
+                        StartupRecoveryKind.Database,
+                        databaseException,
+                        showImmediately: true);
+                    startupWindow.Close();
+                    return;
+                }
+
+                OpenApplicationWindow(desktop, showImmediately: true);
+                startupWindow.Close();
+            };
+
+            desktop.MainWindow = startupWindow;
+            if (showImmediately)
+            {
+                startupWindow.Show();
+            }
+        }
+
+        private static void OpenApplicationWindow(
+            IClassicDesktopStyleApplicationLifetime desktop,
+            bool showImmediately)
+        {
             var mainWindow = Program.Services.GetRequiredService<MainWindow>();
             desktop.MainWindow = mainWindow;
             if (showImmediately)
@@ -95,7 +121,16 @@ namespace KK.Var
                 var settings = await Program.Services
                     .GetRequiredService<IUserSettingsService>()
                     .LoadAsync();
-                OpenApplicationWindow(desktop, settings, showImmediately: true);
+
+                if (kind == StartupRecoveryKind.UserSettings)
+                {
+                    OpenStartupWindow(desktop, settings, showImmediately: true);
+                }
+                else
+                {
+                    OpenApplicationWindow(desktop, showImmediately: true);
+                }
+
                 recoveryWindow.Close();
             };
 

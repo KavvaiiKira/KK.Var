@@ -2007,4 +2007,7 @@
     <data name="YesSameMachine" xml:space="preserve">
         <value>Да, это та же машина</value>
     </data>
+    <data name="StartingApplication" xml:space="preserve">
+        <value>Подготовка приложения…</value>
+    </data>
 </root>

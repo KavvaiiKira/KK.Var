@@ -130,7 +130,6 @@ namespace KK.Var.Services.Implementations
             var directory = new DirectoryInfo(root);
             pathPolicy.EnsureTreeHasNoReparsePoints(directory);
             var total = 0L;
-
             foreach (var file in directory.EnumerateFiles("*", SearchOption.AllDirectories))
             {
                 cancellationToken.ThrowIfCancellationRequested();
