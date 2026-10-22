@@ -9,18 +9,6 @@
              x:Class="KK.Var.Views.Pages.DeploymentDetailsView"
              x:DataType="vm:DeploymentDetailsViewModel">
 
-    <UserControl.Resources>
-        <SolidColorBrush x:Key="ScrollBarBackground" Color="{StaticResource AppSurfaceRaisedColor}" />
-        <SolidColorBrush x:Key="ScrollBarTrackFill" Color="{StaticResource AppSurfaceRaisedColor}" />
-        <SolidColorBrush x:Key="ScrollBarPanningThumbBackground" Color="{StaticResource AppPrimaryColor}" />
-        <SolidColorBrush x:Key="ScrollBarThumbFillPointerOver" Color="{StaticResource AppPrimaryHoverColor}" />
-        <SolidColorBrush x:Key="ScrollBarThumbFillPressed" Color="{StaticResource AppAccentColor}" />
-        <SolidColorBrush x:Key="ScrollBarButtonArrowForeground" Color="{StaticResource AppTextMutedColor}" />
-        <SolidColorBrush x:Key="ScrollBarButtonArrowForegroundPointerOver" Color="{StaticResource AppPrimaryHoverColor}" />
-        <SolidColorBrush x:Key="ScrollBarButtonArrowForegroundPressed" Color="{StaticResource AppAccentColor}" />
-        <SolidColorBrush x:Key="ScrollViewerScrollBarsSeparatorBackground" Color="{StaticResource AppSurfaceRaisedColor}" />
-    </UserControl.Resources>
-
     <UserControl.Styles>
         <Style Selector="TextBox.operation-code">
             <Setter Property="Padding" Value="12" />

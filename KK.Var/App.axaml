@@ -81,6 +81,24 @@
             <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedPressed" Color="{StaticResource AppTextColor}" />
             <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelectedPressed" Color="{StaticResource AppPrimaryHoverColor}" />
 
+            <!-- Shared scrollbar palette for pages, text fields, lists and popups. -->
+            <SolidColorBrush x:Key="ScrollBarBackground" Color="{StaticResource AppSurfaceRaisedColor}" />
+            <SolidColorBrush x:Key="ScrollBarBackgroundPointerOver" Color="{StaticResource AppSurfaceRaisedColor}" />
+            <SolidColorBrush x:Key="ScrollBarTrackFill" Color="{StaticResource AppSurfaceRaisedColor}" />
+            <SolidColorBrush x:Key="ScrollBarTrackFillPointerOver" Color="{StaticResource AppSurfaceRaisedColor}" />
+            <SolidColorBrush x:Key="ScrollBarPanningThumbBackground" Color="{StaticResource AppPrimaryColor}" Opacity="0.5" />
+            <SolidColorBrush x:Key="ScrollBarThumbBackgroundColor" Color="{StaticResource AppPrimaryColor}" Opacity="0.5" />
+            <SolidColorBrush x:Key="ScrollBarThumbFillPointerOver" Color="{StaticResource AppPrimaryColor}" Opacity="0.65" />
+            <SolidColorBrush x:Key="ScrollBarThumbFillPressed" Color="{StaticResource AppPrimaryColor}" Opacity="0.8" />
+            <SolidColorBrush x:Key="ScrollBarThumbFillDisabled" Color="{StaticResource AppBorderColor}" />
+            <SolidColorBrush x:Key="ScrollBarButtonArrowForeground" Color="{StaticResource AppTextMutedColor}" />
+            <SolidColorBrush x:Key="ScrollBarButtonArrowForegroundPointerOver" Color="{StaticResource AppPrimaryHoverColor}" />
+            <SolidColorBrush x:Key="ScrollBarButtonArrowForegroundPressed" Color="{StaticResource AppAccentColor}" />
+            <SolidColorBrush x:Key="ScrollBarButtonBackground" Color="{StaticResource AppSurfaceRaisedColor}" />
+            <SolidColorBrush x:Key="ScrollBarButtonBackgroundPointerOver" Color="{StaticResource AppSurfaceHoverColor}" />
+            <SolidColorBrush x:Key="ScrollBarButtonBackgroundPressed" Color="{StaticResource AppSurfaceHoverColor}" />
+            <SolidColorBrush x:Key="ScrollViewerScrollBarsSeparatorBackground" Color="{StaticResource AppSurfaceRaisedColor}" />
+
             <FontFamily x:Key="BrandFontFamily">avares://KK.Var/Assets/Fonts#Exo 2</FontFamily>
         </ResourceDictionary>
     </Application.Resources>
@@ -97,6 +115,33 @@
         </FluentTheme>
         <Style Selector=":is(Window)">
             <Setter Property="Icon" Value="avares://KK.Var/Assets/Brand/kk-var.ico" />
+        </Style>
+        <Style Selector="ScrollViewer">
+            <Setter Property="AllowAutoHide" Value="False" />
+        </Style>
+        <Style Selector="ScrollBar">
+            <Setter Property="CornerRadius" Value="6" />
+        </Style>
+        <Style Selector="ScrollBar /template/ Grid#Root">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="ScrollBar /template/ Border#VerticalRoot, ScrollBar /template/ Border#HorizontalRoot">
+            <Setter Property="CornerRadius" Value="6" />
+        </Style>
+        <Style Selector="ScrollBar /template/ Rectangle#TrackRect">
+            <Setter Property="RadiusX" Value="6" />
+            <Setter Property="RadiusY" Value="6" />
+            <Setter Property="StrokeThickness" Value="0" />
+        </Style>
+        <!-- Keep Thumb bounds unchanged: Track uses them to adjust an active drag. -->
+        <Style Selector="ScrollBar /template/ Thumb">
+            <Setter Property="CornerRadius" Value="4" />
+        </Style>
+        <Style Selector="ScrollBar:vertical /template/ Thumb /template/ Border">
+            <Setter Property="Margin" Value="4,0" />
+        </Style>
+        <Style Selector="ScrollBar:horizontal /template/ Thumb /template/ Border">
+            <Setter Property="Margin" Value="0,4" />
         </Style>
         <Style Selector="ComboBox">
             <Setter Property="CornerRadius" Value="8" />
