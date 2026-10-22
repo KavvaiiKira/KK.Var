@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using KK.Var.Constants;
 using KK.Var.Enums;
 using KK.Var.Models;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.ViewModels
 {
@@ -80,7 +81,7 @@ namespace KK.Var.ViewModels
                         [new DeploymentPreflightCheck(
                             PreflightCheckKeys.Check,
                             PreflightStatus.Error,
-                            Localize("Не удалось выполнить проверку."),
+                            Texts.CouldNotCompletePreflightCheck,
                             Localize(exception.Message))]);
                     DeploymentWorkspace.NotifySelectedDeploymentStateChanged();
                 }

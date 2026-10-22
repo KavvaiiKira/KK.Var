@@ -8,6 +8,7 @@ using KK.Var.Data;
 using KK.Var.Enums;
 using KK.Var.Models;
 using Microsoft.EntityFrameworkCore;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
@@ -34,7 +35,7 @@ namespace KK.Var.Services.Implementations
             return await db.RemoteMachines.AsNoTracking().SingleOrDefaultAsync(
                 machine => machine.Id == id,
                 cancellationToken) ??
-                throw Error("Выберите профиль удалённой машины.");
+                throw Error(Texts.SelectRemoteMachineProfile);
         }
 
         public async Task<RemoteMachineSettings> GetConnectionAsync(
@@ -44,7 +45,7 @@ namespace KK.Var.Services.Implementations
             var machine = await GetAsync(id, cancellationToken);
             if (machine.IsArchived || !machine.IsVerified)
             {
-                throw Error("Профиль машины должен быть проверен и не архивирован.");
+                throw Error(Texts.MachineProfileMustVerifiedNotArchived);
             }
             return new RemoteMachineSettings
             {
@@ -85,7 +86,7 @@ namespace KK.Var.Services.Implementations
                                     (deployment.Status == DeploymentStatus.Running || deployment.Status == DeploymentStatus.Pending),
                     cancellationToken))
             {
-                throw Error("Машина занята операцией. Изменение и архивирование недоступны.");
+                throw Error(Texts.MachineActiveOperationEditingArchivingUnavailable);
             }
         }
 
@@ -104,7 +105,7 @@ namespace KK.Var.Services.Implementations
                 string.IsNullOrWhiteSpace(connection.Host) || string.IsNullOrWhiteSpace(connection.UserName) ||
                 connection.Port is < 1 or > 65535)
             {
-                throw Error("Заполните профиль и успешно проверьте SSH-подключение.");
+                throw Error(Texts.CompleteProfileSuccessfullyVerifySSHConnection);
             }
             await _gate.WaitAsync(cancellationToken);
             try
@@ -116,13 +117,13 @@ namespace KK.Var.Services.Implementations
                     cancellationToken);
                 if (current?.UpdatedAtUtc != expectedUpdatedAt || current?.IsArchived == true)
                 {
-                    throw Error("Профиль изменился. Откройте его заново.");
+                    throw Error(Texts.ProfileChangedOpenAgain);
                 }
                 var identityChanged = current is not null && (current.Host != connection.Host?.Trim() ||
                     current.Port != connection.Port || current.HostKeyFingerprint != verification.HostKeyFingerprint);
                 if (identityChanged && !identityConfirmed)
                 {
-                    throw Error("Подтвердите, является ли новый адрес той же машиной.");
+                    throw Error(Texts.ConfirmWhetherNewAddressBelongsSameMachine);
                 }
                 if (current is null)
                 {
@@ -155,7 +156,7 @@ namespace KK.Var.Services.Implementations
                         var password = connection.Password ?? previousPassword;
                         if (string.IsNullOrWhiteSpace(password))
                         {
-                            throw Error("Введите пароль SSH для этого профиля.");
+                            throw Error(Texts.EnterSSHPasswordProfile);
                         }
                         await passwordStore.SaveAsync(current.Id, password, cancellationToken);
                     }
@@ -194,7 +195,7 @@ namespace KK.Var.Services.Implementations
                 await AssertEditableCoreAsync(db, id, cancellationToken);
                 if (await db.Projects.AnyAsync(project => project.RemoteMachineId == id, cancellationToken))
                 {
-                    throw Error("Сначала назначьте проектам этого профиля другую машину.");
+                    throw Error(Texts.AssignAnotherMachineProfileSProjectsFirst);
                 }
                 var machine = await db.RemoteMachines.SingleAsync(item => item.Id == id, cancellationToken);
                 machine.IsArchived = true;
@@ -240,7 +241,7 @@ namespace KK.Var.Services.Implementations
                 var machine = await GetAsync(id, cancellationToken);
                 if (!machine.IsVerified || machine.IsArchived)
                 {
-                    throw Error("Профиль машины должен быть проверен и не архивирован.");
+                    throw Error(Texts.MachineProfileMustVerifiedNotArchived);
                 }
                 _reservations[id] = _reservations.GetValueOrDefault(id) + 1;
                 return new Reservation(this, id);

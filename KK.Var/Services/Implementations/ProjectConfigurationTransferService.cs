@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using KK.Var.Models;
 using KK.Var.Repositories;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
@@ -35,7 +36,7 @@ namespace KK.Var.Services.Implementations
         public async Task<string> ExportAsync(Guid projectId, CancellationToken cancellationToken = default)
         {
             var project = await projectService.GetByIdAsync(projectId, cancellationToken) ??
-                throw new InvalidOperationException(localizationService.Get("Проект не найден."));
+                throw new InvalidOperationException(Texts.ProjectNotFound);
             var variables = await environmentService.GetAsync(projectId, cancellationToken);
             var data = new ProjectConfigurationData
             {
@@ -118,7 +119,7 @@ namespace KK.Var.Services.Implementations
             if (await projectRepository.NameExistsAsync(data.Name.Trim(), cancellationToken: cancellationToken))
             {
                 throw new InvalidDataException(localizationService.Format(
-                    "Проект «{0}» уже существует. Измените имя перед импортом.",
+                    Texts.ProjectAlreadyExistsChangeNameImporting,
                     data.Name.Trim()));
             }
             if (await projectRepository.ServiceNameExistsAsync(
@@ -127,7 +128,7 @@ namespace KK.Var.Services.Implementations
                 remoteMachineId: remoteMachineId))
             {
                 throw new InvalidDataException(localizationService.Format(
-                    "Сервис «{0}» уже назначен другому проекту. Измените сервис перед импортом.",
+                    Texts.ServiceAssignedAnotherProjectChangeImporting,
                     data.RemoteServiceName.Trim()));
             }
             var project = new KKProject
@@ -183,11 +184,11 @@ namespace KK.Var.Services.Implementations
         }
 
         private InvalidDataException InvalidDocument() =>
-            new InvalidDataException(localizationService.Get("Файл конфигурации проекта некорректен."));
+            new InvalidDataException(Texts.ProjectConfigurationFileInvalid);
 
         private InvalidDataException UnsupportedVersion(int version) =>
             new InvalidDataException(localizationService.Format(
-                "Версия формата конфигурации {0} не поддерживается.",
+                Texts.ConfigurationFormatVersionNotSupported,
                 version));
     }
 }

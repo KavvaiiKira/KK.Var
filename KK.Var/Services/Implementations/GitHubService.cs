@@ -10,6 +10,7 @@ using KK.Var.Configuration;
 using KK.Var.Constants;
 using KK.Var.Models;
 using Microsoft.Extensions.Logging;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
@@ -151,28 +152,22 @@ namespace KK.Var.Services.Implementations
                         pollingInterval += TimeSpan.FromSeconds(5);
                         continue;
                     case GitHubProtocol.AccessDeniedError:
-                        throw new InvalidOperationException(_localizationService.Get(
-                            "Авторизация GitHub была отменена пользователем."));
+                        throw new InvalidOperationException(Texts.GitHubAuthorizationCancelledUser);
                     case GitHubProtocol.ExpiredTokenError:
-                        throw new InvalidOperationException(_localizationService.Get(
-                            "Срок действия кода GitHub истёк. Запустите подключение ещё раз."));
+                        throw new InvalidOperationException(Texts.GitHubCodeExpiredStartConnectionAgain);
                     case GitHubProtocol.DeviceFlowDisabledError:
-                        throw new InvalidOperationException(_localizationService.Get(
-                            "Для GitHub OAuth App не включён Device Flow."));
+                        throw new InvalidOperationException(Texts.DeviceFlowNotEnabledGitHubOAuthApp);
                     case GitHubProtocol.IncorrectClientCredentialsError:
-                        throw new InvalidOperationException(_localizationService.Get(
-                            "GitHub Client ID указан неверно."));
+                        throw new InvalidOperationException(Texts.GitHubClientIDInvalid);
                     default:
                         throw new InvalidOperationException(
                             GetGitHubError(
                                 root,
-                                _localizationService.Get(
-                                                                "GitHub не выдал токен доступа.")));
+                                Texts.GitHubDidNotIssueAccessToken));
                 }
             }
 
-            throw new InvalidOperationException(_localizationService.Get(
-                "Срок действия кода GitHub истёк. Запустите подключение ещё раз."));
+            throw new InvalidOperationException(Texts.GitHubCodeExpiredStartConnectionAgain);
         }
 
         public async Task<GitHubToken> RefreshAccessTokenAsync(
@@ -183,8 +178,7 @@ namespace KK.Var.Services.Implementations
 
             if (string.IsNullOrWhiteSpace(token.RefreshToken))
             {
-                throw new InvalidOperationException(_localizationService.Get(
-                    "Сеанс GitHub истёк. Подключите GitHub заново."));
+                throw new InvalidOperationException(Texts.GitHubSessionExpiredConnectGitHubAgain);
             }
 
             using var content = new FormUrlEncodedContent(
@@ -217,8 +211,7 @@ namespace KK.Var.Services.Implementations
             {
                 throw new InvalidOperationException(GetGitHubError(
                     root,
-                    _localizationService.Get(
-                                        "Не удалось обновить сеанс GitHub. Подключите GitHub заново.")));
+                    Texts.CouldNotRefreshGitHubSessionConnectGitHub));
             }
 
             return ReadToken(root);
@@ -291,14 +284,13 @@ namespace KK.Var.Services.Implementations
             if (string.IsNullOrWhiteSpace(repositoryFullName) ||
                 repositoryFullName.Split('/').Length != 2)
             {
-                throw new ArgumentException(_localizationService.Get(
-                    "Некорректное имя репозитория GitHub."));
+                throw new ArgumentException(Texts.InvalidGitHubRepositoryName);
             }
 
             if (string.IsNullOrWhiteSpace(commitSha))
             {
                 throw new ArgumentException(
-                    _localizationService.Get("Не указан Git commit SHA."),
+                    Texts.GitCommitSHANotProvided,
                     nameof(commitSha));
             }
 
@@ -333,8 +325,7 @@ namespace KK.Var.Services.Implementations
             if (string.IsNullOrWhiteSpace(repositoryFullName) ||
                 repositoryFullName.Split('/').Length != 2)
             {
-                throw new ArgumentException(_localizationService.Get(
-                    "Некорректное имя репозитория GitHub."));
+                throw new ArgumentException(Texts.InvalidGitHubRepositoryName);
             }
 
             var uri = new Uri($"{GitHubProtocol.RepositoryApiPrefix}{repositoryFullName}{GitHubProtocol.LatestCommitQuery}");
@@ -352,13 +343,11 @@ namespace KK.Var.Services.Implementations
 
             if (commits.ValueKind != JsonValueKind.Array || commits.GetArrayLength() == 0)
             {
-                throw new InvalidDataException(_localizationService.Get(
-                    "В репозитории GitHub нет коммитов."));
+                throw new InvalidDataException(Texts.GitHubRepositoryNoCommits);
             }
 
             return commits[0].GetProperty(GitHubProtocol.ShaField).GetString() ??
-                throw new InvalidDataException(_localizationService.Get(
-                    "GitHub не вернул Git commit SHA."));
+                throw new InvalidDataException(Texts.GitHubDidNotReturnGitCommitSHA);
         }
 
         public async Task<IReadOnlyList<GitHubSubmodule>> GetSubmodulesAsync(
@@ -370,14 +359,13 @@ namespace KK.Var.Services.Implementations
             if (string.IsNullOrWhiteSpace(repositoryFullName) ||
                 repositoryFullName.Split('/').Length != 2)
             {
-                throw new ArgumentException(_localizationService.Get(
-                    "Некорректное имя репозитория GitHub."));
+                throw new ArgumentException(Texts.InvalidGitHubRepositoryName);
             }
 
             if (string.IsNullOrWhiteSpace(commitSha))
             {
                 throw new ArgumentException(
-                    _localizationService.Get("Не указан Git commit SHA."),
+                    Texts.GitCommitSHANotProvided,
                     nameof(commitSha));
             }
 
@@ -398,8 +386,7 @@ namespace KK.Var.Services.Implementations
                 .GetProperty(GitHubProtocol.TreeField)
                 .GetProperty(GitHubProtocol.ShaField)
                 .GetString() ??
-                throw new InvalidDataException(_localizationService.Get(
-                    "GitHub не вернул SHA дерева репозитория."));
+                throw new InvalidDataException(Texts.GitHubDidNotReturnRepositoryTreeSHA);
 
             var treeUri = new Uri($"{GitHubProtocol.RepositoryApiPrefix}{repositoryFullName}{GitHubProtocol.GitTreePathPrefix}{treeSha}{GitHubProtocol.RecursiveTreeQuery}");
 
@@ -489,7 +476,7 @@ namespace KK.Var.Services.Implementations
             }
 
             var message = _localizationService.Format(
-                "GitHub вернул ошибку HTTP {0}.",
+                Texts.GitHubReturnedHTTPError,
                 (int)response.StatusCode);
 
             try
@@ -548,8 +535,7 @@ namespace KK.Var.Services.Implementations
         {
             if (!_options.IsConfigured)
             {
-                throw new InvalidOperationException(_localizationService.Get(
-                    "GitHub Client ID не настроен в appsettings.json."));
+                throw new InvalidOperationException(Texts.GitHubClientIDNotConfiguredAppsettingsJson);
             }
         }
     }

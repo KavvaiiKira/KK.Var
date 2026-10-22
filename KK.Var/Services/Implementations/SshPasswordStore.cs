@@ -6,10 +6,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using KK.Var.Constants;
 using KK.Var.Data;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
-    public sealed class SshPasswordStore(ILocalizationService localizationService) : ISshPasswordStore
+    public sealed class SshPasswordStore : ISshPasswordStore
     {
         private const string PasswordEntropyPrefix = "KK.Var.SSH.Password.v2:";
 
@@ -33,7 +34,7 @@ namespace KK.Var.Services.Implementations
             if (!OperatingSystem.IsWindows())
             {
                 throw new PlatformNotSupportedException(
-                    localizationService.Get("Защищённое хранение SSH-пароля доступно только в Windows."));
+                    Texts.ProtectedSSHPasswordStorageOnlyAvailableWindows);
             }
 
             DatabasePaths.EnsureUserDataDirectory();
@@ -62,7 +63,7 @@ namespace KK.Var.Services.Implementations
         {
             if (!OperatingSystem.IsWindows())
             {
-                throw new PlatformNotSupportedException(localizationService.Get("Защищённое хранение SSH-пароля доступно только в Windows."));
+                throw new PlatformNotSupportedException(Texts.ProtectedSSHPasswordStorageOnlyAvailableWindows);
             }
 
             if (!File.Exists(PasswordPath(machineId)))

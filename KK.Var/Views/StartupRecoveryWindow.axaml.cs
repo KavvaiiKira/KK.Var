@@ -5,6 +5,7 @@ using Avalonia.Interactivity;
 using KK.Var.Enums;
 using KK.Var.Services;
 using KK.Var.Views.Design;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Views
 {
@@ -41,17 +42,17 @@ namespace KK.Var.Views
             var localization = _localizationService;
 
             TitleText.Text = kind == StartupRecoveryKind.UserSettings ?
-                localization.Get("Не удалось прочитать настройки") :
-                localization.Get("Не удалось открыть базу данных");
+                Texts.CouldNotReadSettings :
+                Texts.CouldNotOpenDatabase;
 
             DescriptionText.Text = kind == StartupRecoveryKind.UserSettings ?
-                localization.Get("Настройки повреждены или недоступны. Можно сохранить исходный файл в резервной копии и начать с чистых настроек.") :
-                localization.Get("SQLite-база повреждена или её схема не может быть обновлена. Можно сохранить все файлы базы в резервной копии и создать новую базу.");
+                Texts.SettingsDamagedUnavailableCanBackUpOriginal :
+                Texts.SQLiteDatabaseDamagedSchemaCannotUpdatedCan;
 
             ErrorText.Text = localization.Get(exception.Message);
-            OpenDataDirectoryButton.Content = localization.Get("Открыть папку данных");
-            CloseButton.Content = localization.Get("Завершить");
-            RecoverButton.Content = localization.Get("Создать копию и сбросить");
+            OpenDataDirectoryButton.Content = Texts.OpenDataFolder;
+            CloseButton.Content = Texts.Exit;
+            RecoverButton.Content = Texts.BackUpReset;
         }
 
         public event EventHandler? RecoverySucceeded;
@@ -74,18 +75,18 @@ namespace KK.Var.Views
         {
             RecoverButton.IsEnabled = false;
             var localization = _localizationService;
-            StatusText.Text = localization.Get("Создание резервной копии...");
+            StatusText.Text = Texts.CreatingBackup;
 
             try
             {
                 var backupDirectory = await _recoveryService.BackupAndResetAsync(_kind);
-                StatusText.Text = localization.Format("Резервная копия: {0}", backupDirectory);
+                StatusText.Text = localization.Format(Texts.Backup, backupDirectory);
                 RecoverySucceeded?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception exception)
             {
                 ErrorText.Text = localization.Get(exception.Message);
-                StatusText.Text = localization.Get("Восстановление не выполнено.");
+                StatusText.Text = Texts.RecoveryNotCompleted;
                 RecoverButton.IsEnabled = true;
             }
         }

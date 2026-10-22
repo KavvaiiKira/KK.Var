@@ -8,10 +8,11 @@ using System.Threading.Tasks;
 using KK.Var.Constants;
 using KK.Var.Data;
 using KK.Var.Models;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
-    public sealed class GitHubTokenStore(ILocalizationService localizationService) : IGitHubTokenStore
+    public sealed class GitHubTokenStore : IGitHubTokenStore
     {
         private const string TokenEntropyPurpose = "KK.Var.GitHub.Token.v1";
 
@@ -28,7 +29,7 @@ namespace KK.Var.Services.Implementations
             if (!OperatingSystem.IsWindows())
             {
                 throw new PlatformNotSupportedException(
-                    localizationService.Get("Защищённое хранение GitHub-токена доступно только в Windows."));
+                    Texts.ProtectedGitHubTokenStorageOnlyAvailableWindows);
             }
 
             DatabasePaths.EnsureUserDataDirectory();
@@ -57,7 +58,7 @@ namespace KK.Var.Services.Implementations
             if (!OperatingSystem.IsWindows())
             {
                 throw new PlatformNotSupportedException(
-                    localizationService.Get("Защищённое хранение GitHub-токена доступно только в Windows."));
+                    Texts.ProtectedGitHubTokenStorageOnlyAvailableWindows);
             }
 
             if (!File.Exists(DatabasePaths.GitHubTokenFilePath))
@@ -75,7 +76,7 @@ namespace KK.Var.Services.Implementations
                 DataProtectionScope.CurrentUser);
 
             return JsonSerializer.Deserialize<GitHubToken>(token) ??
-                throw new InvalidDataException(localizationService.Get("Данные GitHub-токена недопустимы."));
+                throw new InvalidDataException(Texts.GitHubTokenDataInvalid);
         }
 
         public Task DeleteAsync(CancellationToken cancellationToken = default)

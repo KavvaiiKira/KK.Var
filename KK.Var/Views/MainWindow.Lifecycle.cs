@@ -1,6 +1,7 @@
 using System;
 using Avalonia.Controls;
 using KK.Var.ViewModels;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Views
 {
@@ -28,7 +29,7 @@ namespace KK.Var.Views
 
             viewModel.ShowNotification(
                 viewModel.Localize(
-                                "Дождитесь завершения Deploy. Закрытие приложения во время переключения версии заблокировано."),
+                                Texts.WaitDeployFinishClosingApplicationDuringVersion),
                 isError: true);
             return false;
         }

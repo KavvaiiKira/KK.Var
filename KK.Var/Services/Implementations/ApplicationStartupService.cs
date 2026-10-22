@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using KK.Var.Models;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
@@ -22,7 +23,7 @@ namespace KK.Var.Services.Implementations
             catch (Exception exception)
             {
                 return new ApplicationStartupResult(0, localizationService.Format(
-                    "Не удалось восстановить прерванный Deploy: {0}",
+                    Texts.CouldNotRecoverInterruptedDeploy,
                     exception.Message));
             }
         }

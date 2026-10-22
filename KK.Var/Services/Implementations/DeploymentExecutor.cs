@@ -9,6 +9,7 @@ using KK.Var.Data;
 using KK.Var.Enums;
 using KK.Var.Models;
 using KK.Var.Repositories;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
@@ -17,8 +18,7 @@ namespace KK.Var.Services.Implementations
         IDeploymentJournal journal,
         IKKProjectEnvironmentService environmentService,
         IRemoteDeploymentService remoteDeploymentService,
-        IRemoteMachineService machineService,
-        ILocalizationService localizationService) : IDeploymentExecutor
+        IRemoteMachineService machineService) : IDeploymentExecutor
     {
         public async Task<KKProjectDeployment> ExecuteAsync(
             KKProject project,
@@ -31,7 +31,7 @@ namespace KK.Var.Services.Implementations
         {
             if (!ArchitectureCompatibility.IsCompatible(version.TargetArchitecture, connection.Architecture))
             {
-                throw new InvalidOperationException(localizationService.Get("Архитектура архива несовместима с выбранной машиной."));
+                throw new InvalidOperationException(Texts.ArchiveArchitectureIncompatibleSelectedMachine);
             }
             var machine = await machineService.GetAsync(project.RemoteMachineId, cancellationToken);
             connection.CleanDeployment = machine.ServerGeneration > 0 &&

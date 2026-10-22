@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using KK.Var.Enums;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.ViewModels
 {
@@ -10,11 +11,11 @@ namespace KK.Var.ViewModels
         {
             if (SelectedProjectMachine is null || !SelectedProjectMachine.IsVerified || SelectedProjectMachine.IsArchived)
             {
-                return Localize("Выберите проверенный профиль машины.");
+                return Texts.SelectVerifiedMachineProfile;
             }
             if (IsProjectMachineChanged && !MachineSwitchConfirmed)
             {
-                return Localize("Подтвердите смену машины проекта.");
+                return Texts.ConfirmProjectSMachineChange;
             }
             if (!string.IsNullOrEmpty(BuildEditor.Error))
             {
@@ -22,51 +23,47 @@ namespace KK.Var.ViewModels
             }
             if (string.IsNullOrWhiteSpace(Name))
             {
-                return Localize("Укажите название проекта.");
+                return Texts.EnterProjectName;
             }
 
             if (IsLocalSource && string.IsNullOrWhiteSpace(LocalDirectoryPath))
             {
-                return Localize("Выберите локальную папку проекта.");
+                return Texts.SelectLocalProjectFolder;
             }
 
             if (IsGitHubSource && SelectedGitHubRepository is null)
             {
-                return Localize("Выберите репозиторий GitHub.");
+                return Texts.SelectGitHubRepository;
             }
 
             if (string.IsNullOrWhiteSpace(RemoteServiceName))
             {
-                return Localize("Укажите название systemd-сервиса.");
+                return Texts.EnterSystemdServiceName;
             }
 
             if (string.IsNullOrWhiteSpace(RemoteExecutableFileName))
             {
-                return Localize("Укажите исполняемый файл или точку входа.");
+                return Texts.EnterExecutableFileEntryPoint;
             }
 
             if (string.IsNullOrWhiteSpace(RemoteDeploymentDirectory))
             {
-                return Localize(
-                    "Укажите директорию развёртывания на удалённой машине.");
+                return Texts.EnterDeploymentDirectoryRemoteMachine;
             }
 
             if (string.IsNullOrWhiteSpace(ProjectEnvironmentFilePath))
             {
-                return Localize(
-                    "Укажите путь к файлу переменных окружения внутри проекта.");
+                return Texts.EnterEnvironmentFilePathInsideProject;
             }
 
             if (MaxStoredVersions is < 1 or > 10000)
             {
-                return Localize(
-                    "Максимальное количество версий должно быть от 1 до 10000.");
+                return Texts.MaximumVersionCountMustBetween110000;
             }
 
             if (!TryParseStorageLimitBytes(out _))
             {
-                return Localize(
-                    "Лимит размера версий должен быть положительным числом в МБ.");
+                return Texts.VersionSizeLimitMustPositiveNumberMB;
             }
 
             var healthCheckError = ValidateHealthCheck();
@@ -85,13 +82,13 @@ namespace KK.Var.ViewModels
                 if (provider == ProjectBuildProvider.Custom &&
                     string.IsNullOrWhiteSpace(configuration.Command))
                 {
-                    return Localize("Укажите command для пользовательской сборки.");
+                    return Texts.EnterCommandCustomBuild;
                 }
 
                 if (provider == ProjectBuildProvider.Cpp &&
                     string.IsNullOrWhiteSpace(configuration.ToolchainFile))
                 {
-                    return Localize("Укажите toolchainFile для сборки C++ под Linux.");
+                    return Texts.EnterToolchainFileCLinuxBuild;
                 }
             }
             catch (System.IO.IOException exception)
@@ -100,11 +97,11 @@ namespace KK.Var.ViewModels
             }
             catch (ArgumentException)
             {
-                return Localize("Проверьте пути в параметрах сборки.");
+                return Texts.CheckPathsBuildSettings;
             }
             catch (System.Text.Json.JsonException)
             {
-                return Localize("Параметры сборки содержат некорректный JSON.");
+                return Texts.BuildParametersContainInvalidJSON;
             }
 
             return string.Empty;

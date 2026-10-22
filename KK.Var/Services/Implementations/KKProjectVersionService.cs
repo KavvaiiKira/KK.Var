@@ -9,6 +9,7 @@ using KK.Var.Constants;
 using KK.Var.Enums;
 using KK.Var.Models;
 using KK.Var.Repositories;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
@@ -45,13 +46,13 @@ namespace KK.Var.Services.Implementations
             ArgumentNullException.ThrowIfNull(version);
 
             _ = await projectRepository.GetByIdAsync(version.KKProjectId, cancellationToken) ??
-                throw new KeyNotFoundException(localizationService.Format("Проект «{0}» не найден.", version.KKProjectId));
+                throw new KeyNotFoundException(localizationService.Format(Texts.ProjectNotFound2, version.KKProjectId));
 
             version.Tag = Required(version.Tag, nameof(version.Tag), 200);
             version.TargetArchitecture = ArchitectureCompatibility.Normalize(version.TargetArchitecture);
             if (string.IsNullOrWhiteSpace(version.TargetArchitecture) || version.TargetArchitecture == ArchitectureNames.Unknown)
             {
-                throw new ArgumentException(localizationService.Get("Укажите целевую архитектуру версии."));
+                throw new ArgumentException(Texts.SpecifyVersionSTargetArchitecture);
             }
             version.ArtifactRelativePath = Required(
                 version.ArtifactRelativePath,
@@ -72,20 +73,20 @@ namespace KK.Var.Services.Implementations
 
             if (!Sha256Pattern.IsMatch(version.ArtifactSha256))
             {
-                throw new ArgumentException(localizationService.Get("Недопустимая контрольная сумма SHA-256 архива."));
+                throw new ArgumentException(Texts.InvalidArtifactSHA256Checksum);
             }
 
             if (version.SourceCommitSha is not null &&
                 !CommitShaPattern.IsMatch(version.SourceCommitSha))
             {
-                throw new ArgumentException(localizationService.Get("Недопустимый SHA коммита исходного кода."));
+                throw new ArgumentException(Texts.InvalidSourceCommitSHA);
             }
 
             if (version.ArtifactSize < 0)
             {
                 throw new ArgumentOutOfRangeException(
                     nameof(version.ArtifactSize),
-                    localizationService.Get("Размер архива не может быть отрицательным."));
+                    Texts.ArtifactSizeCannotNegative);
             }
 
             if (await versionRepository.TagExistsAsync(
@@ -94,7 +95,7 @@ namespace KK.Var.Services.Implementations
                 cancellationToken))
             {
                 throw new VersionTagException(VersionTagError.AlreadyExists, localizationService.Format(
-                    "Версия «{0}» уже существует.",
+                    Texts.VersionAlreadyExists,
                     version.Tag));
             }
 
@@ -132,12 +133,11 @@ namespace KK.Var.Services.Implementations
         {
             if (storageActivity.IsCleanupRunning)
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Нельзя изменять версии во время очистки."));
+                throw new InvalidOperationException(Texts.VersionsCannotChangedDuringCleanup);
             }
 
             var version = await versionRepository.GetByIdAsync(versionId, cancellationToken) ??
-                throw new KeyNotFoundException(localizationService.Get("Версия не найдена."));
+                throw new KeyNotFoundException(Texts.VersionNotFound);
 
             version.IsPinned = isPinned;
             await versionRepository.UpdateAsync(version, cancellationToken);
@@ -148,14 +148,13 @@ namespace KK.Var.Services.Implementations
             CancellationToken cancellationToken = default)
         {
             var version = await versionRepository.GetByIdAsync(versionId, cancellationToken) ??
-                throw new KeyNotFoundException(localizationService.Get("Версия не найдена."));
+                throw new KeyNotFoundException(Texts.VersionNotFound);
 
             if (operationQueue.HasActiveOperation(version.KKProjectId) ||
                 storageActivity.IsMigrationRunning ||
                 storageActivity.IsCleanupRunning)
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Нельзя удалить версию во время активной операции."));
+                throw new InvalidOperationException(Texts.VersionCannotDeletedDuringActiveOperation);
             }
 
             var protectedIds = await GetProtectedVersionIdsAsync(
@@ -163,8 +162,7 @@ namespace KK.Var.Services.Implementations
                 cancellationToken);
             if (protectedIds.Contains(version.Id))
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Текущую и предыдущую развёрнутые версии удалять нельзя."));
+                throw new InvalidOperationException(Texts.CurrentPreviousDeployedVersionsCannotDeleted);
             }
 
             await artifactStorageService.DeleteArtifactAsync(
@@ -179,13 +177,13 @@ namespace KK.Var.Services.Implementations
 
             if (string.IsNullOrEmpty(normalized))
             {
-                throw new ArgumentException(localizationService.Get("Укажите значение."), parameterName);
+                throw new ArgumentException(Texts.ValueRequired, parameterName);
             }
 
             if (normalized.Length > maxLength)
             {
                 throw new ArgumentException(
-                    localizationService.Format("Значение не может превышать {0} символов.", maxLength),
+                    localizationService.Format(Texts.ValueCannotExceedCharacters, maxLength),
                     parameterName);
             }
 
@@ -196,14 +194,14 @@ namespace KK.Var.Services.Implementations
         {
             if (Path.IsPathRooted(path))
             {
-                throw new ArgumentException(localizationService.Get("Путь к архиву должен быть относительным."));
+                throw new ArgumentException(Texts.ArtifactPathMustRelative);
             }
 
             foreach (var segment in path.Replace('\\', '/').Split('/'))
             {
                 if (segment is "." or "..")
                 {
-                    throw new ArgumentException(localizationService.Get("Путь к архиву не может содержать сегменты . или ..."));
+                    throw new ArgumentException(Texts.ArtifactPathCannotContainSegments);
                 }
             }
         }

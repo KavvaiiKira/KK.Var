@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using KK.Var.Enums;
 using KK.Var.Models;
 using KK.Var.Services;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.ViewModels
 {
@@ -103,7 +104,7 @@ namespace KK.Var.ViewModels
                 UpdateImportPreview();
                 if (SelectedImportMachine is null)
                 {
-                    throw new InvalidOperationException(Localize("Выберите проверенный профиль машины."));
+                    throw new InvalidOperationException(Texts.SelectVerifiedMachineProfile);
                 }
                 var project = await _projectConfigurationTransferService.ImportAsync(
                     _pendingProjectImport,
@@ -114,7 +115,7 @@ namespace KK.Var.ViewModels
                 HasPendingProjectImport = false;
                 _pendingProjectImport = null;
                 OnPropertyChanged(nameof(ImportPreviewJson));
-                PublishNotification(LocalizeFormat("Проект «{0}» импортирован.", project.Name), isError: false);
+                PublishNotification(LocalizeFormat(Texts.ProjectImported, project.Name), isError: false);
                 return project;
             }
             catch (Exception exception)

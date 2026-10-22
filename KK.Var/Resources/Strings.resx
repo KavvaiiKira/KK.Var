@@ -1,0 +1,2010 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>2.0</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms</value>
+    </resheader>
+    <data name="AccessRepositoryListThroughGitHubDeviceFlow" xml:space="preserve">
+        <value>Доступ к списку ваших репозиториев через GitHub Device Flow</value>
+    </data>
+    <data name="Account" xml:space="preserve">
+        <value>Аккаунт</value>
+    </data>
+    <data name="Action" xml:space="preserve">
+        <value>Действие</value>
+    </data>
+    <data name="Add" xml:space="preserve">
+        <value>＋ Добавить</value>
+    </data>
+    <data name="AddProfile" xml:space="preserve">
+        <value>Добавить профиль</value>
+    </data>
+    <data name="AddProject" xml:space="preserve">
+        <value>Добавить проект</value>
+    </data>
+    <data name="AdditionalBuildArguments" xml:space="preserve">
+        <value>Дополнительные аргументы сборки</value>
+    </data>
+    <data name="AddressIP" xml:space="preserve">
+        <value>Адрес или IP</value>
+    </data>
+    <data name="AllChangesSaved" xml:space="preserve">
+        <value>Все изменения сохранены</value>
+    </data>
+    <data name="AllMachines" xml:space="preserve">
+        <value>Все машины</value>
+    </data>
+    <data name="AllProjects" xml:space="preserve">
+        <value>Все проекты</value>
+    </data>
+    <data name="AllStatuses" xml:space="preserve">
+        <value>Все статусы</value>
+    </data>
+    <data name="ArchiveArchitectureIncompatibleSelectedMachine" xml:space="preserve">
+        <value>Архитектура архива несовместима с выбранной машиной.</value>
+    </data>
+    <data name="ArchiveAvailable" xml:space="preserve">
+        <value>Архив доступен</value>
+    </data>
+    <data name="ArchiveChecksumVersionDoesNotMatch" xml:space="preserve">
+        <value>Контрольная сумма архива версии «{0}» не совпадает.</value>
+    </data>
+    <data name="ArchiveDirectoryCannotChangedDuringActiveOperation" xml:space="preserve">
+        <value>Нельзя менять каталог архивов во время активной операции.</value>
+    </data>
+    <data name="ArchiveDirectoryCannotContainReparsePoint" xml:space="preserve">
+        <value>Каталог архивов не может содержать reparse point.</value>
+    </data>
+    <data name="ArchiveDirectoryCannotDriveRoot" xml:space="preserve">
+        <value>Каталог архивов не может быть корнем диска.</value>
+    </data>
+    <data name="ArchiveDirectoryCannotInsideSystemDirectory" xml:space="preserve">
+        <value>Каталог архивов не может находиться в системной директории.</value>
+    </data>
+    <data name="ArchiveDirectoryCannotPointFile" xml:space="preserve">
+        <value>Каталог архивов не может указывать на файл.</value>
+    </data>
+    <data name="ArchiveDirectoryMustAbsoluteLocalPath" xml:space="preserve">
+        <value>Каталог архивов должен быть абсолютным локальным путём.</value>
+    </data>
+    <data name="ArchiveFileCannotReparsePoint" xml:space="preserve">
+        <value>Файл архива не может быть reparse point.</value>
+    </data>
+    <data name="ArchiveMigrationPlan" xml:space="preserve">
+        <value>План переноса архивов</value>
+    </data>
+    <data name="ArchiveMissing" xml:space="preserve">
+        <value>Архив отсутствует</value>
+    </data>
+    <data name="ArchivePathCannotPassThroughReparsePoint" xml:space="preserve">
+        <value>Путь к архивам не может проходить через reparse point.</value>
+    </data>
+    <data name="ArchiveProfile" xml:space="preserve">
+        <value>Архивировать профиль</value>
+    </data>
+    <data name="ArchiveSizeVersionDoesNotMatchStored" xml:space="preserve">
+        <value>Размер архива версии «{0}» не совпадает с сохранённым.</value>
+    </data>
+    <data name="ArchiveVersionNotFoundCurrentDirectory" xml:space="preserve">
+        <value>Не найден архив версии «{0}» в текущем каталоге.</value>
+    </data>
+    <data name="Archived" xml:space="preserve">
+        <value>Архив</value>
+    </data>
+    <data name="ArtifactPathCannotContainSegments" xml:space="preserve">
+        <value>Путь к архиву не может содержать сегменты . или ...</value>
+    </data>
+    <data name="ArtifactPathMustRelative" xml:space="preserve">
+        <value>Путь к архиву должен быть относительным.</value>
+    </data>
+    <data name="ArtifactSizeCannotNegative" xml:space="preserve">
+        <value>Размер архива не может быть отрицательным.</value>
+    </data>
+    <data name="ArtifactTargetDirectoryInvalid" xml:space="preserve">
+        <value>Целевой каталог архивов недопустим.</value>
+    </data>
+    <data name="ArtifactVersionAlreadyExists" xml:space="preserve">
+        <value>Артефакт версии «{0}» уже существует.</value>
+    </data>
+    <data name="AssignAnotherMachineProfileSProjectsFirst" xml:space="preserve">
+        <value>Сначала назначьте проектам этого профиля другую машину.</value>
+    </data>
+    <data name="AuthenticationMethod" xml:space="preserve">
+        <value>Способ входа</value>
+    </data>
+    <data name="AutomaticCsprojSelection" xml:space="preserve">
+        <value>Автоматический выбор .csproj</value>
+    </data>
+    <data name="AutomaticDetectionCanOverriddenManually" xml:space="preserve">
+        <value>Автоопределение можно уточнить вручную</value>
+    </data>
+    <data name="AutomaticRollbackFailed" xml:space="preserve">
+        <value>Автоматический rollback завершился ошибкой: {0}</value>
+    </data>
+    <data name="AutomaticRollbackResult" xml:space="preserve">
+        <value>Результат автоматического rollback: {0}</value>
+    </data>
+    <data name="AutosaveNotCompletedVariableIncomplete" xml:space="preserve">
+        <value>Автосохранение не завершилось или в списке есть незаполненная переменная.</value>
+    </data>
+    <data name="AvailableBytesMinimumRequired" xml:space="preserve">
+        <value>Доступно байт: {0}; требуется минимум: {1}.</value>
+    </data>
+    <data name="B" xml:space="preserve">
+        <value>Б</value>
+    </data>
+    <data name="BackProjects" xml:space="preserve">
+        <value>Назад к проектам</value>
+    </data>
+    <data name="BackUpReset" xml:space="preserve">
+        <value>Создать копию и сбросить</value>
+    </data>
+    <data name="Backup" xml:space="preserve">
+        <value>Резервная копия: {0}</value>
+    </data>
+    <data name="Browse" xml:space="preserve">
+        <value>Обзор...</value>
+    </data>
+    <data name="Build" xml:space="preserve">
+        <value>Сборка</value>
+    </data>
+    <data name="Build2" xml:space="preserve">
+        <value>Сборка: {0}</value>
+    </data>
+    <data name="BuildArgumentsEnvironmentVariableNamesMustNot" xml:space="preserve">
+        <value>Аргументы сборки и имена переменных окружения не должны быть пустыми.</value>
+    </data>
+    <data name="BuildArgumentsEnvironmentVariablesInvalid" xml:space="preserve">
+        <value>Аргументы сборки или переменные окружения недопустимы.</value>
+    </data>
+    <data name="BuildCommand" xml:space="preserve">
+        <value>Команда сборки</value>
+    </data>
+    <data name="BuildCommandCheckedPlaceholdersResolved" xml:space="preserve">
+        <value>Команда сборки будет проверена после подстановки параметров.</value>
+    </data>
+    <data name="BuildCommandNotFoundInstallRequiredTool" xml:space="preserve">
+        <value>Команда сборки «{0}» не найдена. Установите необходимый инструмент и перезапустите KK.Var.</value>
+    </data>
+    <data name="BuildConfiguration" xml:space="preserve">
+        <value>Конфигурация сборки</value>
+    </data>
+    <data name="BuildConfigurationEmpty" xml:space="preserve">
+        <value>Конфигурация сборки пуста.</value>
+    </data>
+    <data name="BuildConfigurationLocalToolAvailable" xml:space="preserve">
+        <value>Build-конфигурация и локальный инструмент проверены.</value>
+    </data>
+    <data name="BuildConfigurationToolUnavailable" xml:space="preserve">
+        <value>Build-конфигурация или инструмент недоступны.</value>
+    </data>
+    <data name="BuildDeliveryLocalReleaseManagement" xml:space="preserve">
+        <value>Сборка, доставка и управление локальными релизами</value>
+    </data>
+    <data name="BuildDeploy" xml:space="preserve">
+        <value>Собрать и выполнить deploy</value>
+    </data>
+    <data name="BuildExitedCode" xml:space="preserve">
+        <value>Сборка завершилась с кодом {0}: {1}</value>
+    </data>
+    <data name="BuildInputFilesCheckedGitHubArchiveDownloaded" xml:space="preserve">
+        <value>Входные файлы сборки будут проверены после загрузки GitHub-архива.</value>
+    </data>
+    <data name="BuildParametersContainInvalidJSON" xml:space="preserve">
+        <value>Параметры сборки содержат некорректный JSON.</value>
+    </data>
+    <data name="BuildParametersMustJSONObject" xml:space="preserve">
+        <value>Параметры сборки должны быть JSON-объектом.</value>
+    </data>
+    <data name="BuildPathsMustStayInsideSourceDirectory" xml:space="preserve">
+        <value>Пути сборки должны оставаться внутри исходного каталога.</value>
+    </data>
+    <data name="BuildProcessEnvironment" xml:space="preserve">
+        <value>Переменные процесса сборки</value>
+    </data>
+    <data name="BuildProviderDetectedSourceDownload" xml:space="preserve">
+        <value>Способ сборки будет определён после загрузки исходников.</value>
+    </data>
+    <data name="BuildRun" xml:space="preserve">
+        <value>Сборка и запуск</value>
+    </data>
+    <data name="BuildToolNotFound" xml:space="preserve">
+        <value>Инструмент сборки «{0}» не найден.</value>
+    </data>
+    <data name="BuildType" xml:space="preserve">
+        <value>Тип сборки</value>
+    </data>
+    <data name="BuildWorkingDirectoryNotFound" xml:space="preserve">
+        <value>Рабочий каталог сборки не найден.</value>
+    </data>
+    <data name="Build_WorkingDirectory" xml:space="preserve">
+        <value>Рабочий каталог сборки</value>
+    </data>
+    <data name="CGORequiresCCompilerTargetingLinuxArchitecture" xml:space="preserve">
+        <value>Для CGO нужен C-компилятор под целевую Linux-архитектуру.</value>
+    </data>
+    <data name="CMakeConfigureArguments" xml:space="preserve">
+        <value>Аргументы конфигурации CMake</value>
+    </data>
+    <data name="CMakeGenerator" xml:space="preserve">
+        <value>Генератор CMake</value>
+    </data>
+    <data name="CMakeNotFoundInstallCMakeRestartKK" xml:space="preserve">
+        <value>CMake не найден. Установите CMake и перезапустите KK.Var.</value>
+    </data>
+    <data name="CanConnectGitHubNowLater" xml:space="preserve">
+        <value>GitHub можно подключить сейчас или позже.</value>
+    </data>
+    <data name="CancelOperation" xml:space="preserve">
+        <value>Отменить операцию</value>
+    </data>
+    <data name="Cancelled" xml:space="preserve">
+        <value>Отменено</value>
+    </data>
+    <data name="Changed" xml:space="preserve">
+        <value>Изменён</value>
+    </data>
+    <data name="Check" xml:space="preserve">
+        <value>Проверить</value>
+    </data>
+    <data name="CheckBuildEnvironmentNamesEmptyDuplicateNames" xml:space="preserve">
+        <value>Проверьте имена переменных сборки: пустые и повторяющиеся имена недопустимы.</value>
+    </data>
+    <data name="CheckConnectionConfirmSSHServerFingerprint" xml:space="preserve">
+        <value>Проверьте подключение и подтвердите отпечаток SSH-сервера.</value>
+    </data>
+    <data name="CheckPathsBuildSettings" xml:space="preserve">
+        <value>Проверьте пути в параметрах сборки.</value>
+    </data>
+    <data name="CheckSSHConnectionFirstDetectRemoteMachine" xml:space="preserve">
+        <value>Сначала проверьте SSH-подключение, чтобы определить архитектуру удалённой машины.</value>
+    </data>
+    <data name="CheckingRemoteMachine" xml:space="preserve">
+        <value>Проверка удалённой машины</value>
+    </data>
+    <data name="CheckingSSHConnection" xml:space="preserve">
+        <value>Проверка SSH-подключения</value>
+    </data>
+    <data name="CleanUpVersions" xml:space="preserve">
+        <value>Очистить версии</value>
+    </data>
+    <data name="CleanUpVersions2" xml:space="preserve">
+        <value>Очистить версии?</value>
+    </data>
+    <data name="CleaningUpLocalVersions" xml:space="preserve">
+        <value>Очистка локальных версий</value>
+    </data>
+    <data name="CleanupPlanChangedCalculateAgain" xml:space="preserve">
+        <value>План очистки изменился. Рассчитайте его повторно.</value>
+    </data>
+    <data name="CleanupStoppedVersion" xml:space="preserve">
+        <value>Очистка остановлена на версии «{0}»: {1}</value>
+    </data>
+    <data name="Command" xml:space="preserve">
+        <value>Команда</value>
+    </data>
+    <data name="CommandHealthCheckFailedAttempts" xml:space="preserve">
+        <value>Командный health-check не пройден после {0} попыток.</value>
+    </data>
+    <data name="CommandRemoteMachine" xml:space="preserve">
+        <value>Команда на удалённой машине</value>
+    </data>
+    <data name="Commit_Author" xml:space="preserve">
+        <value>Автор</value>
+    </data>
+    <data name="Commit_Title" xml:space="preserve">
+        <value>Коммит ветки</value>
+    </data>
+    <data name="Common_Back" xml:space="preserve">
+        <value>Назад</value>
+    </data>
+    <data name="Common_Cancel" xml:space="preserve">
+        <value>Отмена</value>
+    </data>
+    <data name="Common_Close" xml:space="preserve">
+        <value>Закрыть</value>
+    </data>
+    <data name="Common_Description" xml:space="preserve">
+        <value>Описание</value>
+    </data>
+    <data name="CompareFingerprintRemoteMachineAdministratorSRecords" xml:space="preserve">
+        <value>Сверьте отпечаток с данными администратора удалённой машины.</value>
+    </data>
+    <data name="CompleteProfileSuccessfullyVerifySSHConnection" xml:space="preserve">
+        <value>Заполните профиль и успешно проверьте SSH-подключение.</value>
+    </data>
+    <data name="CompleteRequiredRemoteConnectionFieldsSaveSettings" xml:space="preserve">
+        <value>Заполните отмеченные поля подключения к удалённой машине и сохраните настройки.</value>
+    </data>
+    <data name="CompleteRequiredSetup" xml:space="preserve">
+        <value>Завершите обязательную настройку</value>
+    </data>
+    <data name="Completed" xml:space="preserve">
+        <value>Завершение</value>
+    </data>
+    <data name="ConfigurationCreate" xml:space="preserve">
+        <value>Создаваемая конфигурация</value>
+    </data>
+    <data name="ConfigurationFormatVersionNotSupported" xml:space="preserve">
+        <value>Версия формата конфигурации {0} не поддерживается.</value>
+    </data>
+    <data name="ConfigureAccessContinue" xml:space="preserve">
+        <value>Осталось настроить доступ</value>
+    </data>
+    <data name="ConfigureSSHAccessFirst" xml:space="preserve">
+        <value>Сначала настройте SSH-доступ</value>
+    </data>
+    <data name="ConfirmFingerprintVerifyLogin" xml:space="preserve">
+        <value>Подтвердить fingerprint и проверить вход</value>
+    </data>
+    <data name="ConfirmProjectSMachineChange" xml:space="preserve">
+        <value>Подтвердите смену машины проекта.</value>
+    </data>
+    <data name="ConfirmSSHHostFingerprintSettings" xml:space="preserve">
+        <value>Подтвердите отпечаток SSH-сервера в настройках.</value>
+    </data>
+    <data name="ConfirmSSHServer" xml:space="preserve">
+        <value>Подтвердите SSH-сервер</value>
+    </data>
+    <data name="ConfirmSaveProfile" xml:space="preserve">
+        <value>Подтвердить и сохранить профиль</value>
+    </data>
+    <data name="ConfirmSignGitHub" xml:space="preserve">
+        <value>Подтвердите вход в GitHub</value>
+    </data>
+    <data name="ConfirmWhetherNewAddressBelongsSameMachine" xml:space="preserve">
+        <value>Подтвердите, является ли новый адрес той же машиной.</value>
+    </data>
+    <data name="ConnectGitHub" xml:space="preserve">
+        <value>Подключить GitHub</value>
+    </data>
+    <data name="ConnectGitHubSettingsBuildingProject" xml:space="preserve">
+        <value>Подключите GitHub в настройках перед сборкой проекта.</value>
+    </data>
+    <data name="ConnectGitHubSettingsPageFirst" xml:space="preserve">
+        <value>Сначала подключите GitHub на странице настроек.</value>
+    </data>
+    <data name="Connected" xml:space="preserve">
+        <value>Подключён</value>
+    </data>
+    <data name="ConnectingGitHub" xml:space="preserve">
+        <value>Подключение GitHub</value>
+    </data>
+    <data name="ConnectionCheckFailed" xml:space="preserve">
+        <value>Проверка подключения завершилась ошибкой: {0}</value>
+    </data>
+    <data name="ConnectionSettings" xml:space="preserve">
+        <value>Настройки подключения</value>
+    </data>
+    <data name="ContinueEditing" xml:space="preserve">
+        <value>Продолжить редактирование</value>
+    </data>
+    <data name="CopyCode" xml:space="preserve">
+        <value>Копировать код</value>
+    </data>
+    <data name="CouldNotCollectAllDiagnostics" xml:space="preserve">
+        <value>Не удалось полностью собрать диагностику: {0}</value>
+    </data>
+    <data name="CouldNotCompletePreflightCheck" xml:space="preserve">
+        <value>Не удалось выполнить проверку.</value>
+    </data>
+    <data name="CouldNotCreatePythonVirtualEnvironmentVenv" xml:space="preserve">
+        <value>Не удалось создать виртуальное окружение Python: на удалённой машине отсутствует venv/ensurepip. Для Debian или Ubuntu установите пакет python3-venv.</value>
+    </data>
+    <data name="CouldNotDetermineDriveSelectedDirectory" xml:space="preserve">
+        <value>Не удалось определить диск выбранного каталога.</value>
+    </data>
+    <data name="CouldNotEstablishSSHConnection" xml:space="preserve">
+        <value>Не удалось установить SSH-соединение: {0}</value>
+    </data>
+    <data name="CouldNotOpenDatabase" xml:space="preserve">
+        <value>Не удалось открыть базу данных</value>
+    </data>
+    <data name="CouldNotReadSettings" xml:space="preserve">
+        <value>Не удалось прочитать настройки</value>
+    </data>
+    <data name="CouldNotRecoverInterruptedDeploy" xml:space="preserve">
+        <value>Не удалось восстановить прерванный Deploy: {0}</value>
+    </data>
+    <data name="CouldNotRefreshGitHubSessionConnectGitHub" xml:space="preserve">
+        <value>Не удалось обновить сеанс GitHub. Подключите GitHub заново.</value>
+    </data>
+    <data name="CouldNotRemoveTemporaryFilesCompletedDeploy" xml:space="preserve">
+        <value>Не удалось удалить временные файлы завершённого Deploy: {0}</value>
+    </data>
+    <data name="CouldNotRemoveTemporaryRemoteOperationFiles" xml:space="preserve">
+        <value>Не удалось удалить временные файлы удалённой операции: {0}</value>
+    </data>
+    <data name="CouldNotStart" xml:space="preserve">
+        <value>Не удалось запустить {0}.</value>
+    </data>
+    <data name="CreateDeployProjectsKKVarNeedsKnow" xml:space="preserve">
+        <value>Для создания и развёртывания проектов KK.Var должен знать, к какой Linux-машине подключаться.</value>
+    </data>
+    <data name="CreateProject" xml:space="preserve">
+        <value>Создать проект</value>
+    </data>
+    <data name="Created" xml:space="preserve">
+        <value>Создан</value>
+    </data>
+    <data name="CreatingBackup" xml:space="preserve">
+        <value>Создание резервной копии...</value>
+    </data>
+    <data name="CreatingLocalArchive" xml:space="preserve">
+        <value>Создание локального архива</value>
+    </data>
+    <data name="CurrentPreviousDeployedVersionsCannotDeleted" xml:space="preserve">
+        <value>Текущую и предыдущую развёрнутые версии удалять нельзя.</value>
+    </data>
+    <data name="CustomScript" xml:space="preserve">
+        <value>Свой сценарий</value>
+    </data>
+    <data name="DaemonReloadPerformed" xml:space="preserve">
+        <value>Выполнен daemon-reload</value>
+    </data>
+    <data name="DatabaseFileNameMustNotContainDirectory" xml:space="preserve">
+        <value>Имя файла базы данных не должно содержать путь к каталогу.</value>
+    </data>
+    <data name="Date" xml:space="preserve">
+        <value>Дата</value>
+    </data>
+    <data name="Default" xml:space="preserve">
+        <value>По умолчанию</value>
+    </data>
+    <data name="Delete" xml:space="preserve">
+        <value>Удалить</value>
+    </data>
+    <data name="DeleteLocalVersion" xml:space="preserve">
+        <value>Удалить локальную версию?</value>
+    </data>
+    <data name="DeleteProject" xml:space="preserve">
+        <value>Удалить проект?</value>
+    </data>
+    <data name="DeletedVersionsBytes" xml:space="preserve">
+        <value>Очищено версий: {0}, байт: {1}.</value>
+    </data>
+    <data name="DeletingProject" xml:space="preserve">
+        <value>Удаление проекта</value>
+    </data>
+    <data name="Deploy" xml:space="preserve">
+        <value>Развернуть</value>
+    </data>
+    <data name="DeployAutomaticRollbackFailed" xml:space="preserve">
+        <value>Ошибка Deploy и автоматического rollback</value>
+    </data>
+    <data name="DeployCannotStartWhileLocalVersionsBeing" xml:space="preserve">
+        <value>Нельзя начать Deploy во время переноса локальных версий.</value>
+    </data>
+    <data name="DeployCompleted" xml:space="preserve">
+        <value>Deploy завершён</value>
+    </data>
+    <data name="DeployCompletedButVersionCleanupFailed" xml:space="preserve">
+        <value>Deploy завершён, но очистка версий не удалась: {0}</value>
+    </data>
+    <data name="DeployFailed" xml:space="preserve">
+        <value>Deploy завершился ошибкой</value>
+    </data>
+    <data name="DeployFailedAutomaticRollbackCompleted" xml:space="preserve">
+        <value>Ошибка Deploy: автоматический rollback выполнен</value>
+    </data>
+    <data name="DeployFailedRestoringPreviousVersion" xml:space="preserve">
+        <value>Ошибка Deploy, восстановление предыдущей версии</value>
+    </data>
+    <data name="DeployPreflightChecks" xml:space="preserve">
+        <value>Предварительная проверка Deploy</value>
+    </data>
+    <data name="DeployRollbackOperationsAllProjectsChronologicalOrder" xml:space="preserve">
+        <value>Deploy и rollback всех проектов в порядке выполнения</value>
+    </data>
+    <data name="Deployment" xml:space="preserve">
+        <value>Развёртывание</value>
+    </data>
+    <data name="DeploymentAlreadyCompleted" xml:space="preserve">
+        <value>Операция развёртывания уже завершена.</value>
+    </data>
+    <data name="DeploymentNoLongerRunning" xml:space="preserve">
+        <value>Операция развёртывания больше не выполняется.</value>
+    </data>
+    <data name="DeploymentNotFound" xml:space="preserve">
+        <value>Операция развёртывания «{0}» не найдена.</value>
+    </data>
+    <data name="DeploymentPathCannotContainSegments" xml:space="preserve">
+        <value>Путь развёртывания не может содержать сегменты . или ...</value>
+    </data>
+    <data name="DetectAutomatically" xml:space="preserve">
+        <value>Определить автоматически</value>
+    </data>
+    <data name="DetectBuildSettings" xml:space="preserve">
+        <value>Определить параметры сборки</value>
+    </data>
+    <data name="DetectedAutomatically" xml:space="preserve">
+        <value>Определена автоматически: {0}</value>
+    </data>
+    <data name="DetectedAutomaticallyDuringConnectionCheck" xml:space="preserve">
+        <value>Будет определена автоматически при проверке подключения</value>
+    </data>
+    <data name="DeviceFlowNotEnabledGitHubOAuthApp" xml:space="preserve">
+        <value>Для GitHub OAuth App не включён Device Flow.</value>
+    </data>
+    <data name="DirectoryContainsVersionArchivesAllProjects" xml:space="preserve">
+        <value>Каталог содержит архивы версий всех проектов.</value>
+    </data>
+    <data name="DirectoryUnavailable" xml:space="preserve">
+        <value>Каталог недоступен</value>
+    </data>
+    <data name="Discard" xml:space="preserve">
+        <value>Не сохранять</value>
+    </data>
+    <data name="DiscardChanges" xml:space="preserve">
+        <value>Не сохранять изменения?</value>
+    </data>
+    <data name="DiscardLeave" xml:space="preserve">
+        <value>Уйти без сохранения</value>
+    </data>
+    <data name="Disconnect" xml:space="preserve">
+        <value>Отключить</value>
+    </data>
+    <data name="DotnetProcessCouldNotStarted" xml:space="preserve">
+        <value>Не удалось запустить процесс dotnet.</value>
+    </data>
+    <data name="Duration" xml:space="preserve">
+        <value>Длительность</value>
+    </data>
+    <data name="DuringDeployTheyWrittenSelectedFormatPath" xml:space="preserve">
+        <value>Во время deploy они будут записаны в выбранном формате по пути, указанному в проекте.</value>
+    </data>
+    <data name="ERROR" xml:space="preserve">
+        <value>ОШИБКА: {0}</value>
+    </data>
+    <data name="Edit" xml:space="preserve">
+        <value>Редактировать</value>
+    </data>
+    <data name="EditProject" xml:space="preserve">
+        <value>Редактирование проекта</value>
+    </data>
+    <data name="EffectivePath" xml:space="preserve">
+        <value>Эффективный путь</value>
+    </data>
+    <data name="EnableCGO" xml:space="preserve">
+        <value>Включить CGO</value>
+    </data>
+    <data name="EnterAbsoluteHTTPHTTPSHealthCheckAddress" xml:space="preserve">
+        <value>Укажите абсолютный HTTP- или HTTPS-адрес health-check.</value>
+    </data>
+    <data name="EnterAbsoluteLinuxPathDedicatedApplicationDirectory" xml:space="preserve">
+        <value>Укажите абсолютный Linux-путь к отдельной директории приложения.</value>
+    </data>
+    <data name="EnterCodeGitHubPage" xml:space="preserve">
+        <value>Введите этот код на открывшейся странице GitHub</value>
+    </data>
+    <data name="EnterCommandCustomBuild" xml:space="preserve">
+        <value>Укажите command для пользовательской сборки.</value>
+    </data>
+    <data name="EnterDeploymentDirectoryRemoteMachine" xml:space="preserve">
+        <value>Укажите директорию развёртывания на удалённой машине.</value>
+    </data>
+    <data name="EnterEnvironmentFilePathInsideProject" xml:space="preserve">
+        <value>Укажите путь к файлу переменных окружения внутри проекта.</value>
+    </data>
+    <data name="EnterExecutableFileEntryPoint" xml:space="preserve">
+        <value>Укажите исполняемый файл или точку входа.</value>
+    </data>
+    <data name="EnterHealthCheckCommand" xml:space="preserve">
+        <value>Укажите команду health-check.</value>
+    </data>
+    <data name="EnterMachineProfileName" xml:space="preserve">
+        <value>Укажите имя профиля машины.</value>
+    </data>
+    <data name="EnterNameCompleteSSHConnectionBelowClick" xml:space="preserve">
+        <value>Укажите имя, заполните SSH-подключение ниже и нажмите «Проверить и сохранить профиль». При первом подключении сверьте и подтвердите fingerprint сервера.</value>
+    </data>
+    <data name="EnterNameEveryVariable" xml:space="preserve">
+        <value>Заполните имя каждой переменной</value>
+    </data>
+    <data name="EnterPrivateSSHKeyPath" xml:space="preserve">
+        <value>Укажите путь к приватному SSH-ключу.</value>
+    </data>
+    <data name="EnterProjectName" xml:space="preserve">
+        <value>Укажите название проекта.</value>
+    </data>
+    <data name="EnterRemoteMachineAddress" xml:space="preserve">
+        <value>Укажите адрес удалённой машины.</value>
+    </data>
+    <data name="EnterSSHPassword" xml:space="preserve">
+        <value>Укажите пароль SSH.</value>
+    </data>
+    <data name="EnterSSHPasswordProfile" xml:space="preserve">
+        <value>Введите пароль SSH для этого профиля.</value>
+    </data>
+    <data name="EnterSSHUser" xml:space="preserve">
+        <value>Укажите пользователя SSH.</value>
+    </data>
+    <data name="EnterSystemdServiceName" xml:space="preserve">
+        <value>Укажите название systemd-сервиса.</value>
+    </data>
+    <data name="EnterTagNewVersion" xml:space="preserve">
+        <value>Укажите тег новой версии.</value>
+    </data>
+    <data name="EnterToolchainFileCLinuxBuild" xml:space="preserve">
+        <value>Укажите toolchainFile для сборки C++ под Linux.</value>
+    </data>
+    <data name="EnteredProjectDataLost" xml:space="preserve">
+        <value>Введённые данные проекта будут потеряны.</value>
+    </data>
+    <data name="EnvironmentFileCanGenerated" xml:space="preserve">
+        <value>Файл переменных можно сформировать.</value>
+    </data>
+    <data name="EnvironmentFileDirectoryCouldNotDetermined" xml:space="preserve">
+        <value>Не удалось определить каталог файла окружения.</value>
+    </data>
+    <data name="EnvironmentFileInvalid" xml:space="preserve">
+        <value>Файл переменных некорректен.</value>
+    </data>
+    <data name="EnvironmentFilePathOutsideProjectRootDirectory" xml:space="preserve">
+        <value>Путь к файлу окружения выходит за пределы корневого каталога проекта.</value>
+    </data>
+    <data name="EnvironmentFormatVariablesSaved" xml:space="preserve">
+        <value>Формат и переменные окружения сохранены</value>
+    </data>
+    <data name="EnvironmentVariableNameDuplicated" xml:space="preserve">
+        <value>Имя переменной окружения «{0}» повторяется.</value>
+    </data>
+    <data name="EnvironmentVariables" xml:space="preserve">
+        <value>Переменные окружения</value>
+    </data>
+    <data name="EnvironmentVariablesFile" xml:space="preserve">
+        <value>Файл переменных окружения</value>
+    </data>
+    <data name="EnvironmentVariablesSnapshot" xml:space="preserve">
+        <value>Снимок переменных окружения</value>
+    </data>
+    <data name="ExampleBillingAPI" xml:space="preserve">
+        <value>Например, Billing API</value>
+    </data>
+    <data name="ExampleRelease1" xml:space="preserve">
+        <value>Например, release-1</value>
+    </data>
+    <data name="ExecutableCsprojCouldNotSelectedUnambiguouslyAssembly" xml:space="preserve">
+        <value>Не удалось однозначно выбрать исполняемый .csproj. Имя выходной сборки должно совпадать с исполняемым файлом проекта.</value>
+    </data>
+    <data name="ExecutableFileEntryPoint" xml:space="preserve">
+        <value>Исполняемый файл или точка входа</value>
+    </data>
+    <data name="ExecutableFileNotFoundBuild" xml:space="preserve">
+        <value>После сборки не найден исполняемый файл «{0}».</value>
+    </data>
+    <data name="Exit" xml:space="preserve">
+        <value>Завершить</value>
+    </data>
+    <data name="Export" xml:space="preserve">
+        <value>Экспорт</value>
+    </data>
+    <data name="ExportIncludesProjectBuildProcessEnvironmentValues" xml:space="preserve">
+        <value>Экспорт включает значения переменных проекта и процесса сборки.</value>
+    </data>
+    <data name="ExportProjectConfiguration" xml:space="preserve">
+        <value>Экспорт конфигурации проекта</value>
+    </data>
+    <data name="ExtractingNewVersion" xml:space="preserve">
+        <value>Распаковка новой версии</value>
+    </data>
+    <data name="Failed" xml:space="preserve">
+        <value>Ошибка</value>
+    </data>
+    <data name="Files" xml:space="preserve">
+        <value>Файлов: {0}</value>
+    </data>
+    <data name="FinalBuildSizeUnknownMinimumFreeSpace" xml:space="preserve">
+        <value>Итоговый размер сборки неизвестен; проверен минимальный запас места.</value>
+    </data>
+    <data name="FinalStatus" xml:space="preserve">
+        <value>Итоговый статус</value>
+    </data>
+    <data name="FingerprintDiffersNotConfirmedOSSSHKeys" xml:space="preserve">
+        <value>Fingerprint отличается или ещё не подтверждён. Возможна переустановка, замена SSH-ключей или другой сервер.</value>
+    </data>
+    <data name="FingerprintMatchesProvidingStrongEvidenceMachineIdentity" xml:space="preserve">
+        <value>Fingerprint совпадает: это сильное подтверждение идентичности машины. Подтвердите выбор.</value>
+    </data>
+    <data name="FirstLaunch" xml:space="preserve">
+        <value>Первый запуск</value>
+    </data>
+    <data name="GB" xml:space="preserve">
+        <value>ГБ</value>
+    </data>
+    <data name="GitCommitSHANotProvided" xml:space="preserve">
+        <value>Не указан Git commit SHA.</value>
+    </data>
+    <data name="GitHubArchiveContainsUnsafePath" xml:space="preserve">
+        <value>Архив GitHub содержит небезопасный путь.</value>
+    </data>
+    <data name="GitHubArchiveEmpty" xml:space="preserve">
+        <value>Архив GitHub пуст.</value>
+    </data>
+    <data name="GitHubArchiveSizeKnownDownload" xml:space="preserve">
+        <value>Размер GitHub-архива станет известен после загрузки.</value>
+    </data>
+    <data name="GitHubAuthorizationCancelledUser" xml:space="preserve">
+        <value>Авторизация GitHub была отменена пользователем.</value>
+    </data>
+    <data name="GitHubClientIDInvalid" xml:space="preserve">
+        <value>GitHub Client ID указан неверно.</value>
+    </data>
+    <data name="GitHubClientIDNotConfiguredAppsettingsJson" xml:space="preserve">
+        <value>GitHub Client ID не настроен в appsettings.json.</value>
+    </data>
+    <data name="GitHubCodeExpiredStartConnectionAgain" xml:space="preserve">
+        <value>Срок действия кода GitHub истёк. Запустите подключение ещё раз.</value>
+    </data>
+    <data name="GitHubCommit" xml:space="preserve">
+        <value>Commit GitHub</value>
+    </data>
+    <data name="GitHubConnectedSuccessfully" xml:space="preserve">
+        <value>GitHub успешно подключён</value>
+    </data>
+    <data name="GitHubConnectionCancelled" xml:space="preserve">
+        <value>Подключение GitHub отменено</value>
+    </data>
+    <data name="GitHubDefaultBranch" xml:space="preserve">
+        <value>Ветка по умолчанию в GitHub</value>
+    </data>
+    <data name="GitHubDidNotIssueAccessToken" xml:space="preserve">
+        <value>GitHub не выдал токен доступа.</value>
+    </data>
+    <data name="GitHubDidNotReturnGitCommitSHA" xml:space="preserve">
+        <value>GitHub не вернул Git commit SHA.</value>
+    </data>
+    <data name="GitHubDidNotReturnRepositoryTreeSHA" xml:space="preserve">
+        <value>GitHub не вернул SHA дерева репозитория.</value>
+    </data>
+    <data name="GitHubDisconnected" xml:space="preserve">
+        <value>GitHub отключён</value>
+    </data>
+    <data name="GitHubFolder" xml:space="preserve">
+        <value>GitHub или папка</value>
+    </data>
+    <data name="GitHubLocalVersionsLinuxMachineConnection" xml:space="preserve">
+        <value>GitHub, локальные версии и подключение к Linux-машине</value>
+    </data>
+    <data name="GitHubRepository" xml:space="preserve">
+        <value>Репозиторий GitHub</value>
+    </data>
+    <data name="GitHubRepositoryAvailable" xml:space="preserve">
+        <value>GitHub-репозиторий доступен.</value>
+    </data>
+    <data name="GitHubRepositoryIDFullNameCloneURL" xml:space="preserve">
+        <value>Укажите идентификатор, полное имя и URL клонирования репозитория GitHub.</value>
+    </data>
+    <data name="GitHubRepositoryNoCommits" xml:space="preserve">
+        <value>В репозитории GitHub нет коммитов.</value>
+    </data>
+    <data name="GitHubRepositoryNotConfigured" xml:space="preserve">
+        <value>Не указан репозиторий GitHub.</value>
+    </data>
+    <data name="GitHubRepositoryUnavailable" xml:space="preserve">
+        <value>GitHub-репозиторий недоступен.</value>
+    </data>
+    <data name="GitHubReturnedHTTPError" xml:space="preserve">
+        <value>GitHub вернул ошибку HTTP {0}.</value>
+    </data>
+    <data name="GitHubSessionExpiredConnectGitHubAgain" xml:space="preserve">
+        <value>Сеанс GitHub истёк. Подключите GitHub заново.</value>
+    </data>
+    <data name="GitHubTokenDataInvalid" xml:space="preserve">
+        <value>Данные GitHub-токена недопустимы.</value>
+    </data>
+    <data name="GitSubmoduleNestingTooDeep" xml:space="preserve">
+        <value>Слишком большая вложенность Git submodule.</value>
+    </data>
+    <data name="GitSubmodulePathOutsideRepository" xml:space="preserve">
+        <value>Путь к подмодулю Git выходит за пределы репозитория.</value>
+    </data>
+    <data name="GitSubmoduleUsesUnsupportedURL" xml:space="preserve">
+        <value>Git submodule использует неподдерживаемый URL: {0}</value>
+    </data>
+    <data name="GoSDKNotFoundInstallGoRestart" xml:space="preserve">
+        <value>Go SDK не найден. Установите Go и перезапустите KK.Var. При запуске из Visual Studio перезапустите также Visual Studio.</value>
+    </data>
+    <data name="HTTPAddress" xml:space="preserve">
+        <value>HTTP-адрес</value>
+    </data>
+    <data name="HTTPHealthCheckFailedAttempts" xml:space="preserve">
+        <value>HTTP health-check не пройден после {0} попыток.</value>
+    </data>
+    <data name="HTTPRequest" xml:space="preserve">
+        <value>HTTP-запрос</value>
+    </data>
+    <data name="HealthCheck" xml:space="preserve">
+        <value>Проверка работоспособности</value>
+    </data>
+    <data name="HealthCheckAttempt" xml:space="preserve">
+        <value>Health-check: попытка {0} из {1}</value>
+    </data>
+    <data name="HealthCheckAttemptExitedCode" xml:space="preserve">
+        <value>Попытка health-check завершилась с кодом {0}.</value>
+    </data>
+    <data name="HealthCheckAttemptFailed" xml:space="preserve">
+        <value>Попытка health-check завершилась ошибкой: {0}</value>
+    </data>
+    <data name="HealthCheckFailed" xml:space="preserve">
+        <value>Health-check не пройден.</value>
+    </data>
+    <data name="HealthCheckFailedRestoringPreviousVersion" xml:space="preserve">
+        <value>Health-check не пройден, восстановление предыдущей версии</value>
+    </data>
+    <data name="HealthCheckIntervalMustBetween13600" xml:space="preserve">
+        <value>Интервал health-check должен быть от 1 до 3600 секунд.</value>
+    </data>
+    <data name="HealthCheckPassed" xml:space="preserve">
+        <value>Health-check пройден</value>
+    </data>
+    <data name="HealthCheckPassed2" xml:space="preserve">
+        <value>Health-check пройден.</value>
+    </data>
+    <data name="HealthCheckTimeoutMustBetween13600" xml:space="preserve">
+        <value>Timeout health-check должен быть от 1 до 3600 секунд.</value>
+    </data>
+    <data name="HealthCheckType" xml:space="preserve">
+        <value>Тип health-check</value>
+    </data>
+    <data name="HealthCheckTypeStarted" xml:space="preserve">
+        <value>Запущен health-check типа {0}.</value>
+    </data>
+    <data name="Help" xml:space="preserve">
+        <value>Помощь</value>
+    </data>
+    <data name="HistoryEmpty" xml:space="preserve">
+        <value>История пока пуста</value>
+    </data>
+    <data name="History_Title" xml:space="preserve">
+        <value>История</value>
+    </data>
+    <data name="HowDeployWorks" xml:space="preserve">
+        <value>Как проходит deploy</value>
+    </data>
+    <data name="IConfirmMachineChange" xml:space="preserve">
+        <value>Подтверждаю смену машины</value>
+    </data>
+    <data name="ImportProjectConfiguration" xml:space="preserve">
+        <value>Импорт конфигурации проекта</value>
+    </data>
+    <data name="InputFilesSelectedBuildProviderNotFound" xml:space="preserve">
+        <value>Не найдены входные файлы выбранного способа сборки.</value>
+    </data>
+    <data name="Interrupted" xml:space="preserve">
+        <value>Прервано</value>
+    </data>
+    <data name="InterruptedDeployCompletedNewVersionRunning" xml:space="preserve">
+        <value>Прерванный Deploy завершён: новая версия работает.</value>
+    </data>
+    <data name="InterruptedDeployRecoveredPreviousVersionRestored" xml:space="preserve">
+        <value>Прерванный Deploy восстановлен: возвращена предыдущая версия.</value>
+    </data>
+    <data name="InterruptedDeployStoppedVersionSwitch" xml:space="preserve">
+        <value>Прерванный Deploy остановлен до переключения версии.</value>
+    </data>
+    <data name="InterruptedOperationsRecovered" xml:space="preserve">
+        <value>Восстановлено прерванных операций: {0}</value>
+    </data>
+    <data name="IntervalSeconds" xml:space="preserve">
+        <value>Интервал, секунд</value>
+    </data>
+    <data name="InvalidArtifactSHA256Checksum" xml:space="preserve">
+        <value>Недопустимая контрольная сумма SHA-256 архива.</value>
+    </data>
+    <data name="InvalidBuildArgumentsBuildProcessEnvironment" xml:space="preserve">
+        <value>Некорректные аргументы или переменные процесса сборки.</value>
+    </data>
+    <data name="InvalidDeploymentOperationIdentifier" xml:space="preserve">
+        <value>Недопустимый идентификатор операции развёртывания.</value>
+    </data>
+    <data name="InvalidEnvironmentVariableName" xml:space="preserve">
+        <value>Недопустимое имя переменной окружения «{0}».</value>
+    </data>
+    <data name="InvalidGitCommitSHA" xml:space="preserve">
+        <value>Некорректный Git commit SHA.</value>
+    </data>
+    <data name="InvalidGitHubBranchName" xml:space="preserve">
+        <value>Некорректное имя ветки GitHub.</value>
+    </data>
+    <data name="InvalidGitHubRepositoryName" xml:space="preserve">
+        <value>Некорректное имя репозитория GitHub.</value>
+    </data>
+    <data name="InvalidGitHubURLSubmodule" xml:space="preserve">
+        <value>Некорректный GitHub URL для submodule: {0}</value>
+    </data>
+    <data name="InvalidRemoteOperationIdentifier" xml:space="preserve">
+        <value>Недопустимый идентификатор удалённой операции.</value>
+    </data>
+    <data name="InvalidSourceCommitSHA" xml:space="preserve">
+        <value>Недопустимый SHA коммита исходного кода.</value>
+    </data>
+    <data name="InvalidSystemdServiceName" xml:space="preserve">
+        <value>Недопустимое имя systemd-сервиса.</value>
+    </data>
+    <data name="JSONObjectRequired" xml:space="preserve">
+        <value>Требуется JSON-объект.</value>
+    </data>
+    <data name="KB" xml:space="preserve">
+        <value>КБ</value>
+    </data>
+    <data name="KKVarBuildProjectSelectedSource" xml:space="preserve">
+        <value>KK.Var будет собирать проект из выбранного источника</value>
+    </data>
+    <data name="KKVarBuildSourceCodeCreateLocal" xml:space="preserve">
+        <value>KK.Var соберёт исходный код, создаст локальную версию, передаст файлы на Linux-машину и перезапустит systemd-сервис.</value>
+    </data>
+    <data name="KKVarBuildsProjectsGitHubLocalFolder" xml:space="preserve">
+        <value>KK.Var собирает проекты с GitHub или из локальной папки, хранит ваши версии локально и доставляет их на Linux-машину.</value>
+    </data>
+    <data name="KKVarFirstTimeSetup" xml:space="preserve">
+        <value>Настройка первого запуска KK.Var</value>
+    </data>
+    <data name="KKVarRecovery" xml:space="preserve">
+        <value>Восстановление KK.Var</value>
+    </data>
+    <data name="LastDeploy" xml:space="preserve">
+        <value>Последний deploy</value>
+    </data>
+    <data name="LastStage" xml:space="preserve">
+        <value>Последний этап</value>
+    </data>
+    <data name="LimitsAppliedDuringAutomaticCleanupSuccessfulDeploy" xml:space="preserve">
+        <value>Ограничения применяются при автоматической очистке после успешного Deploy.</value>
+    </data>
+    <data name="LinuxMachineAddressSSHPort" xml:space="preserve">
+        <value>• адрес и SSH-порт Linux-машины</value>
+    </data>
+    <data name="LinuxRootDirectoryCannotUsedDeploymentEnter" xml:space="preserve">
+        <value>Нельзя разворачивать проект в корневую директорию Linux. Укажите отдельную директорию приложения, например /opt/my-app.</value>
+    </data>
+    <data name="LoadingBranches" xml:space="preserve">
+        <value>Загрузка веток…</value>
+    </data>
+    <data name="LoadingCommit" xml:space="preserve">
+        <value>Загрузка коммита…</value>
+    </data>
+    <data name="LoadingGitHubRepositories" xml:space="preserve">
+        <value>Загрузка репозиториев GitHub</value>
+    </data>
+    <data name="LoadingHistory" xml:space="preserve">
+        <value>Загрузка истории</value>
+    </data>
+    <data name="LoadingProject" xml:space="preserve">
+        <value>Загрузка проекта</value>
+    </data>
+    <data name="LocalArchiveCanCreatedFreeSpaceChecked" xml:space="preserve">
+        <value>Локальный архив можно создать; свободное место проверено.</value>
+    </data>
+    <data name="LocalArchiveCannotPrepared" xml:space="preserve">
+        <value>Не удалось подготовить локальный архив.</value>
+    </data>
+    <data name="LocalArchiveSelectedVersionNotFound" xml:space="preserve">
+        <value>Локальный архив выбранной версии не найден.</value>
+    </data>
+    <data name="LocalDirectoryPathRequired" xml:space="preserve">
+        <value>Укажите путь к локальному каталогу.</value>
+    </data>
+    <data name="LocalFolder" xml:space="preserve">
+        <value>Локальная папка</value>
+    </data>
+    <data name="LocalProjectDirectory" xml:space="preserve">
+        <value>Локальная папка проекта</value>
+    </data>
+    <data name="LocalProjectFolderNotConfigured" xml:space="preserve">
+        <value>Не указана локальная папка проекта.</value>
+    </data>
+    <data name="LocalProjectFolderNotFound" xml:space="preserve">
+        <value>Локальная папка проекта не найдена: {0}</value>
+    </data>
+    <data name="LocalSourceDirectoryAvailable" xml:space="preserve">
+        <value>Локальный исходный каталог доступен.</value>
+    </data>
+    <data name="LocalSourceDirectoryUnavailable" xml:space="preserve">
+        <value>Локальный исходный каталог недоступен.</value>
+    </data>
+    <data name="LocalVersionArchiveNotFound" xml:space="preserve">
+        <value>Локальный архив версии не найден.</value>
+    </data>
+    <data name="LocalVersions" xml:space="preserve">
+        <value>Локальные версии</value>
+    </data>
+    <data name="LocalVersionsDirectoryChanged" xml:space="preserve">
+        <value>Каталог локальных версий изменён</value>
+    </data>
+    <data name="MB" xml:space="preserve">
+        <value>МБ</value>
+    </data>
+    <data name="MachineActiveOperationEditingArchivingUnavailable" xml:space="preserve">
+        <value>Машина занята операцией. Изменение и архивирование недоступны.</value>
+    </data>
+    <data name="MachineProfileMustVerifiedNotArchived" xml:space="preserve">
+        <value>Профиль машины должен быть проверен и не архивирован.</value>
+    </data>
+    <data name="MachineProfileName" xml:space="preserve">
+        <value>Имя профиля машины</value>
+    </data>
+    <data name="MachineProfileSavedVerified" xml:space="preserve">
+        <value>Профиль машины сохранён и проверен.</value>
+    </data>
+    <data name="Machines_Title" xml:space="preserve">
+        <value>Профили удалённых машин</value>
+    </data>
+    <data name="MaximizeRestore" xml:space="preserve">
+        <value>Развернуть или восстановить</value>
+    </data>
+    <data name="MaximumVersionCount" xml:space="preserve">
+        <value>Максимальное количество версий</value>
+    </data>
+    <data name="MaximumVersionCountMustBetween110000" xml:space="preserve">
+        <value>Максимальное количество версий должно быть от 1 до 10000.</value>
+    </data>
+    <data name="MinimizeWindow" xml:space="preserve">
+        <value>Скрыть окно</value>
+    </data>
+    <data name="MissingArchives" xml:space="preserve">
+        <value>Отсутствует архивов: {0}</value>
+    </data>
+    <data name="Move" xml:space="preserve">
+        <value>Перенести</value>
+    </data>
+    <data name="MultipleBuildTypesDetectedSelectCorrectOne" xml:space="preserve">
+        <value>Найдено несколько способов сборки. Выберите нужный в настройках проекта.</value>
+    </data>
+    <data name="MultipleExecutableCsprojFilesSameAssemblyName" xml:space="preserve">
+        <value>Найдено несколько исполняемых .csproj с одинаковым именем сборки.</value>
+    </data>
+    <data name="NETSDKNotFoundInstallNETSDK" xml:space="preserve">
+        <value>.NET SDK не найден. Установите .NET SDK и перезапустите KK.Var.</value>
+    </data>
+    <data name="Never" xml:space="preserve">
+        <value>Не выполнялся</value>
+    </data>
+    <data name="NewDeployRollbackOperationsUseSelectedMachine" xml:space="preserve">
+        <value>Новые Deploy и rollback будут выполняться на выбранной машине. Сервис на прежней машине не будет остановлен или удалён автоматически.</value>
+    </data>
+    <data name="NewDirectoryActiveButSourceFileS" xml:space="preserve">
+        <value>Новый каталог уже используется, но не удалось удалить исходных файлов: {0}.</value>
+    </data>
+    <data name="NewProfile" xml:space="preserve">
+        <value>Новый профиль</value>
+    </data>
+    <data name="NewProject" xml:space="preserve">
+        <value>＋  Новый проект</value>
+    </data>
+    <data name="NewProject2" xml:space="preserve">
+        <value>Новый проект</value>
+    </data>
+    <data name="NewProjectCreatedCheckPathsNameSystemd" xml:space="preserve">
+        <value>Будет создан новый проект. Проверьте пути, имя и systemd-сервис; при конфликте измените их.</value>
+    </data>
+    <data name="NewVersionDiagnosticsAutomaticRollback" xml:space="preserve">
+        <value>Диагностика новой версии перед автоматическим rollback:</value>
+    </data>
+    <data name="NewVersionTagAvailable" xml:space="preserve">
+        <value>Тег новой версии доступен.</value>
+    </data>
+    <data name="Next" xml:space="preserve">
+        <value>Далее</value>
+    </data>
+    <data name="NextVersion" xml:space="preserve">
+        <value>Следующая версия</value>
+    </data>
+    <data name="NinjaNotFound" xml:space="preserve">
+        <value>Ninja не найден.</value>
+    </data>
+    <data name="No" xml:space="preserve">
+        <value>Нет</value>
+    </data>
+    <data name="NoActiveOperations" xml:space="preserve">
+        <value>Нет активных операций</value>
+    </data>
+    <data name="NoCheck" xml:space="preserve">
+        <value>Без проверки</value>
+    </data>
+    <data name="NoConflictingOperationProject" xml:space="preserve">
+        <value>Для проекта нет конфликтующей операции.</value>
+    </data>
+    <data name="NoCreateNewMachine" xml:space="preserve">
+        <value>Нет, создать новую</value>
+    </data>
+    <data name="NoDeployRollbackOperationsYet" xml:space="preserve">
+        <value>Deploy и rollback ещё не выполнялись</value>
+    </data>
+    <data name="NoDescription" xml:space="preserve">
+        <value>Без описания</value>
+    </data>
+    <data name="NoPreviousVersionNewVersionRemoved" xml:space="preserve">
+        <value>Предыдущая версия отсутствует; новая версия удалена</value>
+    </data>
+    <data name="NoProjectsLinkedProfileYet" xml:space="preserve">
+        <value>К этому профилю пока не привязаны проекты.</value>
+    </data>
+    <data name="NoURLFoundGitmodulesGitSubmodule" xml:space="preserve">
+        <value>Для Git submodule «{0}» не найден URL в .gitmodules.</value>
+    </data>
+    <data name="NoVersionCleanupNeeded" xml:space="preserve">
+        <value>Очистка версий не требуется.</value>
+    </data>
+    <data name="NoVersions" xml:space="preserve">
+        <value>Нет версий</value>
+    </data>
+    <data name="NonInteractiveSudoChecked" xml:space="preserve">
+        <value>sudo без запроса пароля проверен.</value>
+    </data>
+    <data name="NonInteractiveSudoUnavailable" xml:space="preserve">
+        <value>sudo без запроса пароля недоступен.</value>
+    </data>
+    <data name="NotConnected" xml:space="preserve">
+        <value>Не подключён</value>
+    </data>
+    <data name="NotifyWhenDeployRollbackFinish" xml:space="preserve">
+        <value>Уведомлять о завершении Deploy и rollback</value>
+    </data>
+    <data name="NumberAttempts" xml:space="preserve">
+        <value>Количество попыток</value>
+    </data>
+    <data name="NumberHealthCheckAttemptsMustBetween1" xml:space="preserve">
+        <value>Количество попыток health-check должно быть от 1 до 100.</value>
+    </data>
+    <data name="OldAddressNewAddressOldFingerprintNew" xml:space="preserve">
+        <value>Старый адрес: {0}
+Новый адрес: {1}
+Старый fingerprint: {2}
+Новый fingerprint: {3}</value>
+    </data>
+    <data name="OneArgumentPerLineEnvironmentNAMEValue" xml:space="preserve">
+        <value>Один аргумент на строку. Переменные: NAME=value; NAME удаляет переменную. Экранирование: \n, \r, \\.</value>
+    </data>
+    <data name="Open" xml:space="preserve">
+        <value>Открыть</value>
+    </data>
+    <data name="OpenDataFolder" xml:space="preserve">
+        <value>Открыть папку данных</value>
+    </data>
+    <data name="OpenGitHub" xml:space="preserve">
+        <value>Открыть GitHub</value>
+    </data>
+    <data name="OpenOperationDetails" xml:space="preserve">
+        <value>Откройте подробности операции.</value>
+    </data>
+    <data name="OpenSettings" xml:space="preserve">
+        <value>Открыть настройки</value>
+    </data>
+    <data name="OperationCancelled" xml:space="preserve">
+        <value>Операция отменена.</value>
+    </data>
+    <data name="OperationCompleted" xml:space="preserve">
+        <value>Операция завершена</value>
+    </data>
+    <data name="OperationDetails" xml:space="preserve">
+        <value>Детали операции</value>
+    </data>
+    <data name="OperationError" xml:space="preserve">
+        <value>Ошибка операции</value>
+    </data>
+    <data name="OperationLog" xml:space="preserve">
+        <value>Лог операции</value>
+    </data>
+    <data name="OperationLogFileMissingUnavailable" xml:space="preserve">
+        <value>Файл лога операции отсутствует или недоступен.</value>
+    </data>
+    <data name="OperationNoLongerAvailable" xml:space="preserve">
+        <value>Операция больше недоступна.</value>
+    </data>
+    <data name="OperationType" xml:space="preserve">
+        <value>Тип операции</value>
+    </data>
+    <data name="OptionalCheckRunsSystemdServiceStarts" xml:space="preserve">
+        <value>Необязательная проверка выполняется после запуска systemd-сервиса.</value>
+    </data>
+    <data name="OptionalProjectNameUsedDefault" xml:space="preserve">
+        <value>Необязательно - иначе используется название</value>
+    </data>
+    <data name="Overview" xml:space="preserve">
+        <value>Обзор</value>
+    </data>
+    <data name="ParameterContainsInvalidCharacters" xml:space="preserve">
+        <value>Параметр содержит недопустимые символы.</value>
+    </data>
+    <data name="Password" xml:space="preserve">
+        <value>Пароль</value>
+    </data>
+    <data name="PathRelativeProjectRootKKVarCreates" xml:space="preserve">
+        <value>Путь задаётся относительно корня проекта. Сам файл KK.Var сформирует при сборке.</value>
+    </data>
+    <data name="PathsRelativeWorkingDirectoryEmptyPythonDependency" xml:space="preserve">
+        <value>Пути задаются относительно рабочего каталога; пустой файл зависимостей Python означает автоопределение.</value>
+    </data>
+    <data name="Pending" xml:space="preserve">
+        <value>Ожидает</value>
+    </data>
+    <data name="Pin" xml:space="preserve">
+        <value>Закрепить</value>
+    </data>
+    <data name="Pinned" xml:space="preserve">
+        <value>Закреплена</value>
+    </data>
+    <data name="PipInstallArguments" xml:space="preserve">
+        <value>Параметры установки pip</value>
+    </data>
+    <data name="PreflightChecksPassed" xml:space="preserve">
+        <value>Preflight: проверка пройдена.</value>
+    </data>
+    <data name="PreflightStoppedDeploy" xml:space="preserve">
+        <value>Предварительная проверка остановила Deploy: {0}</value>
+    </data>
+    <data name="Preflight_Details" xml:space="preserve">
+        <value>Технические подробности</value>
+    </data>
+    <data name="Preflight_Error" xml:space="preserve">
+        <value>Preflight: ошибка - {0}</value>
+    </data>
+    <data name="Preflight_WarningCount" xml:space="preserve">
+        <value>Preflight: предупреждений - {0}.</value>
+    </data>
+    <data name="Preparing" xml:space="preserve">
+        <value>Подготовка</value>
+    </data>
+    <data name="PreparingMovingLocalArchives" xml:space="preserve">
+        <value>Подготовка или перенос локальных архивов</value>
+    </data>
+    <data name="PreparingSourceCode" xml:space="preserve">
+        <value>Подготовка исходного кода</value>
+    </data>
+    <data name="PreviousServerSStateUnknownRecoveryStopped" xml:space="preserve">
+        <value>Состояние прежнего сервера неизвестно. Recovery остановлен.</value>
+    </data>
+    <data name="PreviousVersionRestoredButSystemdUnitDid" xml:space="preserve">
+        <value>Предыдущая версия восстановлена, но прежний systemd unit отсутствовал.</value>
+    </data>
+    <data name="PreviousVersionRestoredStarted" xml:space="preserve">
+        <value>Предыдущая версия восстановлена и запущена</value>
+    </data>
+    <data name="PreviousVersionRestoredStartedSuccessfully" xml:space="preserve">
+        <value>Предыдущая версия восстановлена и успешно запущена.</value>
+    </data>
+    <data name="PreviousVersionRestoredWithoutStartingService" xml:space="preserve">
+        <value>Предыдущая версия восстановлена без запуска сервиса</value>
+    </data>
+    <data name="Private" xml:space="preserve">
+        <value>Приватный</value>
+    </data>
+    <data name="PrivateKeyPassword" xml:space="preserve">
+        <value>• приватный ключ или пароль</value>
+    </data>
+    <data name="PrivateSSHKeyFileCannotAccessed" xml:space="preserve">
+        <value>Нет доступа к файлу приватного SSH-ключа.</value>
+    </data>
+    <data name="PrivateSSHKeyFileNotFound" xml:space="preserve">
+        <value>Файл приватного SSH-ключа не найден.</value>
+    </data>
+    <data name="PrivateSSHKeyPath" xml:space="preserve">
+        <value>Путь к приватному SSH-ключу</value>
+    </data>
+    <data name="ProfileChangedOpenAgain" xml:space="preserve">
+        <value>Профиль изменился. Откройте его заново.</value>
+    </data>
+    <data name="Project" xml:space="preserve">
+        <value>Проект</value>
+    </data>
+    <data name="ProjectAdded" xml:space="preserve">
+        <value>Проект «{0}» добавлен</value>
+    </data>
+    <data name="ProjectAllLocalArchivesPermanentlyDeleted" xml:space="preserve">
+        <value>Проект «{0}» и все его локальные архивы будут удалены без возможности отмены.</value>
+    </data>
+    <data name="ProjectAlreadyActiveOperation" xml:space="preserve">
+        <value>Для этого проекта уже есть активная операция.</value>
+    </data>
+    <data name="ProjectAlreadyExistsChangeNameImporting" xml:space="preserve">
+        <value>Проект «{0}» уже существует. Измените имя перед импортом.</value>
+    </data>
+    <data name="ProjectBuildTypeCouldNotDetectedAutomatically" xml:space="preserve">
+        <value>Не удалось автоматически определить способ сборки проекта.</value>
+    </data>
+    <data name="ProjectCannotDeletedDuringVersionCleanup" xml:space="preserve">
+        <value>Нельзя удалять проект во время очистки версий.</value>
+    </data>
+    <data name="ProjectCannotDeployedDirectlyIntoUserS" xml:space="preserve">
+        <value>Нельзя разворачивать проект прямо в домашнюю директорию пользователя. Укажите вложенную директорию приложения.</value>
+    </data>
+    <data name="ProjectCannotDeployedIntoProtectedLinuxSystem" xml:space="preserve">
+        <value>Нельзя разворачивать проект в защищённую системную директорию Linux. Выберите отдельную директорию приложения.</value>
+    </data>
+    <data name="ProjectConfigurationExported" xml:space="preserve">
+        <value>Конфигурация проекта экспортирована.</value>
+    </data>
+    <data name="ProjectConfigurationFileInvalid" xml:space="preserve">
+        <value>Файл конфигурации проекта некорректен.</value>
+    </data>
+    <data name="ProjectDeleted" xml:space="preserve">
+        <value>Проект «{0}» удалён</value>
+    </data>
+    <data name="ProjectDeploy" xml:space="preserve">
+        <value>Deploy проекта</value>
+    </data>
+    <data name="ProjectFilePathContainsInvalidSegment" xml:space="preserve">
+        <value>Путь к файлу проекта содержит недопустимый сегмент.</value>
+    </data>
+    <data name="ProjectFolder" xml:space="preserve">
+        <value>Папка проекта</value>
+    </data>
+    <data name="ProjectGitHubBranch" xml:space="preserve">
+        <value>Ветка проекта GitHub</value>
+    </data>
+    <data name="ProjectHealthCheckSettingsIncomplete" xml:space="preserve">
+        <value>Настройки health-check проекта неполны.</value>
+    </data>
+    <data name="ProjectHistory" xml:space="preserve">
+        <value>История проекта</value>
+    </data>
+    <data name="ProjectIdentifierRequired" xml:space="preserve">
+        <value>Укажите идентификатор проекта.</value>
+    </data>
+    <data name="ProjectImported" xml:space="preserve">
+        <value>Проект «{0}» импортирован.</value>
+    </data>
+    <data name="ProjectMachine" xml:space="preserve">
+        <value>Машина проекта</value>
+    </data>
+    <data name="ProjectName" xml:space="preserve">
+        <value>Название проекта</value>
+    </data>
+    <data name="ProjectNamedAlreadyExists" xml:space="preserve">
+        <value>Проект с именем «{0}» уже существует.</value>
+    </data>
+    <data name="ProjectNoBuiltVersionsYet" xml:space="preserve">
+        <value>У проекта пока нет собранных версий</value>
+    </data>
+    <data name="ProjectNotFound" xml:space="preserve">
+        <value>Проект не найден.</value>
+    </data>
+    <data name="ProjectNotFound2" xml:space="preserve">
+        <value>Проект «{0}» не найден.</value>
+    </data>
+    <data name="ProjectNotFoundRefresh" xml:space="preserve">
+        <value>Проект не найден после обновления.</value>
+    </data>
+    <data name="ProjectRootDirectoryRequired" xml:space="preserve">
+        <value>Укажите корневой каталог проекта.</value>
+    </data>
+    <data name="ProjectSVersionStoragePolicyInvalid" xml:space="preserve">
+        <value>Политика хранения проекта недопустима.</value>
+    </data>
+    <data name="ProjectSolutionNET" xml:space="preserve">
+        <value>Проект или решение (.NET)</value>
+    </data>
+    <data name="ProjectSourceTypeInvalid" xml:space="preserve">
+        <value>Тип источника проекта недопустим.</value>
+    </data>
+    <data name="ProjectType" xml:space="preserve">
+        <value>Тип проекта</value>
+    </data>
+    <data name="ProjectUpdated" xml:space="preserve">
+        <value>Проект «{0}» изменён</value>
+    </data>
+    <data name="ProjectVersionDate" xml:space="preserve">
+        <value>Проект, версия или дата</value>
+    </data>
+    <data name="ProjectsUsingProfile" xml:space="preserve">
+        <value>Проекты этого профиля</value>
+    </data>
+    <data name="Projects_Import" xml:space="preserve">
+        <value>Импорт проекта</value>
+    </data>
+    <data name="Projects_Title" xml:space="preserve">
+        <value>Проекты</value>
+    </data>
+    <data name="ProtectedDeletion" xml:space="preserve">
+        <value>Защищена от удаления</value>
+    </data>
+    <data name="ProtectedGitHubTokenStorageOnlyAvailableWindows" xml:space="preserve">
+        <value>Защищённое хранение GitHub-токена доступно только в Windows.</value>
+    </data>
+    <data name="ProtectedSSHPasswordStorageOnlyAvailableWindows" xml:space="preserve">
+        <value>Защищённое хранение SSH-пароля доступно только в Windows.</value>
+    </data>
+    <data name="Python3AvailableRemoteMachine" xml:space="preserve">
+        <value>Python 3 доступен на удалённой машине.</value>
+    </data>
+    <data name="Python3UnavailableRemoteMachine" xml:space="preserve">
+        <value>Python 3 недоступен на удалённой машине.</value>
+    </data>
+    <data name="PythonDependencyFile" xml:space="preserve">
+        <value>Файл зависимостей Python</value>
+    </data>
+    <data name="PythonEntryPoint" xml:space="preserve">
+        <value>Точка входа Python</value>
+    </data>
+    <data name="PythonSpecifyRelativePathWithoutPlaceholders" xml:space="preserve">
+        <value>Для Python укажите относительный путь без подстановок.</value>
+    </data>
+    <data name="QueuedPosition" xml:space="preserve">
+        <value>В очереди · позиция {0}</value>
+    </data>
+    <data name="ReadySwitch" xml:space="preserve">
+        <value>Готово к переключению</value>
+    </data>
+    <data name="RecoveryNotCompleted" xml:space="preserve">
+        <value>Восстановление не выполнено.</value>
+    </data>
+    <data name="RecoverySourceCannotReparsePoint" xml:space="preserve">
+        <value>Источник восстановления не может быть reparse point: {0}</value>
+    </data>
+    <data name="Refresh" xml:space="preserve">
+        <value>Обновить</value>
+    </data>
+    <data name="RefreshCommit" xml:space="preserve">
+        <value>Обновить коммит</value>
+    </data>
+    <data name="RelativePathFileInsideProjectRequired" xml:space="preserve">
+        <value>Укажите относительный путь к файлу внутри проекта.</value>
+    </data>
+    <data name="RemoteArchitectureChecked" xml:space="preserve">
+        <value>Архитектура удалённой машины проверена.</value>
+    </data>
+    <data name="RemoteArchitectureDoesNotMatchSettings" xml:space="preserve">
+        <value>Архитектура удалённой машины не совпадает с настройками.</value>
+    </data>
+    <data name="RemoteArchitectureNotCurrentlySupported" xml:space="preserve">
+        <value>Архитектура удалённой машины «{0}» пока не поддерживается.</value>
+    </data>
+    <data name="RemoteArchitectureNotCurrentlySupportedGo" xml:space="preserve">
+        <value>Архитектура удалённой машины «{0}» пока не поддерживается для Go.</value>
+    </data>
+    <data name="RemoteArchitectureNotCurrentlySupportedNET" xml:space="preserve">
+        <value>Архитектура удалённой машины «{0}» пока не поддерживается для .NET.</value>
+    </data>
+    <data name="RemoteCommandExitedCode" xml:space="preserve">
+        <value>Удалённая команда завершилась с кодом {0}.</value>
+    </data>
+    <data name="RemoteDeploymentPathSafe" xml:space="preserve">
+        <value>Удалённый путь безопасен для Deploy.</value>
+    </data>
+    <data name="RemoteDeploymentPathUnsafe" xml:space="preserve">
+        <value>Удалённый путь Deploy небезопасен.</value>
+    </data>
+    <data name="RemoteFreeSpaceChecked" xml:space="preserve">
+        <value>Свободное место на удалённой машине проверено.</value>
+    </data>
+    <data name="RemoteMachineArchitecture" xml:space="preserve">
+        <value>Архитектура удалённой машины</value>
+    </data>
+    <data name="RemoteMachineArchitectureChangedExpectedReceivedRun" xml:space="preserve">
+        <value>Архитектура удалённой машины изменилась: ожидалась {0}, получена {1}. Выполните проверку подключения ещё раз.</value>
+    </data>
+    <data name="RemoteMachineCouldNotChecked" xml:space="preserve">
+        <value>Не удалось проверить удалённую машину.</value>
+    </data>
+    <data name="RemoteMachineDirectory" xml:space="preserve">
+        <value>Директория на удалённой машине</value>
+    </data>
+    <data name="RemoteMachineDoesNotEnoughFreeSpace" xml:space="preserve">
+        <value>На удалённой машине недостаточно свободного места.</value>
+    </data>
+    <data name="RemoteMachineNotConfigured" xml:space="preserve">
+        <value>Удалённая машина не настроена.</value>
+    </data>
+    <data name="RemoteMachineReadyDeploy" xml:space="preserve">
+        <value>Удалённая машина готова к Deploy</value>
+    </data>
+    <data name="RemoteMachineUnavailable" xml:space="preserve">
+        <value>Удалённая машина недоступна: {0}</value>
+    </data>
+    <data name="RemoteOperationCancelledAutomaticRollbackResult" xml:space="preserve">
+        <value>Удалённая операция отменена: {0} Результат автоматического rollback: {1}</value>
+    </data>
+    <data name="RemoteOperationFailed" xml:space="preserve">
+        <value>Удалённая операция завершилась ошибкой: {0}</value>
+    </data>
+    <data name="RemoteOperationFailedAutomaticRollbackFailed" xml:space="preserve">
+        <value>Удалённая операция завершилась ошибкой: {0} Автоматический rollback завершился ошибкой: {1}</value>
+    </data>
+    <data name="RemoteOperationFailedAutomaticRollbackResult" xml:space="preserve">
+        <value>Удалённая операция завершилась ошибкой: {0} Результат автоматического rollback: {1}</value>
+    </data>
+    <data name="RepeatDeploy" xml:space="preserve">
+        <value>Повторить Deploy</value>
+    </data>
+    <data name="RequestingAuthorizationCode" xml:space="preserve">
+        <value>Получаем код авторизации...</value>
+    </data>
+    <data name="RestoreArchivedProfileFirst" xml:space="preserve">
+        <value>Сначала восстановите архивированный профиль.</value>
+    </data>
+    <data name="RestoreProfile" xml:space="preserve">
+        <value>Восстановить профиль</value>
+    </data>
+    <data name="Rollback" xml:space="preserve">
+        <value>Откат</value>
+    </data>
+    <data name="Rollback2" xml:space="preserve">
+        <value>Откатить</value>
+    </data>
+    <data name="RollbackCannotStartWhileLocalVersionsBeing" xml:space="preserve">
+        <value>Нельзя начать rollback во время переноса локальных версий.</value>
+    </data>
+    <data name="RollbackCompleted" xml:space="preserve">
+        <value>Rollback завершён</value>
+    </data>
+    <data name="RollbackFailed" xml:space="preserve">
+        <value>Rollback завершился ошибкой</value>
+    </data>
+    <data name="RolledBackVersion" xml:space="preserve">
+        <value>Выполнен rollback на версию «{0}»</value>
+    </data>
+    <data name="Running" xml:space="preserve">
+        <value>Выполняется</value>
+    </data>
+    <data name="RunningDeploy" xml:space="preserve">
+        <value>Выполнение deploy</value>
+    </data>
+    <data name="RunningHealthCheck" xml:space="preserve">
+        <value>Проверка health-check</value>
+    </data>
+    <data name="RunningPreflightChecks" xml:space="preserve">
+        <value>Выполняется предварительная проверка…</value>
+    </data>
+    <data name="SQLiteDatabaseDamagedSchemaCannotUpdatedCan" xml:space="preserve">
+        <value>SQLite-база повреждена или её схема не может быть обновлена. Можно сохранить все файлы базы в резервной копии и создать новую базу.</value>
+    </data>
+    <data name="SSHConnectedButMachineArchitectureCouldNot" xml:space="preserve">
+        <value>SSH подключён, но определить архитектуру машины не удалось.</value>
+    </data>
+    <data name="SSHConnectionHostFingerprintVerified" xml:space="preserve">
+        <value>SSH-подключение и отпечаток подтверждены.</value>
+    </data>
+    <data name="SSHKey" xml:space="preserve">
+        <value>SSH-ключ</value>
+    </data>
+    <data name="SSHKeyChangedAgainRepeatCheck" xml:space="preserve">
+        <value>SSH-ключ снова изменился. Повторите проверку.</value>
+    </data>
+    <data name="SSHPort" xml:space="preserve">
+        <value>SSH-порт</value>
+    </data>
+    <data name="SSHPortMustBetween165535" xml:space="preserve">
+        <value>SSH-порт должен находиться в диапазоне от 1 до 65535.</value>
+    </data>
+    <data name="SSHServerKeyDoesNotMatchTrusted" xml:space="preserve">
+        <value>Ключ SSH-сервера не совпадает с подтверждённым отпечатком. Проверьте подключение в настройках.</value>
+    </data>
+    <data name="SSHServerRejectedSuppliedCredentials" xml:space="preserve">
+        <value>SSH-сервер отклонил указанные данные для входа.</value>
+    </data>
+    <data name="SSHSystemd" xml:space="preserve">
+        <value>SSH и systemd</value>
+    </data>
+    <data name="SSHUser" xml:space="preserve">
+        <value>• пользователя SSH</value>
+    </data>
+    <data name="SaveChanges" xml:space="preserve">
+        <value>Сохранить изменения</value>
+    </data>
+    <data name="SaveContinue" xml:space="preserve">
+        <value>Сохранить и перейти</value>
+    </data>
+    <data name="SaveNow" xml:space="preserve">
+        <value>Сохранить сейчас</value>
+    </data>
+    <data name="SaveProject" xml:space="preserve">
+        <value>Сохранить проект</value>
+    </data>
+    <data name="Saving" xml:space="preserve">
+        <value>Сохранение...</value>
+    </data>
+    <data name="SavingEnvironmentVariables" xml:space="preserve">
+        <value>Сохранение переменных окружения</value>
+    </data>
+    <data name="SavingProject" xml:space="preserve">
+        <value>Сохранение проекта</value>
+    </data>
+    <data name="SelectAccessibleLocalDirectoryDetectionGitHubSelect" xml:space="preserve">
+        <value>Для автоопределения выберите доступную локальную папку. Для GitHub выберите тип сборки вручную.</value>
+    </data>
+    <data name="SelectBuildTypeDetectLocalDirectoryConfigure" xml:space="preserve">
+        <value>Для настройки параметров выберите тип сборки или определите его по локальной папке.</value>
+    </data>
+    <data name="SelectCsprojSlnSlnxFile" xml:space="preserve">
+        <value>Выберите файл .csproj, .sln или .slnx.</value>
+    </data>
+    <data name="SelectFolder" xml:space="preserve">
+        <value>Выбрать папку</value>
+    </data>
+    <data name="SelectFolderComputer" xml:space="preserve">
+        <value>Выберите папку на этом компьютере</value>
+    </data>
+    <data name="SelectGitHubRepository" xml:space="preserve">
+        <value>Выберите репозиторий GitHub.</value>
+    </data>
+    <data name="SelectLocalProjectFolder" xml:space="preserve">
+        <value>Выберите локальную папку проекта.</value>
+    </data>
+    <data name="SelectLocalVersionsDirectory" xml:space="preserve">
+        <value>Выберите каталог локальных версий</value>
+    </data>
+    <data name="SelectProjectFolder" xml:space="preserve">
+        <value>Выберите папку проекта</value>
+    </data>
+    <data name="SelectRemoteMachineProfile" xml:space="preserve">
+        <value>Выберите профиль удалённой машины.</value>
+    </data>
+    <data name="SelectRepository" xml:space="preserve">
+        <value>Выберите репозиторий</value>
+    </data>
+    <data name="SelectVerifiedMachineProfile" xml:space="preserve">
+        <value>Выберите проверенный профиль машины.</value>
+    </data>
+    <data name="SelectedHealthCheckTypeNotSupported" xml:space="preserve">
+        <value>Выбран неподдерживаемый тип health-check.</value>
+    </data>
+    <data name="SelectedPathPointsFile" xml:space="preserve">
+        <value>Выбранный путь указывает на файл.</value>
+    </data>
+    <data name="SelectedProfileSettingsAddressSavedOnlyVerification" xml:space="preserve">
+        <value>Параметры выбранного профиля. Адрес сохраняется только после проверки и подтверждения.</value>
+    </data>
+    <data name="ServiceAssignedAnotherProjectChangeImporting" xml:space="preserve">
+        <value>Сервис «{0}» уже назначен другому проекту. Измените сервис перед импортом.</value>
+    </data>
+    <data name="ServiceDidNotRemainActiveSeconds" xml:space="preserve">
+        <value>Сервис не оставался активным в течение {0} секунд.</value>
+    </data>
+    <data name="ServiceFile" xml:space="preserve">
+        <value>Файл сервиса</value>
+    </data>
+    <data name="ServiceStarted" xml:space="preserve">
+        <value>Сервис запущен</value>
+    </data>
+    <data name="SettingsDamagedUnavailableCanBackUpOriginal" xml:space="preserve">
+        <value>Настройки повреждены или недоступны. Можно сохранить исходный файл в резервной копии и начать с чистых настроек.</value>
+    </data>
+    <data name="SettingsPageOpenStepGetStartedProvide" xml:space="preserve">
+        <value>После этого шага откроется страница настроек. Для начала работы обязательно укажите:</value>
+    </data>
+    <data name="Settings_Title" xml:space="preserve">
+        <value>Настройки</value>
+    </data>
+    <data name="ShowMore" xml:space="preserve">
+        <value>Показать ещё</value>
+    </data>
+    <data name="ShowShortResultWhenWindowMinimizedAnother" xml:space="preserve">
+        <value>Показывать краткий результат, когда окно свёрнуто или открыта другая страница. Настройка сохраняется сразу.</value>
+    </data>
+    <data name="SimpleLocalCICD" xml:space="preserve">
+        <value>Простой локальный CI/CD</value>
+    </data>
+    <data name="SizeLimitMB" xml:space="preserve">
+        <value>Лимит размера, МБ</value>
+    </data>
+    <data name="SizeLimitMustGreaterThanZero" xml:space="preserve">
+        <value>Лимит размера должен быть больше нуля.</value>
+    </data>
+    <data name="Source" xml:space="preserve">
+        <value>Источник</value>
+    </data>
+    <data name="SourceBuildDeploymentSettings" xml:space="preserve">
+        <value>Источник, сборка и параметры развёртывания</value>
+    </data>
+    <data name="SourceConfiguredProjectSettings" xml:space="preserve">
+        <value>Источник задан в настройках проекта.</value>
+    </data>
+    <data name="SourceTargetArchiveDirectoriesCannotNestedInside" xml:space="preserve">
+        <value>Исходный и новый каталоги архивов не могут быть вложены друг в друга.</value>
+    </data>
+    <data name="SourceType" xml:space="preserve">
+        <value>Способ получения исходников</value>
+    </data>
+    <data name="Source_Title" xml:space="preserve">
+        <value>Исходный код</value>
+    </data>
+    <data name="SpecifiedBuildFileNotFound" xml:space="preserve">
+        <value>Указанный файл сборки не найден.</value>
+    </data>
+    <data name="SpecifyCustomBuildCommand" xml:space="preserve">
+        <value>Укажите команду пользовательской сборки.</value>
+    </data>
+    <data name="SpecifyExistingCMakeToolchainFileCLinux" xml:space="preserve">
+        <value>Укажите существующий CMake toolchain-файл для сборки C++ под Linux.</value>
+    </data>
+    <data name="SpecifyRequirementsTxtFilePyprojectToml" xml:space="preserve">
+        <value>Укажите requirements-файл .txt или pyproject.toml.</value>
+    </data>
+    <data name="SpecifyVersionSTargetArchitecture" xml:space="preserve">
+        <value>Укажите целевую архитектуру версии.</value>
+    </data>
+    <data name="StabilityDelay" xml:space="preserve">
+        <value>Задержка стабильности</value>
+    </data>
+    <data name="StabilityDelayMustBetween13600Seconds" xml:space="preserve">
+        <value>Задержка стабильности должна быть от 1 до 3600 секунд.</value>
+    </data>
+    <data name="StableOperationTimeSeconds" xml:space="preserve">
+        <value>Время стабильной работы, секунд</value>
+    </data>
+    <data name="Started" xml:space="preserve">
+        <value>Начало</value>
+    </data>
+    <data name="StartingService" xml:space="preserve">
+        <value>Запуск сервиса</value>
+    </data>
+    <data name="StartingSystemdService" xml:space="preserve">
+        <value>Запуск systemd-сервиса</value>
+    </data>
+    <data name="Status" xml:space="preserve">
+        <value>Статус</value>
+    </data>
+    <data name="Stay" xml:space="preserve">
+        <value>Остаться</value>
+    </data>
+    <data name="StoredValuesNotIntendedSecrets" xml:space="preserve">
+        <value>Сохранённые значения не предназначены для секретов.</value>
+    </data>
+    <data name="Succeeded" xml:space="preserve">
+        <value>Успешно</value>
+    </data>
+    <data name="SwitchEnglish" xml:space="preserve">
+        <value>Переключить на английский</value>
+    </data>
+    <data name="SwitchRussian" xml:space="preserve">
+        <value>Переключить на русский</value>
+    </data>
+    <data name="SwitchingVersion" xml:space="preserve">
+        <value>Переключение версии</value>
+    </data>
+    <data name="SystemdReloadedUpdatedUnit" xml:space="preserve">
+        <value>Systemd перечитал изменённый unit</value>
+    </data>
+    <data name="SystemdService" xml:space="preserve">
+        <value>Systemd-сервис</value>
+    </data>
+    <data name="SystemdServiceAlreadyAssignedAnotherProject" xml:space="preserve">
+        <value>Systemd-сервис «{0}» уже назначен другому проекту.</value>
+    </data>
+    <data name="SystemdServiceName" xml:space="preserve">
+        <value>Название systemd-сервиса</value>
+    </data>
+    <data name="SystemdServiceStartedSuccessfully" xml:space="preserve">
+        <value>Systemd-сервис успешно запущен</value>
+    </data>
+    <data name="SystemdTarAvailable" xml:space="preserve">
+        <value>systemd и tar доступны.</value>
+    </data>
+    <data name="SystemdTarUnavailable" xml:space="preserve">
+        <value>systemd или tar недоступны.</value>
+    </data>
+    <data name="SystemdUnitCreated" xml:space="preserve">
+        <value>Systemd unit будет создан</value>
+    </data>
+    <data name="SystemdUnitUnchanged" xml:space="preserve">
+        <value>Systemd unit не изменился</value>
+    </data>
+    <data name="SystemdUnitUpdated" xml:space="preserve">
+        <value>Systemd unit будет обновлён</value>
+    </data>
+    <data name="TCPHealthCheckFailedAttempts" xml:space="preserve">
+        <value>TCP health-check не пройден после {0} попыток.</value>
+    </data>
+    <data name="TCPPort" xml:space="preserve">
+        <value>TCP-порт</value>
+    </data>
+    <data name="TCPPortMustBetween165535" xml:space="preserve">
+        <value>TCP-порт должен быть от 1 до 65535.</value>
+    </data>
+    <data name="TemporaryFilesKeptRemoteMachineRecovery" xml:space="preserve">
+        <value>Временные файлы сохранены на удалённой машине для восстановления.</value>
+    </data>
+    <data name="TerminalDeploymentStatusRequired" xml:space="preserve">
+        <value>Укажите конечный статус развёртывания.</value>
+    </data>
+    <data name="ThereNoPreviousVersionNewVersionStopped" xml:space="preserve">
+        <value>Предыдущая версия отсутствовала; новая версия остановлена и удалена.</value>
+    </data>
+    <data name="ThereNotEnoughFreeSpaceSelectedDirectory" xml:space="preserve">
+        <value>В выбранном каталоге недостаточно свободного места.</value>
+    </data>
+    <data name="ThereNotEnoughSpaceLocalArchive" xml:space="preserve">
+        <value>Недостаточно места для локального архива.</value>
+    </data>
+    <data name="ThereUnsavedChanges" xml:space="preserve">
+        <value>Есть несохранённые изменения</value>
+    </data>
+    <data name="ThreeClearStagesWithoutRemoteReleaseStorage" xml:space="preserve">
+        <value>Три понятных этапа без удалённого хранилища релизов</value>
+    </data>
+    <data name="TimeoutSeconds" xml:space="preserve">
+        <value>Timeout, секунд</value>
+    </data>
+    <data name="ToolchainFile" xml:space="preserve">
+        <value>Toolchain-файл</value>
+    </data>
+    <data name="ToolchainPathCheckedBuildPlaceholdersResolved" xml:space="preserve">
+        <value>Путь к toolchain будет проверен после подстановки параметров сборки.</value>
+    </data>
+    <data name="TotalProjectSize" xml:space="preserve">
+        <value>Общий размер проекта</value>
+    </data>
+    <data name="TransferringProjectConfiguration" xml:space="preserve">
+        <value>Передача конфигурации проекта</value>
+    </data>
+    <data name="Unchanged" xml:space="preserve">
+        <value>Не изменялся</value>
+    </data>
+    <data name="UnitFileChange" xml:space="preserve">
+        <value>Изменение unit-файла</value>
+    </data>
+    <data name="UnitFileUpdated" xml:space="preserve">
+        <value>Unit-файл обновлён</value>
+    </data>
+    <data name="UnknownArchitecture" xml:space="preserve">
+        <value>Архитектура неизвестна</value>
+    </data>
+    <data name="UnknownError" xml:space="preserve">
+        <value>неизвестная ошибка</value>
+    </data>
+    <data name="Unlimited" xml:space="preserve">
+        <value>Без ограничения</value>
+    </data>
+    <data name="Unpin" xml:space="preserve">
+        <value>Открепить</value>
+    </data>
+    <data name="UnsupportedEnvironmentFileFormat" xml:space="preserve">
+        <value>Неподдерживаемый формат файла окружения.</value>
+    </data>
+    <data name="UnsupportedProjectSourceType" xml:space="preserve">
+        <value>Неподдерживаемый тип источника проекта.</value>
+    </data>
+    <data name="UpdatingUnitFile" xml:space="preserve">
+        <value>Обновление unit-файла</value>
+    </data>
+    <data name="UploadingArchiveRemoteMachine" xml:space="preserve">
+        <value>Загрузка архива на удалённую машину</value>
+    </data>
+    <data name="UsedArchives" xml:space="preserve">
+        <value>Занято архивами</value>
+    </data>
+    <data name="User" xml:space="preserve">
+        <value>Пользователь</value>
+    </data>
+    <data name="VARIABLENAME" xml:space="preserve">
+        <value>ИМЯ_ПЕРЕМЕННОЙ</value>
+    </data>
+    <data name="Value" xml:space="preserve">
+        <value>Значение</value>
+    </data>
+    <data name="ValueCannotExceedCharacters" xml:space="preserve">
+        <value>Значение не может превышать {0} символов.</value>
+    </data>
+    <data name="ValueRequired" xml:space="preserve">
+        <value>Укажите значение.</value>
+    </data>
+    <data name="VariableMustJSONArrayContainingOnlyStrings" xml:space="preserve">
+        <value>Значение переменной «{0}» должно быть JSON-массивом только строк или только чисел.</value>
+    </data>
+    <data name="Variables" xml:space="preserve">
+        <value>Переменные</value>
+    </data>
+    <data name="VariablesNotSaved" xml:space="preserve">
+        <value>Переменные ещё не сохранены</value>
+    </data>
+    <data name="VerifiedArchitectureNewAddress" xml:space="preserve">
+        <value>Проверенная архитектура нового адреса: {0}</value>
+    </data>
+    <data name="VerifySaveProfile" xml:space="preserve">
+        <value>Проверить и сохранить профиль</value>
+    </data>
+    <data name="Version" xml:space="preserve">
+        <value>Версия</value>
+    </data>
+    <data name="VersionAlreadyExists" xml:space="preserve">
+        <value>Версия «{0}» уже существует.</value>
+    </data>
+    <data name="VersionArchiveChecksumDoesNotMatch" xml:space="preserve">
+        <value>Контрольная сумма архива версии не совпадает.</value>
+    </data>
+    <data name="VersionArchivePathContainsInvalidSegment" xml:space="preserve">
+        <value>Путь к архиву версии содержит недопустимый сегмент.</value>
+    </data>
+    <data name="VersionArchivePathInvalid" xml:space="preserve">
+        <value>Путь к архиву версии недопустим.</value>
+    </data>
+    <data name="VersionArchivePathMustRelative" xml:space="preserve">
+        <value>Путь к архиву версии должен быть относительным.</value>
+    </data>
+    <data name="VersionArchivePathOutsideArchiveDirectory" xml:space="preserve">
+        <value>Путь к архиву версии выходит за пределы каталога архивов.</value>
+    </data>
+    <data name="VersionBelongsAnotherProject" xml:space="preserve">
+        <value>Версия принадлежит другому проекту.</value>
+    </data>
+    <data name="VersionCannotDeletedDuringActiveOperation" xml:space="preserve">
+        <value>Нельзя удалить версию во время активной операции.</value>
+    </data>
+    <data name="VersionDeleted" xml:space="preserve">
+        <value>Версия «{0}» удалена</value>
+    </data>
+    <data name="VersionDeployedPreflightWarnings" xml:space="preserve">
+        <value>Версия «{0}» развёрнута с предупреждениями preflight.</value>
+    </data>
+    <data name="VersionDeployedSuccessfully" xml:space="preserve">
+        <value>Версия «{0}» успешно развёрнута</value>
+    </data>
+    <data name="VersionDoesNotBelongSpecifiedProject" xml:space="preserve">
+        <value>Версия не принадлежит указанному проекту.</value>
+    </data>
+    <data name="VersionLocalArchiveDeletedActionCannotUndone" xml:space="preserve">
+        <value>Версия «{0}» и её локальный архив будут удалены. Отменить это действие нельзя.</value>
+    </data>
+    <data name="VersionNotFound" xml:space="preserve">
+        <value>Версия не найдена.</value>
+    </data>
+    <data name="VersionNotFound2" xml:space="preserve">
+        <value>Версия «{0}» не найдена.</value>
+    </data>
+    <data name="VersionRequired" xml:space="preserve">
+        <value>Укажите версию.</value>
+    </data>
+    <data name="VersionSizeLimitMustPositiveNumberMB" xml:space="preserve">
+        <value>Лимит размера версий должен быть положительным числом в МБ.</value>
+    </data>
+    <data name="VersionStorage" xml:space="preserve">
+        <value>Хранение версий</value>
+    </data>
+    <data name="VersionSwitched" xml:space="preserve">
+        <value>Версия переключена</value>
+    </data>
+    <data name="VersionTagMayContainOnlyLatinLetters" xml:space="preserve">
+        <value>Тег версии может содержать только латинские буквы, цифры, точку, дефис и подчёркивание.</value>
+    </data>
+    <data name="VersionsCannotChangedDuringCleanup" xml:space="preserve">
+        <value>Нельзя изменять версии во время очистки.</value>
+    </data>
+    <data name="VersionsCannotCleanedUpDuringActiveOperation" xml:space="preserve">
+        <value>Нельзя очищать версии во время активной операции.</value>
+    </data>
+    <data name="VersionsDeleteBytesActionCannotUndone" xml:space="preserve">
+        <value>Будет удалено версий: {0}, байт: {1}. Отменить это действие нельзя.</value>
+    </data>
+    <data name="VersionsEnvironmentVariablesDeployHistoryLocalArchives" xml:space="preserve">
+        <value>Версии, переменные окружения, история deploy и локальные архивы также будут удалены.</value>
+    </data>
+    <data name="Versions_CreationHint" xml:space="preserve">
+        <value>Версия создаётся автоматически после успешной сборки. Архив и контрольная сумма неизменяемы.</value>
+    </data>
+    <data name="Versions_PinningHint" xml:space="preserve">
+        <value>Закрепление защищает версию от автоматической очистки. «Открепить» снимает защиту, но не удаляет версию. Версия на сервере не меняется.</value>
+    </data>
+    <data name="Versions_Title" xml:space="preserve">
+        <value>Версии</value>
+    </data>
+    <data name="ViewNotFound" xml:space="preserve">
+        <value>Представление «{0}» не найдено.</value>
+    </data>
+    <data name="WaitDeployFinishClosingApplicationDuringVersion" xml:space="preserve">
+        <value>Дождитесь завершения Deploy. Закрытие приложения во время переключения версии заблокировано.</value>
+    </data>
+    <data name="Warning" xml:space="preserve">
+        <value>Предупреждение</value>
+    </data>
+    <data name="WhatChangedVersion" xml:space="preserve">
+        <value>Что изменилось в этой версии</value>
+    </data>
+    <data name="WindowsNotifications" xml:space="preserve">
+        <value>Уведомления Windows</value>
+    </data>
+    <data name="Yes" xml:space="preserve">
+        <value>Да</value>
+    </data>
+    <data name="YesSameMachine" xml:space="preserve">
+        <value>Да, это та же машина</value>
+    </data>
+</root>

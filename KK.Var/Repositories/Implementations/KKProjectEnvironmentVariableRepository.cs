@@ -8,6 +8,7 @@ using KK.Var.Enums;
 using KK.Var.Models;
 using KK.Var.Services;
 using Microsoft.EntityFrameworkCore;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Repositories.Implementations
 {
@@ -40,7 +41,7 @@ namespace KK.Var.Repositories.Implementations
             var project = await db.Projects.SingleOrDefaultAsync(
                 candidate => candidate.Id == projectId,
                 cancellationToken) ??
-                    throw new KeyNotFoundException(localizationService.Format("Проект «{0}» не найден.", projectId));
+                    throw new KeyNotFoundException(localizationService.Format(Texts.ProjectNotFound2, projectId));
 
             var existing = await db.ProjectEnvironmentVariables
                 .Where(variable => variable.KKProjectId == projectId)

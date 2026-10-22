@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using KK.Var.Configuration;
 using KK.Var.Services;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.ViewModels
 {
@@ -43,7 +44,7 @@ namespace KK.Var.ViewModels
             }
             else if (startup.RecoveredDeploymentCount > 0)
             {
-                PublishNotification(LocalizeFormat("Восстановлено прерванных операций: {0}", startup.RecoveredDeploymentCount), isError: false);
+                PublishNotification(LocalizeFormat(Texts.InterruptedOperationsRecovered, startup.RecoveredDeploymentCount), isError: false);
             }
 
             await gitHubAccount.LoadAsync(Settings.GitHub);

@@ -5,6 +5,7 @@ using KK.Var.Enums;
 using KK.Var.Models;
 using Renci.SshNet;
 using static KK.Var.Services.RemoteShell;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
@@ -28,7 +29,7 @@ namespace KK.Var.Services.Implementations
             CancellationToken cancellationToken)
         {
             log.WriteLine(localizationService.Format(
-                "Запущен health-check типа {0}.",
+                Texts.HealthCheckTypeStarted,
                 project.HealthCheckType));
 
             if (project.HealthCheckType == ProjectHealthCheckType.StabilityDelay)
@@ -54,8 +55,7 @@ namespace KK.Var.Services.Implementations
             CancellationToken cancellationToken)
         {
             var delaySeconds = project.HealthCheckStabilityDelaySeconds ??
-                throw new InvalidOperationException(localizationService.Get(
-                    "Настройки health-check проекта неполны."));
+                throw new InvalidOperationException(Texts.ProjectHealthCheckSettingsIncomplete);
             var initialRestartCount = commandRunner.RunCheckedWithOutput(
                 ssh,
                 $"sudo systemctl show --property=NRestarts --value {Q(project.RemoteServiceName)}",
@@ -81,7 +81,7 @@ namespace KK.Var.Services.Implementations
                 if (activeResult.ExitStatus != 0)
                 {
                     throw new HealthCheckFailedException(localizationService.Format(
-                        "Сервис не оставался активным в течение {0} секунд.",
+                        Texts.ServiceDidNotRemainActiveSeconds,
                         delaySeconds));
                 }
             }
@@ -97,7 +97,7 @@ namespace KK.Var.Services.Implementations
                 StringComparison.Ordinal))
             {
                 throw new HealthCheckFailedException(localizationService.Format(
-                    "Сервис не оставался активным в течение {0} секунд.",
+                    Texts.ServiceDidNotRemainActiveSeconds,
                     delaySeconds));
             }
         }
@@ -112,14 +112,11 @@ namespace KK.Var.Services.Implementations
             CancellationToken cancellationToken)
         {
             var timeoutSeconds = project.HealthCheckTimeoutSeconds ??
-                throw new InvalidOperationException(localizationService.Get(
-                    "Настройки health-check проекта неполны."));
+                throw new InvalidOperationException(Texts.ProjectHealthCheckSettingsIncomplete);
             var intervalSeconds = project.HealthCheckIntervalSeconds ??
-                throw new InvalidOperationException(localizationService.Get(
-                    "Настройки health-check проекта неполны."));
+                throw new InvalidOperationException(Texts.ProjectHealthCheckSettingsIncomplete);
             var attempts = project.HealthCheckAttempts ??
-                throw new InvalidOperationException(localizationService.Get(
-                    "Настройки health-check проекта неполны."));
+                throw new InvalidOperationException(Texts.ProjectHealthCheckSettingsIncomplete);
             var command = CreateHealthCheckCommand(
                 project,
                 userName,
@@ -131,7 +128,7 @@ namespace KK.Var.Services.Implementations
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var attemptMessage = localizationService.Format(
-                    "Health-check: попытка {0} из {1}",
+                    Texts.HealthCheckAttempt,
                     attempt,
                     attempts);
                 progress?.Report(new DeploymentProgress(92, attemptMessage));
@@ -149,18 +146,18 @@ namespace KK.Var.Services.Implementations
 
                     if (result.ExitStatus == 0)
                     {
-                        log.WriteLine(localizationService.Get("Health-check пройден."));
+                        log.WriteLine(Texts.HealthCheckPassed2);
                         return;
                     }
 
                     log.WriteLine(localizationService.Format(
-                        "Попытка health-check завершилась с кодом {0}.",
+                        Texts.HealthCheckAttemptExitedCode,
                         result.ExitStatus));
                 }
                 catch (Exception exception) when (exception is not OperationCanceledException)
                 {
                     log.WriteLine(localizationService.Format(
-                        "Попытка health-check завершилась ошибкой: {0}",
+                        Texts.HealthCheckAttemptFailed,
                         exception));
                 }
 
@@ -194,8 +191,7 @@ namespace KK.Var.Services.Implementations
                     CheckTimeoutCommand +
                     $"sudo -u {Q(userName)} timeout {timeoutSeconds}s sh -lc " +
                     Q($"cd -- {Q(target)} && {project.HealthCheckCommand}"),
-                _ => throw new InvalidOperationException(localizationService.Get(
-                    "Выбран неподдерживаемый тип health-check.")),
+                _ => throw new InvalidOperationException(Texts.SelectedHealthCheckTypeNotSupported),
             };
 
         private string GetHealthCheckFailureMessage(
@@ -204,15 +200,15 @@ namespace KK.Var.Services.Implementations
             healthCheckType switch
             {
                 ProjectHealthCheckType.Http => localizationService.Format(
-                    "HTTP health-check не пройден после {0} попыток.",
+                    Texts.HTTPHealthCheckFailedAttempts,
                     attempts),
                 ProjectHealthCheckType.Tcp => localizationService.Format(
-                    "TCP health-check не пройден после {0} попыток.",
+                    Texts.TCPHealthCheckFailedAttempts,
                     attempts),
                 ProjectHealthCheckType.Command => localizationService.Format(
-                    "Командный health-check не пройден после {0} попыток.",
+                    Texts.CommandHealthCheckFailedAttempts,
                     attempts),
-                _ => localizationService.Get("Health-check не пройден."),
+                _ => Texts.HealthCheckFailed,
             };
 
         private static void WaitForDelay(

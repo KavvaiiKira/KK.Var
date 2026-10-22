@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using KK.Var.Configuration;
 using KK.Var.Constants;
 using KK.Var.Services;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.ViewModels
 {
@@ -26,7 +27,7 @@ namespace KK.Var.ViewModels
         public partial bool IsGitHubAuthorizationPending { get; private set; }
 
         [ObservableProperty]
-        public partial string GitHubAccountDisplay { get; set; } = localizationService.Get("Не подключён");
+        public partial string GitHubAccountDisplay { get; set; } = Texts.NotConnected;
 
         [ObservableProperty]
         public partial string GitHubConnectionStatus { get; set; } = string.Empty;
@@ -51,7 +52,7 @@ namespace KK.Var.ViewModels
             var cancellationToken = _gitHubAuthorizationCancellation.Token;
 
             IsGitHubAuthorizationPending = true;
-            GitHubConnectionStatus = Localize("Получаем код авторизации...");
+            GitHubConnectionStatus = Texts.RequestingAuthorizationCode;
 
             try
             {
@@ -59,8 +60,7 @@ namespace KK.Var.ViewModels
 
                 GitHubUserCode = authorization.UserCode;
                 GitHubVerificationUrl = authorization.VerificationUri.ToString();
-                GitHubConnectionStatus = Localize(
-                    "Введите этот код на открывшейся странице GitHub");
+                GitHubConnectionStatus = Texts.EnterCodeGitHubPage;
                 OpenBrowser(authorization.VerificationUri);
 
                 var token = await _gitHubService.WaitForAccessTokenAsync(
@@ -90,13 +90,13 @@ namespace KK.Var.ViewModels
                 _settings.AccountLogin = user.Login;
                 _settings.ConnectedAtUtc = DateTimeOffset.UtcNow;
                 GitHubAccountDisplay = user.Login;
-                GitHubConnectionStatus = Localize("GitHub успешно подключён");
+                GitHubConnectionStatus = Texts.GitHubConnectedSuccessfully;
                 IsGitHubConnected = true;
-                PublishNotification(Localize("GitHub успешно подключён"), isError: false);
+                PublishNotification(Texts.GitHubConnectedSuccessfully, isError: false);
             }
             catch (OperationCanceledException)
             {
-                GitHubConnectionStatus = Localize("Подключение GitHub отменено");
+                GitHubConnectionStatus = Texts.GitHubConnectionCancelled;
             }
             catch (Exception exception)
             {
@@ -131,11 +131,11 @@ namespace KK.Var.ViewModels
 
             _settings.AccountLogin = null;
             _settings.ConnectedAtUtc = null;
-            GitHubAccountDisplay = Localize("Не подключён");
-            GitHubConnectionStatus = Localize("GitHub отключён");
+            GitHubAccountDisplay = Texts.NotConnected;
+            GitHubConnectionStatus = Texts.GitHubDisconnected;
             IsGitHubConnected = false;
 
-            PublishNotification(Localize("GitHub отключён"), isError: false);
+            PublishNotification(Texts.GitHubDisconnected, isError: false);
         }
 
         private GitHubSettings _settings = new GitHubSettings();
@@ -144,7 +144,7 @@ namespace KK.Var.ViewModels
         {
             _settings = settings;
             GitHubAccountDisplay = string.IsNullOrWhiteSpace(settings.AccountLogin) ?
-                Localize("Не подключён") :
+                Texts.NotConnected :
                 settings.AccountLogin;
             try
             {

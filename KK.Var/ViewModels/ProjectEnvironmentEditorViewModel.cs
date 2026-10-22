@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using KK.Var.Enums;
 using KK.Var.Models;
 using KK.Var.Services;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.ViewModels
 {
@@ -47,7 +48,7 @@ namespace KK.Var.ViewModels
         public partial bool HasUnsavedEnvironmentChanges { get; private set; }
 
         [ObservableProperty]
-        public partial string EnvironmentSaveStatus { get; private set; } = localizationService.Get("Все изменения сохранены");
+        public partial string EnvironmentSaveStatus { get; private set; } = Texts.AllChangesSaved;
 
         public void AddEnvironmentVariable()
         {
@@ -91,14 +92,14 @@ namespace KK.Var.ViewModels
                 }
 
                 IsEnvironmentSaving = true;
-                EnvironmentSaveStatus = Localize("Сохранение...");
+                EnvironmentSaveStatus = Texts.Saving;
                 var changeVersion = _environmentChangeVersion;
 
                 try
                 {
                     if (EnvironmentVariables.Any(item => string.IsNullOrWhiteSpace(item.Name)))
                     {
-                        EnvironmentSaveStatus = Localize("Заполните имя каждой переменной");
+                        EnvironmentSaveStatus = Texts.EnterNameEveryVariable;
                         return false;
                     }
 
@@ -127,13 +128,13 @@ namespace KK.Var.ViewModels
                     if (changeVersion == _environmentChangeVersion)
                     {
                         HasUnsavedEnvironmentChanges = false;
-                        EnvironmentSaveStatus = Localize("Все изменения сохранены");
+                        EnvironmentSaveStatus = Texts.AllChangesSaved;
                     }
 
                     if (showNotification)
                     {
                         PublishNotification(
-                            Localize("Формат и переменные окружения сохранены"),
+                            Texts.EnvironmentFormatVariablesSaved,
                             isError: false);
                     }
 
@@ -185,7 +186,7 @@ namespace KK.Var.ViewModels
             HasUnsavedEnvironmentChanges = true;
             InvalidationRequested?.Invoke(SelectedProject?.Id);
             _environmentChangeVersion++;
-            EnvironmentSaveStatus = Localize("Есть несохранённые изменения");
+            EnvironmentSaveStatus = Texts.ThereUnsavedChanges;
             _environmentAutoSaveCancellation?.Cancel();
             _environmentAutoSaveCancellation?.Dispose();
             _environmentAutoSaveCancellation = new CancellationTokenSource();
@@ -200,7 +201,7 @@ namespace KK.Var.ViewModels
 
                 if (EnvironmentVariables.Any(item => string.IsNullOrWhiteSpace(item.Name)))
                 {
-                    EnvironmentSaveStatus = Localize("Заполните имя каждой переменной");
+                    EnvironmentSaveStatus = Texts.EnterNameEveryVariable;
                     return;
                 }
 
@@ -268,8 +269,8 @@ namespace KK.Var.ViewModels
         public override void RefreshLocalization()
         {
             EnvironmentSaveStatus = HasUnsavedEnvironmentChanges ?
-                Localize("Есть несохранённые изменения") :
-                Localize("Все изменения сохранены");
+                Texts.ThereUnsavedChanges :
+                Texts.AllChangesSaved;
             base.RefreshLocalization();
         }
 
@@ -315,7 +316,7 @@ namespace KK.Var.ViewModels
 
             HasUnsavedEnvironmentChanges = false;
             _environmentChangeVersion++;
-            EnvironmentSaveStatus = Localize("Все изменения сохранены");
+            EnvironmentSaveStatus = Texts.AllChangesSaved;
             _isLoadingEnvironment = false;
         }
     }

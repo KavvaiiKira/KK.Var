@@ -8,6 +8,7 @@ using KK.Var.Enums;
 using KK.Var.Models;
 using Renci.SshNet;
 using static KK.Var.Services.RemoteShell;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
@@ -53,7 +54,7 @@ namespace KK.Var.Services.Implementations
             catch (Exception exception)
             {
                 log.WriteLine(localizationService.Format(
-                    "Не удалось удалить временные файлы удалённой операции: {0}",
+                    Texts.CouldNotRemoveTemporaryRemoteOperationFiles,
                     exception));
             }
         }
@@ -78,7 +79,7 @@ namespace KK.Var.Services.Implementations
             catch (Exception exception)
             {
                 log.WriteLine(localizationService.Format(
-                    "Не удалось удалить временные файлы завершённого Deploy: {0}",
+                    Texts.CouldNotRemoveTemporaryFilesCompletedDeploy,
                     exception));
             }
         }
@@ -137,28 +138,25 @@ namespace KK.Var.Services.Implementations
 
                 progress?.Report(new DeploymentProgress(
                     0,
-                    localizationService.Get("Предыдущая версия восстановлена и запущена")));
+                    Texts.PreviousVersionRestoredStarted));
 
-                return localizationService.Get(
-                    "Предыдущая версия восстановлена и успешно запущена.");
+                return Texts.PreviousVersionRestoredStartedSuccessfully;
             }
 
             if (previousVersionExists)
             {
                 progress?.Report(new DeploymentProgress(
                     0,
-                    localizationService.Get("Предыдущая версия восстановлена без запуска сервиса")));
+                    Texts.PreviousVersionRestoredWithoutStartingService));
 
-                return localizationService.Get(
-                    "Предыдущая версия восстановлена, но прежний systemd unit отсутствовал.");
+                return Texts.PreviousVersionRestoredButSystemdUnitDid;
             }
 
             progress?.Report(new DeploymentProgress(
                 0,
-                localizationService.Get("Предыдущая версия отсутствует; новая версия удалена")));
+                Texts.NoPreviousVersionNewVersionRemoved));
 
-            return localizationService.Get(
-                "Предыдущая версия отсутствовала; новая версия остановлена и удалена.");
+            return Texts.ThereNoPreviousVersionNewVersionStopped;
         }
 
         private DeploymentRecoveryResult Recover(
@@ -197,8 +195,7 @@ namespace KK.Var.Services.Implementations
             catch (Renci.SshNet.Common.SshConnectionException) when (
                 hostKeyValidator.RequiresConfirmation)
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Ключ SSH-сервера не совпадает с подтверждённым отпечатком. Проверьте подключение в настройках."));
+                throw new InvalidOperationException(Texts.SSHServerKeyDoesNotMatchTrusted);
             }
 
             try

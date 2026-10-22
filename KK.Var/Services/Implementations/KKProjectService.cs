@@ -9,6 +9,7 @@ using KK.Var.Constants;
 using KK.Var.Enums;
 using KK.Var.Models;
 using KK.Var.Repositories;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
@@ -48,7 +49,7 @@ namespace KK.Var.Services.Implementations
             if (await repository.NameExistsAsync(project.Name, cancellationToken: cancellationToken))
             {
                 throw new InvalidOperationException(
-                    localizationService.Format("Проект с именем «{0}» уже существует.", project.Name));
+                    localizationService.Format(Texts.ProjectNamedAlreadyExists, project.Name));
             }
 
             if (await repository.ServiceNameExistsAsync(
@@ -57,7 +58,7 @@ namespace KK.Var.Services.Implementations
                 remoteMachineId: project.RemoteMachineId))
             {
                 throw new InvalidOperationException(
-                    localizationService.Format("Systemd-сервис «{0}» уже назначен другому проекту.", project.RemoteServiceName));
+                    localizationService.Format(Texts.SystemdServiceAlreadyAssignedAnotherProject, project.RemoteServiceName));
             }
 
             project.Id = project.Id == Guid.Empty ? Guid.NewGuid() : project.Id;
@@ -77,11 +78,11 @@ namespace KK.Var.Services.Implementations
 
             if (project.Id == Guid.Empty)
             {
-                throw new ArgumentException(localizationService.Get("Укажите идентификатор проекта."), nameof(project));
+                throw new ArgumentException(Texts.ProjectIdentifierRequired, nameof(project));
             }
 
             var existing = await repository.GetByIdAsync(project.Id, cancellationToken) ??
-                throw new KeyNotFoundException(localizationService.Format("Проект «{0}» не найден.", project.Id));
+                throw new KeyNotFoundException(localizationService.Format(Texts.ProjectNotFound2, project.Id));
 
             NormalizeAndValidate(project);
             await using var machineReservation = await machineService.ReserveAsync(
@@ -94,7 +95,7 @@ namespace KK.Var.Services.Implementations
                 cancellationToken))
             {
                 throw new InvalidOperationException(
-                    localizationService.Format("Проект с именем «{0}» уже существует.", project.Name));
+                    localizationService.Format(Texts.ProjectNamedAlreadyExists, project.Name));
             }
 
             if (await repository.ServiceNameExistsAsync(
@@ -104,7 +105,7 @@ namespace KK.Var.Services.Implementations
                 remoteMachineId: project.RemoteMachineId))
             {
                 throw new InvalidOperationException(
-                    localizationService.Format("Systemd-сервис «{0}» уже назначен другому проекту.", project.RemoteServiceName));
+                    localizationService.Format(Texts.SystemdServiceAlreadyAssignedAnotherProject, project.RemoteServiceName));
             }
 
             project.CreatedAtUtc = existing.CreatedAtUtc;
@@ -131,7 +132,7 @@ namespace KK.Var.Services.Implementations
             project.GitHubBranch = Optional(project.GitHubBranch, 255);
             if (project.GitHubBranch?.Any(char.IsControl) == true)
             {
-                throw new ArgumentException(localizationService.Get("Некорректное имя ветки GitHub."));
+                throw new ArgumentException(Texts.InvalidGitHubBranchName);
             }
             project.RemoteDeploymentDirectory = Required(
                 project.RemoteDeploymentDirectory,
@@ -161,7 +162,7 @@ namespace KK.Var.Services.Implementations
 
             if (!ServiceNamePattern.IsMatch(project.RemoteServiceName))
             {
-                throw new ArgumentException(localizationService.Get("Недопустимое имя systemd-сервиса."));
+                throw new ArgumentException(Texts.InvalidSystemdServiceName);
             }
 
             ValidateLinuxAbsolutePath(
@@ -177,7 +178,7 @@ namespace KK.Var.Services.Implementations
                 throw new ArgumentOutOfRangeException(
                     nameof(project.EnvironmentFileFormat),
                     project.EnvironmentFileFormat,
-                    localizationService.Get("Неподдерживаемый формат файла окружения."));
+                    Texts.UnsupportedEnvironmentFileFormat);
             }
 
             NormalizeAndValidateHealthCheck(project);
@@ -186,16 +187,14 @@ namespace KK.Var.Services.Implementations
             {
                 throw new ArgumentOutOfRangeException(
                     nameof(project.MaxStoredVersions),
-                    localizationService.Get(
-                                        "Максимальное количество версий должно быть от 1 до 10000."));
+                    Texts.MaximumVersionCountMustBetween110000);
             }
 
             if (project.MaxStoredVersionBytes is <= 0)
             {
                 throw new ArgumentOutOfRangeException(
                     nameof(project.MaxStoredVersionBytes),
-                    localizationService.Get(
-                                        "Лимит размера должен быть больше нуля."));
+                    Texts.SizeLimitMustGreaterThanZero);
             }
 
             project.BuildConfigurationJson =
@@ -215,19 +214,19 @@ namespace KK.Var.Services.Implementations
                 buildConfiguration.BuildArguments.Any(string.IsNullOrWhiteSpace) ||
                 buildConfiguration.Environment.Keys.Any(string.IsNullOrWhiteSpace))
             {
-                throw new ArgumentException(localizationService.Get("Аргументы сборки и имена переменных окружения не должны быть пустыми."));
+                throw new ArgumentException(Texts.BuildArgumentsEnvironmentVariableNamesMustNot);
             }
 
             if (project.BuildProvider == ProjectBuildProvider.Custom &&
                 string.IsNullOrWhiteSpace(buildConfiguration.Command))
             {
-                throw new ArgumentException(localizationService.Get("Укажите команду пользовательской сборки."));
+                throw new ArgumentException(Texts.SpecifyCustomBuildCommand);
             }
 
             if (project.BuildProvider == ProjectBuildProvider.Cpp &&
                 string.IsNullOrWhiteSpace(buildConfiguration.ToolchainFile))
             {
-                throw new ArgumentException(localizationService.Get("Укажите toolchainFile для сборки C++ под Linux."));
+                throw new ArgumentException(Texts.EnterToolchainFileCLinuxBuild);
             }
 
             switch (project.SourceType)
@@ -235,7 +234,7 @@ namespace KK.Var.Services.Implementations
                 case ProjectSourceType.LocalDirectory:
                     if (project.LocalDirectoryPath is null)
                     {
-                        throw new ArgumentException(localizationService.Get("Укажите путь к локальному каталогу."));
+                        throw new ArgumentException(Texts.LocalDirectoryPathRequired);
                     }
 
                     project.GitHubRepositoryId = null;
@@ -251,7 +250,7 @@ namespace KK.Var.Services.Implementations
                         project.GitHubCloneUrl is null)
                     {
                         throw new ArgumentException(
-                            localizationService.Get("Укажите идентификатор, полное имя и URL клонирования репозитория GitHub."));
+                            Texts.GitHubRepositoryIDFullNameCloneURL);
                     }
 
                     project.LocalDirectoryPath = null;
@@ -262,7 +261,7 @@ namespace KK.Var.Services.Implementations
                     throw new ArgumentOutOfRangeException(
                         nameof(project.SourceType),
                         project.SourceType,
-                        localizationService.Get("Неподдерживаемый тип источника проекта."));
+                        Texts.UnsupportedProjectSourceType);
             }
         }
 
@@ -273,7 +272,7 @@ namespace KK.Var.Services.Implementations
                 throw new ArgumentOutOfRangeException(
                     nameof(project.HealthCheckType),
                     project.HealthCheckType,
-                    localizationService.Get("Выбран неподдерживаемый тип health-check."));
+                    Texts.SelectedHealthCheckTypeNotSupported);
             }
 
             project.HealthCheckHttpUrl = Optional(project.HealthCheckHttpUrl, 2048);
@@ -290,8 +289,7 @@ namespace KK.Var.Services.Implementations
                         project.HealthCheckStabilityDelaySeconds,
                         1,
                         3600,
-                        localizationService.Get(
-                                                "Задержка стабильности должна быть от 1 до 3600 секунд."));
+                        Texts.StabilityDelayMustBetween13600Seconds);
                     project.HealthCheckTimeoutSeconds = null;
                     project.HealthCheckIntervalSeconds = null;
                     project.HealthCheckAttempts = null;
@@ -308,8 +306,7 @@ namespace KK.Var.Services.Implementations
                         (!string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) &&
                             !string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)))
                     {
-                        throw new ArgumentException(localizationService.Get(
-                            "Укажите абсолютный HTTP- или HTTPS-адрес health-check."));
+                        throw new ArgumentException(Texts.EnterAbsoluteHTTPHTTPSHealthCheckAddress);
                     }
 
                     project.HealthCheckStabilityDelaySeconds = null;
@@ -323,7 +320,7 @@ namespace KK.Var.Services.Implementations
                         project.HealthCheckTcpPort,
                         1,
                         65535,
-                        localizationService.Get("TCP-порт должен быть от 1 до 65535."));
+                        Texts.TCPPortMustBetween165535);
                     project.HealthCheckStabilityDelaySeconds = null;
                     project.HealthCheckHttpUrl = null;
                     project.HealthCheckCommand = null;
@@ -334,8 +331,7 @@ namespace KK.Var.Services.Implementations
 
                     if (project.HealthCheckCommand is null)
                     {
-                        throw new ArgumentException(localizationService.Get(
-                            "Укажите команду health-check."));
+                        throw new ArgumentException(Texts.EnterHealthCheckCommand);
                     }
 
                     project.HealthCheckStabilityDelaySeconds = null;
@@ -354,17 +350,17 @@ namespace KK.Var.Services.Implementations
                 project.HealthCheckTimeoutSeconds,
                 1,
                 3600,
-                localizationService.Get("Timeout health-check должен быть от 1 до 3600 секунд."));
+                Texts.HealthCheckTimeoutMustBetween13600);
             ValidateRange(
                 project.HealthCheckIntervalSeconds,
                 1,
                 3600,
-                localizationService.Get("Интервал health-check должен быть от 1 до 3600 секунд."));
+                Texts.HealthCheckIntervalMustBetween13600);
             ValidateRange(
                 project.HealthCheckAttempts,
                 1,
                 100,
-                localizationService.Get("Количество попыток health-check должно быть от 1 до 100."));
+                Texts.NumberHealthCheckAttemptsMustBetween1);
         }
 
         private static void ClearHealthCheckSettings(KKProject project)
@@ -396,13 +392,13 @@ namespace KK.Var.Services.Implementations
 
             if (string.IsNullOrEmpty(normalized))
             {
-                throw new ArgumentException(localizationService.Get("Укажите значение."), parameterName);
+                throw new ArgumentException(Texts.ValueRequired, parameterName);
             }
 
             if (normalized.Length > maxLength)
             {
                 throw new ArgumentException(
-                    localizationService.Format("Значение не может превышать {0} символов.", maxLength),
+                    localizationService.Format(Texts.ValueCannotExceedCharacters, maxLength),
                     parameterName);
             }
 
@@ -414,7 +410,7 @@ namespace KK.Var.Services.Implementations
             var normalized = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
             return normalized?.Length > maxLength ?
-                throw new ArgumentException(localizationService.Format("Значение не может превышать {0} символов.", maxLength)) :
+                throw new ArgumentException(localizationService.Format(Texts.ValueCannotExceedCharacters, maxLength)) :
                 normalized;
         }
 
@@ -422,36 +418,31 @@ namespace KK.Var.Services.Implementations
         {
             if (!path.StartsWith("/", StringComparison.Ordinal) || path.IndexOf('\0') >= 0)
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Укажите абсолютный Linux-путь к отдельной директории приложения."));
+                throw new InvalidOperationException(Texts.EnterAbsoluteLinuxPathDedicatedApplicationDirectory);
             }
 
             var segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
             if (segments.Length < 2)
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Нельзя разворачивать проект в корневую директорию Linux. Укажите отдельную директорию приложения, например /opt/my-app."));
+                throw new InvalidOperationException(Texts.LinuxRootDirectoryCannotUsedDeploymentEnter);
             }
 
             if (segments[0].Equals(RemotePaths.HomeDirectoryName, StringComparison.OrdinalIgnoreCase) &&
                 segments.Length < 3)
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Нельзя разворачивать проект прямо в домашнюю директорию пользователя. Укажите вложенную директорию приложения."));
+                throw new InvalidOperationException(Texts.ProjectCannotDeployedDirectlyIntoUserS);
             }
 
             if (RemotePaths.IsProtectedDirectory(path))
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Нельзя разворачивать проект в защищённую системную директорию Linux. Выберите отдельную директорию приложения."));
+                throw new InvalidOperationException(Texts.ProjectCannotDeployedIntoProtectedLinuxSystem);
             }
 
             foreach (var segment in segments)
             {
                 if (segment is "." or "..")
                 {
-                    throw new InvalidOperationException(localizationService.Get(
-                        "Путь развёртывания не может содержать сегменты . или ..."));
+                    throw new InvalidOperationException(Texts.DeploymentPathCannotContainSegments);
                 }
             }
         }
@@ -466,7 +457,7 @@ namespace KK.Var.Services.Implementations
                 normalized.IndexOf('\0') >= 0)
             {
                 throw new ArgumentException(
-                    localizationService.Get("Укажите относительный путь к файлу внутри проекта."),
+                    Texts.RelativePathFileInsideProjectRequired,
                     parameterName);
             }
 
@@ -475,7 +466,7 @@ namespace KK.Var.Services.Implementations
                 if (string.IsNullOrWhiteSpace(segment) || segment is "." or "..")
                 {
                     throw new ArgumentException(
-                        localizationService.Get("Путь к файлу проекта содержит недопустимый сегмент."),
+                        Texts.ProjectFilePathContainsInvalidSegment,
                         parameterName);
                 }
             }

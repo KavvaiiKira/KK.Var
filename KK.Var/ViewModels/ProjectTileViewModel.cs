@@ -1,18 +1,15 @@
 using System.Linq;
 using KK.Var.Enums;
 using KK.Var.Models;
-using KK.Var.Services;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.ViewModels
 {
-    public sealed class ProjectTileViewModel
+    public sealed class ProjectTileViewModel : ViewModelBase
     {
-        public ProjectTileViewModel(
-            KKProject project,
-            ILocalizationService? localizationService = null)
+        public ProjectTileViewModel(KKProject project)
         {
             Project = project;
-            _localizationService = localizationService;
         }
 
         private ProjectTileViewModel()
@@ -21,8 +18,6 @@ namespace KK.Var.ViewModels
 
         public KKProject? Project { get; }
 
-        private readonly ILocalizationService? _localizationService;
-
         public bool IsProject => Project is not null;
 
         public bool IsAddTile => Project is null;
@@ -30,7 +25,7 @@ namespace KK.Var.ViewModels
         public string SourceDisplay =>
             Project?.SourceType == ProjectSourceType.GitHubRepository ?
                 $"GitHub · {Project.GitHubRepositoryFullName}" :
-                $"{Localize("Локальная папка")} · {Project?.LocalDirectoryPath}";
+                $"{Texts.LocalFolder} · {Project?.LocalDirectoryPath}";
 
         public string LastDeploymentDisplay
         {
@@ -38,16 +33,21 @@ namespace KK.Var.ViewModels
             {
                 var deployment = Project?.Deployments.MaxBy(item => item.StartedAtUtc);
                 return deployment is null ?
-                    Localize("Не выполнялся") :
+                    Texts.Never :
                     deployment.StartedAtUtc.ToLocalTime().ToString("g");
             }
         }
 
         public string LatestVersionTag =>
-            Project?.Versions.MaxBy(version => version.CreatedAtUtc)?.Tag ?? Localize("Нет версий");
+            Project?.Versions.MaxBy(version => version.CreatedAtUtc)?.Tag ?? Texts.NoVersions;
 
         public static ProjectTileViewModel AddTile { get; } = new ProjectTileViewModel();
 
-        private string Localize(string key) => _localizationService?.Get(key) ?? key;
+        public void RefreshLocalization()
+        {
+            OnPropertyChanged(nameof(SourceDisplay));
+            OnPropertyChanged(nameof(LastDeploymentDisplay));
+            OnPropertyChanged(nameof(LatestVersionTag));
+        }
     }
 }

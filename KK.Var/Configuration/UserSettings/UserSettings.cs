@@ -5,13 +5,9 @@ namespace KK.Var.Configuration
 {
     public sealed class UserSettings
     {
-        private const string SystemThemeName = "System";
-
         private const string RussianCultureCode = "ru";
 
         public bool IsFirstRunCompleted { get; set; }
-
-        public string Theme { get; set; } = SystemThemeName;
 
         public bool DeploymentNotificationsEnabled { get; set; } = true;
 

@@ -7,6 +7,7 @@ using KK.Var.Data;
 using KK.Var.Models;
 using KK.Var.Services;
 using Microsoft.EntityFrameworkCore;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Repositories.Implementations
 {
@@ -95,7 +96,7 @@ namespace KK.Var.Repositories.Implementations
 
             if (existing is null)
             {
-                throw new KeyNotFoundException(localizationService.Format("Проект «{0}» не найден.", project.Id));
+                throw new KeyNotFoundException(localizationService.Format(Texts.ProjectNotFound2, project.Id));
             }
 
             db.Entry(existing).CurrentValues.SetValues(project);

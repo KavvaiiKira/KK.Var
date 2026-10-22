@@ -2,10 +2,11 @@ using System;
 using System.IO;
 using KK.Var.Configuration;
 using KK.Var.Models;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
-    public sealed class RemoteDeploymentValidator(ILocalizationService localizationService) : IRemoteDeploymentValidator
+    public sealed class RemoteDeploymentValidator : IRemoteDeploymentValidator
     {
         public void Validate(
             RemoteMachineSettings settings,
@@ -15,7 +16,7 @@ namespace KK.Var.Services.Implementations
             if (!File.Exists(artifactPath))
             {
                 throw new FileNotFoundException(
-                    localizationService.Get("Локальный архив версии не найден."),
+                    Texts.LocalVersionArchiveNotFound,
                     artifactPath);
             }
 
@@ -29,8 +30,7 @@ namespace KK.Var.Services.Implementations
             if (string.IsNullOrWhiteSpace(settings.Host) ||
                 string.IsNullOrWhiteSpace(settings.UserName))
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Удалённая машина не настроена."));
+                throw new InvalidOperationException(Texts.RemoteMachineNotConfigured);
             }
 
             if (string.IsNullOrWhiteSpace(settings.HostKeyFingerprint) ||
@@ -40,8 +40,7 @@ namespace KK.Var.Services.Implementations
                     StringComparison.OrdinalIgnoreCase) ||
                 settings.HostKeyPort != settings.Port)
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Проверьте подключение и подтвердите отпечаток SSH-сервера."));
+                throw new InvalidOperationException(Texts.CheckConnectionConfirmSSHServerFingerprint);
             }
 
             RejectControlCharacters(project.RemoteServiceName);
@@ -55,7 +54,7 @@ namespace KK.Var.Services.Implementations
                 !Guid.TryParseExact(operationId, "N", out _))
             {
                 throw new ArgumentException(
-                    localizationService.Get("Недопустимый идентификатор операции развёртывания."),
+                    Texts.InvalidDeploymentOperationIdentifier,
                     nameof(operationId));
             }
         }
@@ -64,8 +63,7 @@ namespace KK.Var.Services.Implementations
         {
             if (value.IndexOfAny(['\r', '\n', '\0']) >= 0)
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Параметр содержит недопустимые символы."));
+                throw new InvalidOperationException(Texts.ParameterContainsInvalidCharacters);
             }
         }
     }

@@ -9,6 +9,7 @@ using KK.Var.Constants;
 using KK.Var.Enums;
 using KK.Var.Models;
 using KK.Var.Repositories;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
@@ -42,21 +43,21 @@ namespace KK.Var.Services.Implementations
 
             if (project is null)
             {
-                checks.Add(checkFactory.Error(PreflightCheckKeys.Project, "Проект не найден."));
+                checks.Add(checkFactory.Error(PreflightCheckKeys.Project, Texts.ProjectNotFound));
                 return new DeploymentPreflightResult(checks);
             }
 
             checks.Add(!currentOperationOwnsQueue &&
                        operationQueue.HasActiveOperation(project.Id) ?
-                checkFactory.Error(PreflightCheckKeys.Queue, "Для этого проекта уже есть активная операция.") :
-                checkFactory.Success(PreflightCheckKeys.Queue, "Для проекта нет конфликтующей операции."));
+                checkFactory.Error(PreflightCheckKeys.Queue, Texts.ProjectAlreadyActiveOperation) :
+                checkFactory.Success(PreflightCheckKeys.Queue, Texts.NoConflictingOperationProject));
 
             var tag = request.VersionTag?.Trim() ?? string.Empty;
             if (!VersionTagPattern.IsMatch(tag))
             {
                 checks.Add(checkFactory.Error(
                     PreflightCheckKeys.Version,
-                    "Тег версии может содержать только латинские буквы, цифры, точку, дефис и подчёркивание.") with
+                    Texts.VersionTagMayContainOnlyLatinLetters) with
                 {
                     VersionError = string.IsNullOrWhiteSpace(tag) ? VersionTagError.Required : VersionTagError.InvalidFormat,
                 });
@@ -66,12 +67,12 @@ namespace KK.Var.Services.Implementations
                 checks.Add(new DeploymentPreflightCheck(
                     PreflightCheckKeys.Version,
                     PreflightStatus.Error,
-                    localizationService.Format("Версия «{0}» уже существует.", tag),
+                    localizationService.Format(Texts.VersionAlreadyExists, tag),
                     VersionError: VersionTagError.AlreadyExists));
             }
             else
             {
-                checks.Add(checkFactory.Success(PreflightCheckKeys.Version, "Тег новой версии доступен."));
+                checks.Add(checkFactory.Success(PreflightCheckKeys.Version, Texts.NewVersionTagAvailable));
             }
 
             RemoteMachineSettings connection;
@@ -97,7 +98,7 @@ namespace KK.Var.Services.Implementations
                 }
                 checks.Add(checkFactory.Error(
                     PreflightCheckKeys.Machine,
-                    "Профиль машины должен быть проверен и не архивирован.",
+                    Texts.MachineProfileMustVerifiedNotArchived,
                     exception.Message));
                 return new DeploymentPreflightResult(checks);
             }
@@ -108,13 +109,13 @@ namespace KK.Var.Services.Implementations
             try
             {
                 _ = await environmentService.GenerateAsync(project.Id, cancellationToken);
-                checks.Add(checkFactory.Success(PreflightCheckKeys.Environment, "Файл переменных можно сформировать."));
+                checks.Add(checkFactory.Success(PreflightCheckKeys.Environment, Texts.EnvironmentFileCanGenerated));
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
                 checks.Add(checkFactory.Error(
                     PreflightCheckKeys.Environment,
-                    "Файл переменных некорректен.",
+                    Texts.EnvironmentFileInvalid,
                     exception.Message));
             }
 
@@ -123,7 +124,7 @@ namespace KK.Var.Services.Implementations
             {
                 checks.Add(checkFactory.Warning(
                     PreflightCheckKeys.SpaceEstimate,
-                    "Итоговый размер сборки неизвестен; проверен минимальный запас места."));
+                    Texts.FinalBuildSizeUnknownMinimumFreeSpace));
             }
 
             storageChecks.CheckRemotePath(project, checks);

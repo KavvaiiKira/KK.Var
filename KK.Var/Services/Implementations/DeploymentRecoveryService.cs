@@ -8,6 +8,7 @@ using KK.Var.Data;
 using KK.Var.Enums;
 using KK.Var.Models;
 using KK.Var.Repositories;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
@@ -17,8 +18,7 @@ namespace KK.Var.Services.Implementations
         IDeploymentJournal journal,
         IRemoteDeploymentService remoteDeploymentService,
         IDeploymentOperationQueue operationQueue,
-        IRemoteMachineService machineService,
-        ILocalizationService localizationService) : IDeploymentRecoveryService
+        IRemoteMachineService machineService) : IDeploymentRecoveryService
     {
         public async Task<int> RecoverInterruptedAsync(
             CancellationToken cancellationToken = default)
@@ -39,7 +39,7 @@ namespace KK.Var.Services.Implementations
                 var machine = await machineService.GetAsync(deployment.RemoteMachineId, cancellationToken);
                 if (machine.ServerGeneration != deployment.RemoteServerGeneration)
                 {
-                    throw new InvalidOperationException(localizationService.Get("Состояние прежнего сервера неизвестно. Recovery остановлен."));
+                    throw new InvalidOperationException(Texts.PreviousServerSStateUnknownRecoveryStopped);
                 }
                 var connection = await machineService.GetConnectionAsync(
                     deployment.RemoteMachineId,
@@ -47,7 +47,7 @@ namespace KK.Var.Services.Implementations
                 deployment.Project = await projectRepository.GetByIdAsync(
                     deployment.KKProjectId,
                     cancellationToken) ??
-                    throw new KeyNotFoundException(localizationService.Get("Проект не найден."));
+                    throw new KeyNotFoundException(Texts.ProjectNotFound);
                 deployment.Project.RemoteDeploymentDirectory = deployment.RemoteDirectorySnapshot;
                 deployment.Project.RemoteServiceName = deployment.RemoteServiceNameSnapshot;
                 deployment.Project.RemoteExecutableFileName = deployment.RemoteExecutableSnapshot;
@@ -101,11 +101,10 @@ namespace KK.Var.Services.Implementations
             var message = result.Outcome switch
             {
                 DeploymentRecoveryOutcome.NewVersionActive =>
-                    localizationService.Get("Прерванный Deploy завершён: новая версия работает."),
+                    Texts.InterruptedDeployCompletedNewVersionRunning,
                 DeploymentRecoveryOutcome.PreviousVersionRestored =>
-                    localizationService.Get("Прерванный Deploy восстановлен: возвращена предыдущая версия."),
-                _ => localizationService.Get(
-                    "Прерванный Deploy остановлен до переключения версии."),
+                    Texts.InterruptedDeployRecoveredPreviousVersionRestored,
+                _ => Texts.InterruptedDeployStoppedVersionSwitch,
             };
 
             await journal.CompleteAsync(

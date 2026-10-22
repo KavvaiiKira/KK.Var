@@ -8,6 +8,7 @@ using KK.Var.Enums;
 using KK.Var.Models;
 using KK.Var.Services;
 using Microsoft.EntityFrameworkCore;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Repositories.Implementations
 {
@@ -154,7 +155,7 @@ namespace KK.Var.Repositories.Implementations
 
             if (existing is null)
             {
-                throw new KeyNotFoundException(localizationService.Format("Операция развёртывания «{0}» не найдена.", deployment.Id));
+                throw new KeyNotFoundException(localizationService.Format(Texts.DeploymentNotFound, deployment.Id));
             }
 
             db.Entry(existing).CurrentValues.SetValues(deployment);

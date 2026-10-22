@@ -8,6 +8,7 @@ using KK.Var.Constants;
 using KK.Var.Enums;
 using KK.Var.Models;
 using KK.Var.Services;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.ViewModels
 {
@@ -102,8 +103,7 @@ namespace KK.Var.ViewModels
                 BuildWorkingDirectory = _buildConfiguration.WorkingDirectory ?? ".";
                 BuildConfiguration = _buildConfiguration.Configuration ?? BuildConstants.ReleaseConfiguration;
                 DotNetProjectPath = _buildConfiguration.DotNetProjectPath ?? string.Empty;
-                CgoEnabled = _buildConfiguration.CgoEnabled ??
-                    _buildConfiguration.Environment?.GetValueOrDefault(BuildConstants.CgoEnabledVariable) == "1";
+                CgoEnabled = _buildConfiguration.CgoEnabled;
                 PythonDependencyFilePath = _buildConfiguration.PythonDependencyFilePath ?? string.Empty;
                 CmakeGenerator = _buildConfiguration.CmakeGenerator ?? BuildConstants.NinjaGenerator;
                 ToolchainFile = _buildConfiguration.ToolchainFile ?? string.Empty;
@@ -124,7 +124,7 @@ namespace KK.Var.ViewModels
             }
             catch (JsonException)
             {
-                _buildEditorError = Localize("Параметры сборки содержат некорректный JSON.");
+                _buildEditorError = Texts.BuildParametersContainInvalidJSON;
                 _buildLoadFailed = true;
             }
             finally
@@ -158,7 +158,7 @@ namespace KK.Var.ViewModels
                             name,
                             separator < 0 ? null : DecodeBuildValue(line[(separator + 1)..])))
                     {
-                        throw new InvalidDataException(Localize("Проверьте имена переменных сборки: пустые и повторяющиеся имена недопустимы."));
+                        throw new InvalidDataException(Texts.CheckBuildEnvironmentNamesEmptyDuplicateNames);
                     }
                 }
 

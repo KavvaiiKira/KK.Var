@@ -5,6 +5,7 @@ using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using KK.Var.Models;
 using KK.Var.ViewModels;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Views
 {
@@ -48,7 +49,7 @@ namespace KK.Var.Views
             {
                 var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
                 {
-                    Title = viewModel.Localize("Импорт конфигурации проекта"),
+                    Title = viewModel.Localize(Texts.ImportProjectConfiguration),
                     AllowMultiple = false,
                     FileTypeFilter = [FilePickerFileTypes.Json],
                 });
@@ -143,9 +144,9 @@ namespace KK.Var.Views
             _projectPendingDelete = project;
             DeleteProjectMessage.Text = DataContext is MainViewModel viewModel ?
                 viewModel.LocalizeFormat(
-                    "Проект «{0}» и все его локальные архивы будут удалены без возможности отмены.",
+                    Texts.ProjectAllLocalArchivesPermanentlyDeleted,
                     project.Name) :
-                    $"Проект «{project.Name}» и все его локальные архивы будут удалены без возможности отмены.";
+                    string.Format(Texts.ProjectAllLocalArchivesPermanentlyDeleted, project.Name);
             DeleteProjectConfirmation.IsVisible = true;
         }
 

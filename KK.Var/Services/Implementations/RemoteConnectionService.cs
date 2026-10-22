@@ -11,6 +11,7 @@ using KK.Var.Enums;
 using KK.Var.Models;
 using Renci.SshNet;
 using Renci.SshNet.Common;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
@@ -64,7 +65,7 @@ namespace KK.Var.Services.Implementations
                 checks.Add(new DeploymentPreflightCheck(
                     PreflightCheckKeys.Ssh,
                     PreflightStatus.Error,
-                    localizationService.Get("Подтвердите отпечаток SSH-сервера в настройках.")));
+                    Texts.ConfirmSSHHostFingerprintSettings));
                 return checks;
             }
 
@@ -80,7 +81,7 @@ namespace KK.Var.Services.Implementations
                 checks.Add(new DeploymentPreflightCheck(
                     PreflightCheckKeys.Ssh,
                     PreflightStatus.Success,
-                    localizationService.Get("SSH-подключение и отпечаток подтверждены.")));
+                    Texts.SSHConnectionHostFingerprintVerified));
 
                 var architecture = Run(client, RemoteCommands.Architecture);
                 checks.Add(new DeploymentPreflightCheck(
@@ -97,8 +98,8 @@ namespace KK.Var.Services.Implementations
                             ArchitectureCompatibility.Normalize(architecture.Result),
                             ArchitectureCompatibility.Normalize(settings.Architecture),
                             StringComparison.OrdinalIgnoreCase) ?
-                        "Архитектура удалённой машины проверена." :
-                        "Архитектура удалённой машины не совпадает с настройками."),
+                        Texts.RemoteArchitectureChecked :
+                        Texts.RemoteArchitectureDoesNotMatchSettings),
                     architecture.Result.Trim()));
 
                 cancellationToken.ThrowIfCancellationRequested();
@@ -107,8 +108,8 @@ namespace KK.Var.Services.Implementations
                     PreflightCheckKeys.Sudo,
                     sudo.ExitStatus == 0 ? PreflightStatus.Success : PreflightStatus.Error,
                     localizationService.Get(sudo.ExitStatus == 0 ?
-                        "sudo без запроса пароля проверен." :
-                        "sudo без запроса пароля недоступен."),
+                        Texts.NonInteractiveSudoChecked :
+                        Texts.NonInteractiveSudoUnavailable),
                     sudo.ExitStatus == 0 ? null : sudo.Error.Trim()));
 
                 cancellationToken.ThrowIfCancellationRequested();
@@ -119,8 +120,8 @@ namespace KK.Var.Services.Implementations
                     PreflightCheckKeys.Systemd,
                     systemd.ExitStatus == 0 ? PreflightStatus.Success : PreflightStatus.Error,
                     localizationService.Get(systemd.ExitStatus == 0 ?
-                        "systemd и tar доступны." :
-                        "systemd или tar недоступны."),
+                        Texts.SystemdTarAvailable :
+                        Texts.SystemdTarUnavailable),
                     systemd.ExitStatus == 0 ? null : systemd.Error.Trim()));
 
                 if (requiresPython)
@@ -130,8 +131,8 @@ namespace KK.Var.Services.Implementations
                         PreflightCheckKeys.Python,
                         python.ExitStatus == 0 ? PreflightStatus.Success : PreflightStatus.Error,
                         localizationService.Get(python.ExitStatus == 0 ?
-                            "Python 3 доступен на удалённой машине." :
-                            "Python 3 недоступен на удалённой машине."),
+                            Texts.Python3AvailableRemoteMachine :
+                            Texts.Python3UnavailableRemoteMachine),
                         python.ExitStatus == 0 ? null : python.Error.Trim()));
                 }
 
@@ -157,11 +158,11 @@ namespace KK.Var.Services.Implementations
                             PreflightStatus.Error,
                         localizationService.Get(disk.ExitStatus == 0 &&
                             available >= minimumFreeBytes ?
-                            "Свободное место на удалённой машине проверено." :
-                            "На удалённой машине недостаточно свободного места."),
+                            Texts.RemoteFreeSpaceChecked :
+                            Texts.RemoteMachineDoesNotEnoughFreeSpace),
                         available < 0 ? disk.Error.Trim() :
                             localizationService.Format(
-                                "Доступно байт: {0}; требуется минимум: {1}.",
+                                Texts.AvailableBytesMinimumRequired,
                                 available,
                                 minimumFreeBytes)));
                 }
@@ -177,7 +178,7 @@ namespace KK.Var.Services.Implementations
                 checks.Add(new DeploymentPreflightCheck(
                     PreflightCheckKeys.Ssh,
                     PreflightStatus.Error,
-                    localizationService.Get("Не удалось проверить удалённую машину."),
+                    Texts.RemoteMachineCouldNotChecked,
                     exception.Message));
             }
 
@@ -213,8 +214,7 @@ namespace KK.Var.Services.Implementations
 
                 if (command.ExitStatus != 0 || string.IsNullOrWhiteSpace(architecture))
                 {
-                    return RemoteConnectionCheckResult.Failure(localizationService.Get(
-                        "SSH подключён, но определить архитектуру машины не удалось."));
+                    return RemoteConnectionCheckResult.Failure(Texts.SSHConnectedButMachineArchitectureCouldNot);
                 }
 
                 client.Disconnect();
@@ -230,38 +230,35 @@ namespace KK.Var.Services.Implementations
             }
             catch (SshAuthenticationException)
             {
-                return RemoteConnectionCheckResult.Failure(localizationService.Get(
-                    "SSH-сервер отклонил указанные данные для входа."));
+                return RemoteConnectionCheckResult.Failure(Texts.SSHServerRejectedSuppliedCredentials);
             }
             catch (SshConnectionException exception)
             {
                 return RemoteConnectionCheckResult.Failure(
                     localizationService.Format(
-                        "Не удалось установить SSH-соединение: {0}",
+                        Texts.CouldNotEstablishSSHConnection,
                         exception.Message));
             }
             catch (SocketException exception)
             {
                 return RemoteConnectionCheckResult.Failure(
                     localizationService.Format(
-                        "Удалённая машина недоступна: {0}",
+                        Texts.RemoteMachineUnavailable,
                         exception.Message));
             }
             catch (FileNotFoundException)
             {
-                return RemoteConnectionCheckResult.Failure(localizationService.Get(
-                    "Файл приватного SSH-ключа не найден."));
+                return RemoteConnectionCheckResult.Failure(Texts.PrivateSSHKeyFileNotFound);
             }
             catch (UnauthorizedAccessException)
             {
-                return RemoteConnectionCheckResult.Failure(localizationService.Get(
-                    "Нет доступа к файлу приватного SSH-ключа."));
+                return RemoteConnectionCheckResult.Failure(Texts.PrivateSSHKeyFileCannotAccessed);
             }
             catch (Exception exception)
             {
                 return RemoteConnectionCheckResult.Failure(
                     localizationService.Format(
-                        "Проверка подключения завершилась ошибкой: {0}",
+                        Texts.ConnectionCheckFailed,
                         exception.Message));
             }
         }

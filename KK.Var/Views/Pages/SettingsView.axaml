@@ -52,11 +52,11 @@
               Margin="30,26,30,18"
               ColumnDefinitions="*,Auto">
             <StackPanel Spacing="5">
-                <TextBlock Text="{DynamicResource 'Настройки'}"
+                <TextBlock Text="{DynamicResource Settings_Title}"
                            FontSize="30"
                            FontWeight="Bold"
                            Foreground="{DynamicResource AppTextBrush}" />
-                <TextBlock Text="{DynamicResource 'GitHub, локальные версии и подключение к Linux-машине'}"
+                <TextBlock Text="{DynamicResource GitHubLocalVersionsLinuxMachineConnection}"
                            FontSize="13"
                            Foreground="{DynamicResource AppTextMutedBrush}" />
             </StackPanel>
@@ -77,35 +77,35 @@
                         BorderThickness="1"
                         CornerRadius="14">
                     <StackPanel Spacing="20">
-                        <TextBlock Text="{DynamicResource 'Профили удалённых машин'}" FontSize="19" FontWeight="Bold" />
+                        <TextBlock Text="{DynamicResource Machines_Title}" FontSize="19" FontWeight="Bold" />
                         <ComboBox Classes="settings-field" IsVisible="{Binding !!MachineEditor.MachineProfiles.Count}" ItemsSource="{Binding MachineEditor.MachineProfiles}" SelectedItem="{Binding MachineEditor.SelectedMachineProfile}"
                                   IsEnabled="{Binding !MachineEditor.IsConnectionCheckRunning}" HorizontalAlignment="Stretch">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate x:DataType="models:RemoteMachine">
                                     <StackPanel Orientation="Horizontal" Spacing="10">
                                         <TextBlock Text="{Binding Name}" />
-                                        <TextBlock IsVisible="{Binding IsArchived}" Text="{DynamicResource 'Архив'}" />
+                                        <TextBlock IsVisible="{Binding IsArchived}" Text="{DynamicResource Archived}" />
                                     </StackPanel>
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
                         <WrapPanel ItemSpacing="10" LineSpacing="8">
-                            <Button Classes="settings-secondary" Content="{DynamicResource 'Добавить профиль'}" IsEnabled="{Binding !MachineEditor.IsConnectionCheckRunning}" Command="{Binding MachineEditor.AddMachineProfileCommand}" Click="AddMachineProfileButton_OnClick" />
+                            <Button Classes="settings-secondary" Content="{DynamicResource AddProfile}" IsEnabled="{Binding !MachineEditor.IsConnectionCheckRunning}" Command="{Binding MachineEditor.AddMachineProfileCommand}" Click="AddMachineProfileButton_OnClick" />
                             <Button Classes="settings-secondary" IsVisible="{Binding !!MachineEditor.SelectedMachineProfile}" Content="{Binding MachineEditor.ArchiveMachineCaption}" Command="{Binding MachineEditor.ArchiveMachineProfileCommand}" />
                         </WrapPanel>
                         <TextBlock IsVisible="{Binding MachineEditor.IsNewMachineProfile}"
-                                   Text="{DynamicResource 'Новый профиль'}" FontWeight="SemiBold"
+                                   Text="{DynamicResource NewProfile}" FontWeight="SemiBold"
                                    Foreground="{DynamicResource AppPrimaryHoverBrush}" />
-                        <TextBlock Text="{DynamicResource 'Укажите имя, заполните SSH-подключение ниже и нажмите «Проверить и сохранить профиль». При первом подключении сверьте и подтвердите fingerprint сервера.'}"
+                        <TextBlock Text="{DynamicResource EnterNameCompleteSSHConnectionBelowClick}"
                                    TextWrapping="Wrap" Foreground="{DynamicResource AppTextMutedBrush}" />
-                        <TextBlock Text="{DynamicResource 'Имя профиля машины'}" />
+                        <TextBlock Text="{DynamicResource MachineProfileName}" />
                         <TextBox x:Name="MachineProfileNameInput" Classes="settings-field" Text="{Binding MachineEditor.MachineProfileName, Mode=TwoWay}" IsEnabled="{Binding !MachineEditor.IsConnectionCheckRunning}" />
                         <Border Height="1" Background="{DynamicResource AppBorderBrush}" />
                         <StackPanel Spacing="5">
-                            <TextBlock Text="{DynamicResource 'Настройки подключения'}"
+                            <TextBlock Text="{DynamicResource ConnectionSettings}"
                                        FontSize="19"
                                        FontWeight="Bold" />
-                            <TextBlock Text="{DynamicResource 'Параметры выбранного профиля. Адрес сохраняется только после проверки и подтверждения.'}"
+                            <TextBlock Text="{DynamicResource SelectedProfileSettingsAddressSavedOnlyVerification}"
                                        FontSize="12"
                                            Foreground="{DynamicResource AppTextMutedBrush}" />
                         </StackPanel>
@@ -117,11 +117,11 @@
                                 BorderThickness="1"
                                 CornerRadius="10">
                             <StackPanel Spacing="4">
-                                <TextBlock Text="{DynamicResource 'Завершите обязательную настройку'}"
+                                <TextBlock Text="{DynamicResource CompleteRequiredSetup}"
                                            FontSize="13"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource AppDangerBrush}" />
-                                <TextBlock Text="{DynamicResource 'Заполните отмеченные поля подключения к удалённой машине и сохраните настройки.'}"
+                                <TextBlock Text="{DynamicResource CompleteRequiredRemoteConnectionFieldsSaveSettings}"
                                            FontSize="11"
                                            Foreground="{DynamicResource AppTextMutedBrush}" />
                             </StackPanel>
@@ -132,7 +132,7 @@
                         <Grid ColumnDefinitions="*,24,*" RowDefinitions="Auto,18,Auto,18,Auto" IsEnabled="{Binding !MachineEditor.IsConnectionCheckRunning}">
                             <StackPanel Grid.Row="0" Grid.Column="0" Spacing="7">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{DynamicResource 'Адрес или IP'}" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                    <TextBlock Text="{DynamicResource AddressIP}" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
                                     <TextBlock Text=" *" IsVisible="{Binding AppSettings.IsFirstRunSetupRequired}" FontSize="12" Foreground="{DynamicResource AppDangerBrush}" />
                                 </StackPanel>
                                 <TextBox Classes="settings-field"
@@ -142,7 +142,7 @@
 
                             <StackPanel Grid.Row="0" Grid.Column="2" Spacing="7">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{DynamicResource 'SSH-порт'}" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                    <TextBlock Text="{DynamicResource SSHPort}" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
                                     <TextBlock Text=" *" IsVisible="{Binding AppSettings.IsFirstRunSetupRequired}" FontSize="12" Foreground="{DynamicResource AppDangerBrush}" />
                                 </StackPanel>
                                 <TextBox Classes="settings-field"
@@ -152,7 +152,7 @@
 
                             <StackPanel Grid.Row="2" Grid.Column="0" Spacing="7">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{DynamicResource 'Пользователь'}" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                    <TextBlock Text="{DynamicResource User}" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
                                     <TextBlock Text=" *" IsVisible="{Binding AppSettings.IsFirstRunSetupRequired}" FontSize="12" Foreground="{DynamicResource AppDangerBrush}" />
                                 </StackPanel>
                                 <TextBox Classes="settings-field"
@@ -162,7 +162,7 @@
 
                             <StackPanel Grid.Row="2" Grid.Column="2" Spacing="7">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{DynamicResource 'Способ входа'}" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                    <TextBlock Text="{DynamicResource AuthenticationMethod}" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
                                     <TextBlock Text=" *" IsVisible="{Binding AppSettings.IsFirstRunSetupRequired}" FontSize="12" Foreground="{DynamicResource AppDangerBrush}" />
                                 </StackPanel>
                                 <ComboBox Classes="settings-field"
@@ -179,7 +179,7 @@
 
                             <StackPanel Grid.Row="4" Grid.Column="0" Spacing="7">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{DynamicResource 'Путь к приватному SSH-ключу'}" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                    <TextBlock Text="{DynamicResource PrivateSSHKeyPath}" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
                                     <TextBlock Text=" *" IsVisible="{Binding AppSettings.IsFirstRunSetupRequired}" FontSize="12" Foreground="{DynamicResource AppDangerBrush}" />
                                 </StackPanel>
                                 <TextBox Classes="settings-field"
@@ -190,7 +190,7 @@
 
                             <StackPanel Grid.Row="4" Grid.Column="2" Spacing="7">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{DynamicResource 'Пароль'}" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                    <TextBlock Text="{DynamicResource Password}" FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
                                     <TextBlock Text=" *" IsVisible="{Binding AppSettings.IsFirstRunSetupRequired}" FontSize="12" Foreground="{DynamicResource AppDangerBrush}" />
                                 </StackPanel>
                                 <TextBox Classes="settings-field"
@@ -208,7 +208,7 @@
                                             Margin="0,0,20,0"
                                             VerticalAlignment="Center"
                                             Spacing="5">
-                                    <TextBlock Text="{DynamicResource 'Архитектура удалённой машины'}"
+                                    <TextBlock Text="{DynamicResource RemoteMachineArchitecture}"
                                                FontSize="12"
                                                FontWeight="SemiBold" />
                                     <TextBlock Text="{Binding MachineEditor.RemoteMachineArchitecture}"
@@ -220,7 +220,7 @@
                                 <Button Grid.Column="1"
                                         VerticalAlignment="Center"
                                         Classes="settings-primary"
-                                        Content="{DynamicResource 'Проверить и сохранить профиль'}"
+                                        Content="{DynamicResource VerifySaveProfile}"
                                         IsEnabled="{Binding !MachineEditor.IsConnectionCheckRunning}"
                                         Command="{Binding CheckRemoteConnectionCommand}" />
                             </Grid>
@@ -234,10 +234,10 @@
                                 CornerRadius="10">
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="20">
                                 <StackPanel Spacing="5">
-                                    <TextBlock Text="{DynamicResource 'Подтвердите SSH-сервер'}"
+                                    <TextBlock Text="{DynamicResource ConfirmSSHServer}"
                                                FontSize="12"
                                                FontWeight="SemiBold" />
-                                    <TextBlock Text="{DynamicResource 'Сверьте отпечаток с данными администратора удалённой машины.'}"
+                                    <TextBlock Text="{DynamicResource CompareFingerprintRemoteMachineAdministratorSRecords}"
                                                FontSize="11"
                                                Foreground="{DynamicResource AppTextMutedBrush}" />
                                     <TextBlock Text="{Binding MachineEditor.MachineIdentityMessage}"
@@ -245,10 +245,10 @@
                                                FontFamily="Consolas"
                                                TextWrapping="Wrap" />
                                     <TextBlock IsVisible="{Binding MachineEditor.HasMachineIdentityWarning}"
-                                               Text="{DynamicResource 'Fingerprint отличается или ещё не подтверждён. Возможна переустановка, замена SSH-ключей или другой сервер.'}"
+                                               Text="{DynamicResource FingerprintDiffersNotConfirmedOSSSHKeys}"
                                                TextWrapping="Wrap" FontWeight="SemiBold" Foreground="{DynamicResource AppDangerBrush}" />
                                     <TextBlock IsVisible="{Binding MachineEditor.IsMachineFingerprintMatch}"
-                                               Text="{DynamicResource 'Fingerprint совпадает: это сильное подтверждение идентичности машины. Подтвердите выбор.'}"
+                                               Text="{DynamicResource FingerprintMatchesProvidingStrongEvidenceMachineIdentity}"
                                                TextWrapping="Wrap" Foreground="{DynamicResource AppSuccessBrush}" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="1"
@@ -257,26 +257,26 @@
                                             IsEnabled="{Binding !MachineEditor.IsConnectionCheckRunning}"
                                             Spacing="8">
                                     <Button Classes="settings-secondary"
-                                            Content="{DynamicResource 'Отмена'}"
+                                            Content="{DynamicResource Common_Cancel}"
                                             Command="{Binding CancelHostKeyConfirmationCommand}" />
                                     <Button Classes="settings-primary"
                                             Content="{Binding MachineEditor.ConfirmMachineIdentityCaption}"
                                             Command="{Binding ConfirmHostKeyCommand}" />
-                                    <Button Classes="settings-secondary" Content="{DynamicResource 'Нет, создать новую'}"
+                                    <Button Classes="settings-secondary" Content="{DynamicResource NoCreateNewMachine}"
                                             Command="{Binding MachineEditor.CreateNewMachineFromCandidateCommand}" />
                                 </StackPanel>
                             </Grid>
                         </Border>
                         <Border Height="1" Background="{DynamicResource AppBorderBrush}" />
                         <StackPanel Spacing="8">
-                            <TextBlock Text="{DynamicResource 'Проекты этого профиля'}"
+                            <TextBlock Text="{DynamicResource ProjectsUsingProfile}"
                                        FontSize="19"
                                        FontWeight="Bold" />
                             <TextBlock IsVisible="{Binding !!MachineEditor.MachineProjectsDisplay}"
                                        Text="{Binding MachineEditor.MachineProjectsDisplay}"
                                        TextWrapping="Wrap" />
                             <TextBlock IsVisible="{Binding !MachineEditor.MachineProjectsDisplay}"
-                                       Text="{DynamicResource 'К этому профилю пока не привязаны проекты.'}"
+                                       Text="{DynamicResource NoProjectsLinkedProfileYet}"
                                        TextWrapping="Wrap"
                                        Foreground="{DynamicResource AppTextMutedBrush}" />
                         </StackPanel>
@@ -293,7 +293,7 @@
                                 <TextBlock Text="GitHub"
                                            FontSize="19"
                                            FontWeight="Bold" />
-                                <TextBlock Text="{DynamicResource 'Доступ к списку ваших репозиториев через GitHub Device Flow'}"
+                                <TextBlock Text="{DynamicResource AccessRepositoryListThroughGitHubDeviceFlow}"
                                            FontSize="12"
                                            Foreground="{DynamicResource AppTextMutedBrush}" />
                             </StackPanel>
@@ -304,7 +304,7 @@
                                     Background="{DynamicResource AppSurfaceHoverBrush}"
                                     CornerRadius="12"
                                     VerticalAlignment="Top">
-                                <TextBlock Text="{DynamicResource 'Не подключён'}"
+                                <TextBlock Text="{DynamicResource NotConnected}"
                                            FontSize="11"
                                            Foreground="{DynamicResource AppTextMutedBrush}" />
                             </Border>
@@ -315,7 +315,7 @@
                                     Background="#223F2E"
                                     CornerRadius="12"
                                     VerticalAlignment="Top">
-                                <TextBlock Text="{DynamicResource 'Подключён'}"
+                                <TextBlock Text="{DynamicResource Connected}"
                                            FontSize="11"
                                            Foreground="{DynamicResource AppSuccessBrush}" />
                             </Border>
@@ -329,7 +329,7 @@
                         <Grid Grid.Row="2" ColumnDefinitions="*,Auto">
                             <StackPanel Spacing="4"
                                         VerticalAlignment="Center">
-                                <TextBlock Text="{DynamicResource 'Аккаунт'}"
+                                <TextBlock Text="{DynamicResource Account}"
                                            FontSize="11"
                                            Foreground="{DynamicResource AppTextMutedBrush}" />
                                 <TextBlock Text="{Binding GitHubAccount.GitHubAccountDisplay}"
@@ -340,7 +340,7 @@
                             <Button Grid.Column="1"
                                     IsVisible="{Binding !GitHubAccount.IsGitHubConnected}"
                                     Classes="settings-secondary"
-                                    Content="{DynamicResource 'Подключить GitHub'}"
+                                    Content="{DynamicResource ConnectGitHub}"
                                     Command="{Binding GitHubAccount.ConnectGitHubCommand}" />
 
                             <StackPanel Grid.Column="1"
@@ -349,7 +349,7 @@
                                         VerticalAlignment="Center"
                                         Spacing="8">
                                 <Button Classes="settings-secondary"
-                                        Content="{DynamicResource 'Отключить'}"
+                                        Content="{DynamicResource Disconnect}"
                                         Command="{Binding GitHubAccount.DisconnectGitHubCommand}" />
                             </StackPanel>
                         </Grid>
@@ -364,7 +364,7 @@
                                 CornerRadius="10">
                             <Grid ColumnDefinitions="*,Auto">
                                 <StackPanel Spacing="6">
-                                    <TextBlock Text="{DynamicResource 'Подтвердите вход в GitHub'}"
+                                    <TextBlock Text="{DynamicResource ConfirmSignGitHub}"
                                                FontSize="13"
                                                FontWeight="SemiBold" />
                                     <TextBlock Text="{Binding GitHubAccount.GitHubConnectionStatus}"
@@ -383,13 +383,13 @@
                                             Orientation="Horizontal"
                                             Spacing="8">
                                     <Button Classes="settings-secondary"
-                                            Content="{DynamicResource 'Копировать код'}"
+                                            Content="{DynamicResource CopyCode}"
                                             Click="CopyGitHubCodeButton_OnClick" />
                                     <Button Classes="settings-secondary"
-                                            Content="{DynamicResource 'Открыть GitHub'}"
+                                            Content="{DynamicResource OpenGitHub}"
                                             Command="{Binding GitHubAccount.OpenGitHubVerificationPageCommand}" />
                                     <Button Classes="settings-secondary"
-                                            Content="{DynamicResource 'Отмена'}"
+                                            Content="{DynamicResource Common_Cancel}"
                                             Command="{Binding GitHubAccount.CancelGitHubAuthorizationCommand}" />
                                 </StackPanel>
                             </Grid>
@@ -408,10 +408,10 @@
                 <Border Padding="24" Background="{DynamicResource AppSurfaceBrush}"
                         BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="14">
                     <StackPanel Spacing="8">
-                        <TextBlock Text="{DynamicResource 'Уведомления Windows'}" FontSize="19" FontWeight="Bold" />
-                        <CheckBox Content="{DynamicResource 'Уведомлять о завершении Deploy и rollback'}"
+                        <TextBlock Text="{DynamicResource WindowsNotifications}" FontSize="19" FontWeight="Bold" />
+                        <CheckBox Content="{DynamicResource NotifyWhenDeployRollbackFinish}"
                                   IsChecked="{Binding AppSettings.DeploymentNotificationsEnabled, Mode=TwoWay}" />
-                        <TextBlock Text="{DynamicResource 'Показывать краткий результат, когда окно свёрнуто или открыта другая страница. Настройка сохраняется сразу.'}"
+                        <TextBlock Text="{DynamicResource ShowShortResultWhenWindowMinimizedAnother}"
                                    TextWrapping="Wrap" Foreground="{DynamicResource AppTextMutedBrush}" />
                     </StackPanel>
                 </Border>
@@ -422,24 +422,24 @@
                         CornerRadius="14">
                     <StackPanel Spacing="16">
                         <StackPanel Spacing="5">
-                            <TextBlock Text="{DynamicResource 'Локальные версии'}"
+                            <TextBlock Text="{DynamicResource LocalVersions}"
                                        FontSize="19"
                                        FontWeight="Bold" />
-                            <TextBlock Text="{DynamicResource 'Каталог содержит архивы версий всех проектов.'}"
+                            <TextBlock Text="{DynamicResource DirectoryContainsVersionArchivesAllProjects}"
                                        FontSize="12"
                                        Foreground="{DynamicResource AppTextMutedBrush}" />
                         </StackPanel>
 
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
                             <StackPanel Spacing="5">
-                                <TextBlock Text="{DynamicResource 'Эффективный путь'}"
+                                <TextBlock Text="{DynamicResource EffectivePath}"
                                            FontSize="11"
                                            Foreground="{DynamicResource AppTextMutedBrush}" />
                                 <TextBlock Text="{Binding ArtifactStorage.ArtifactStorageEffectivePath}"
                                            FontFamily="Cascadia Mono, Consolas"
                                            TextWrapping="Wrap" />
                                 <TextBlock FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}">
-                                    <Run Text="{DynamicResource 'Занято архивами'}" />
+                                    <Run Text="{DynamicResource UsedArchives}" />
                                     <Run Text=": " />
                                     <Run Text="{Binding ArtifactStorage.ArtifactStorageUsedDisplay}" />
                                 </TextBlock>
@@ -451,11 +451,11 @@
                                         Spacing="8">
                                 <Button Classes="settings-secondary"
                                         IsEnabled="{Binding !ArtifactStorage.IsArtifactStorageBusy}"
-                                        Content="{DynamicResource 'Выбрать папку'}"
+                                        Content="{DynamicResource SelectFolder}"
                                         Click="SelectArtifactsDirectoryButton_OnClick" />
                                 <Button Classes="settings-secondary"
                                         IsEnabled="{Binding !ArtifactStorage.IsArtifactStorageBusy}"
-                                        Content="{DynamicResource 'По умолчанию'}"
+                                        Content="{DynamicResource Default}"
                                         Click="ResetArtifactsDirectoryButton_OnClick" />
                             </StackPanel>
                         </Grid>
@@ -468,7 +468,7 @@
                                 CornerRadius="10">
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
                                 <StackPanel Spacing="6">
-                                    <TextBlock Text="{DynamicResource 'План переноса архивов'}"
+                                    <TextBlock Text="{DynamicResource ArchiveMigrationPlan}"
                                                FontWeight="SemiBold" />
                                     <TextBlock Text="{Binding ArtifactStorage.PendingArtifactStorageMigration.SourceRoot, StringFormat='{}{0} →'}"
                                                FontFamily="Cascadia Mono, Consolas"
@@ -490,11 +490,11 @@
                                             Spacing="8">
                                     <Button Classes="settings-secondary"
                                             IsEnabled="{Binding !ArtifactStorage.IsArtifactStorageBusy}"
-                                            Content="{DynamicResource 'Отмена'}"
+                                            Content="{DynamicResource Common_Cancel}"
                                             Click="CancelArtifactMigrationButton_OnClick" />
                                     <Button Classes="settings-primary"
                                             IsEnabled="{Binding !ArtifactStorage.IsArtifactStorageBusy}"
-                                            Content="{DynamicResource 'Перенести'}"
+                                            Content="{DynamicResource Move}"
                                             Click="ApplyArtifactMigrationButton_OnClick" />
                                 </StackPanel>
                             </Grid>

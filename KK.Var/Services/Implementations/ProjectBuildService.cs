@@ -9,6 +9,7 @@ using KK.Var.Constants;
 using KK.Var.Enums;
 using KK.Var.Models;
 using static KK.Var.Services.SourceFiles;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
@@ -78,7 +79,7 @@ namespace KK.Var.Services.Implementations
                         {
                             [BuildConstants.GoOperatingSystemVariable] = BuildConstants.LinuxOperatingSystem,
                             [BuildConstants.GoArchitectureVariable] = goArch,
-                            [BuildConstants.CgoEnabledVariable] = configuration.CgoEnabled == true ? "1" : "0",
+                            [BuildConstants.CgoEnabledVariable] = configuration.CgoEnabled ? "1" : "0",
                         };
 
                         var goOutputPath = Path.Combine(
@@ -120,8 +121,7 @@ namespace KK.Var.Services.Implementations
                         if (string.IsNullOrWhiteSpace(configuredToolchain) ||
                             !File.Exists(toolchainFile))
                         {
-                            throw new FileNotFoundException(localizationService.Get(
-                                "Укажите существующий CMake toolchain-файл для сборки C++ под Linux."));
+                            throw new FileNotFoundException(Texts.SpecifyExistingCMakeToolchainFileCLinux);
                         }
 
                         var buildDirectory = Path.Combine(
@@ -179,8 +179,7 @@ namespace KK.Var.Services.Implementations
                     {
                         if (string.IsNullOrWhiteSpace(configuration.Command))
                         {
-                            throw new InvalidOperationException(localizationService.Get(
-                                "Укажите команду пользовательской сборки."));
+                            throw new InvalidOperationException(Texts.SpecifyCustomBuildCommand);
                         }
 
                         var runtime = MapLinuxRuntime(remoteArchitecture);
@@ -224,7 +223,7 @@ namespace KK.Var.Services.Implementations
             ArchitectureNames.X8664 or ArchitectureNames.Amd64 => ArchitectureNames.LinuxX64Runtime,
             ArchitectureNames.Aarch64 or ArchitectureNames.Arm64 => ArchitectureNames.LinuxArm64Runtime,
             _ => throw new NotSupportedException(localizationService.Format(
-                "Архитектура удалённой машины «{0}» пока не поддерживается для .NET.",
+                Texts.RemoteArchitectureNotCurrentlySupportedNET,
                 architecture)),
         };
 
@@ -233,7 +232,7 @@ namespace KK.Var.Services.Implementations
             ArchitectureNames.X8664 or ArchitectureNames.Amd64 => ArchitectureNames.Amd64,
             ArchitectureNames.Aarch64 or ArchitectureNames.Arm64 => ArchitectureNames.Arm64,
             _ => throw new NotSupportedException(localizationService.Format(
-                "Архитектура удалённой машины «{0}» пока не поддерживается для Go.",
+                Texts.RemoteArchitectureNotCurrentlySupportedGo,
                 architecture)),
         };
 
@@ -242,7 +241,7 @@ namespace KK.Var.Services.Implementations
             ArchitectureNames.X8664 or ArchitectureNames.Amd64 => ArchitectureNames.LinuxX64Runtime,
             ArchitectureNames.Aarch64 or ArchitectureNames.Arm64 => ArchitectureNames.LinuxArm64Runtime,
             _ => throw new NotSupportedException(localizationService.Format(
-                "Архитектура удалённой машины «{0}» пока не поддерживается.",
+                Texts.RemoteArchitectureNotCurrentlySupported,
                 architecture)),
         };
 
@@ -301,10 +300,8 @@ namespace KK.Var.Services.Implementations
             {
                 1 => matching[0].Path,
                 0 when projects.Length == 1 => projects[0].Path,
-                0 => throw new InvalidOperationException(localizationService.Get(
-                    "Не удалось однозначно выбрать исполняемый .csproj. Имя выходной сборки должно совпадать с исполняемым файлом проекта.")),
-                _ => throw new InvalidOperationException(localizationService.Get(
-                    "Найдено несколько исполняемых .csproj с одинаковым именем сборки.")),
+                0 => throw new InvalidOperationException(Texts.ExecutableCsprojCouldNotSelectedUnambiguouslyAssembly),
+                _ => throw new InvalidOperationException(Texts.MultipleExecutableCsprojFilesSameAssemblyName),
             };
         }
     }

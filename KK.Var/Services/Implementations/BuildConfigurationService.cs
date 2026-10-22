@@ -6,10 +6,11 @@ using System.Text.Json;
 using KK.Var.Constants;
 using KK.Var.Enums;
 using KK.Var.Models;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
-    public sealed class BuildConfigurationService(ILocalizationService localizationService) : IBuildConfigurationService
+    public sealed class BuildConfigurationService : IBuildConfigurationService
     {
         private const string ValidationSourceDirectoryName = "validation-source";
 
@@ -23,18 +24,18 @@ namespace KK.Var.Services.Implementations
             using var document = ReadDocument(json);
             if (document.RootElement.ValueKind != JsonValueKind.Object)
             {
-                throw new JsonException(localizationService.Get("Параметры сборки должны быть JSON-объектом."));
+                throw new JsonException(Texts.BuildParametersMustJSONObject);
             }
 
             try
             {
                 return document.RootElement.Deserialize<ProjectBuildConfiguration>(JsonOptions) ??
-                    throw new JsonException(localizationService.Get("Конфигурация сборки пуста."));
+                    throw new JsonException(Texts.BuildConfigurationEmpty);
             }
             catch (JsonException exception)
             {
                 throw new JsonException(
-                    localizationService.Get("Параметры сборки содержат некорректный JSON."),
+                    Texts.BuildParametersContainInvalidJSON,
                     exception);
             }
         }
@@ -48,7 +49,7 @@ namespace KK.Var.Services.Implementations
             catch (JsonException exception)
             {
                 throw new JsonException(
-                    localizationService.Get("Параметры сборки содержат некорректный JSON."),
+                    Texts.BuildParametersContainInvalidJSON,
                     exception);
             }
         }
@@ -74,7 +75,7 @@ namespace KK.Var.Services.Implementations
 
             if (Path.IsPathRooted(value) || value.Contains(':') || value.Any(char.IsControl))
             {
-                throw new InvalidDataException(localizationService.Get("Пути сборки должны оставаться внутри исходного каталога."));
+                throw new InvalidDataException(Texts.BuildPathsMustStayInsideSourceDirectory);
             }
 
             var rootPath = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar);
@@ -83,7 +84,7 @@ namespace KK.Var.Services.Implementations
                 rootPath + Path.DirectorySeparatorChar,
                 StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidDataException(localizationService.Get("Пути сборки должны оставаться внутри исходного каталога."));
+                throw new InvalidDataException(Texts.BuildPathsMustStayInsideSourceDirectory);
             }
 
             var current = path;
@@ -92,7 +93,7 @@ namespace KK.Var.Services.Implementations
                 if ((File.Exists(current) || Directory.Exists(current)) &&
                     (File.GetAttributes(current) & FileAttributes.ReparsePoint) != 0)
                 {
-                    throw new InvalidDataException(localizationService.Get("Пути сборки должны оставаться внутри исходного каталога."));
+                    throw new InvalidDataException(Texts.BuildPathsMustStayInsideSourceDirectory);
                 }
 
                 if (string.Equals(current, rootPath, StringComparison.OrdinalIgnoreCase))
@@ -130,7 +131,7 @@ namespace KK.Var.Services.Implementations
                                             .Replace(BuildConstants.RuntimePlaceholder, ArchitectureNames.LinuxX64Runtime));
                     if (sourceRoot is not null && !file.Contains('{') && !File.Exists(path))
                     {
-                        throw new InvalidDataException(localizationService.Get("Указанный файл сборки не найден."));
+                        throw new InvalidDataException(Texts.SpecifiedBuildFileNotFound);
                     }
                 }
             }
@@ -141,7 +142,7 @@ namespace KK.Var.Services.Implementations
                     Path.GetExtension(configuration.DotNetProjectPath),
                     StringComparer.OrdinalIgnoreCase))
             {
-                throw new InvalidDataException(localizationService.Get("Выберите файл .csproj, .sln или .slnx."));
+                throw new InvalidDataException(Texts.SelectCsprojSlnSlnxFile);
             }
 
             if (provider == ProjectBuildProvider.Python &&
@@ -151,22 +152,22 @@ namespace KK.Var.Services.Implementations
                     BuildConstants.PythonProjectFileName,
                     StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidDataException(localizationService.Get("Укажите requirements-файл .txt или pyproject.toml."));
+                throw new InvalidDataException(Texts.SpecifyRequirementsTxtFilePyprojectToml);
             }
 
             if (sourceRoot is not null && !Directory.Exists(working))
             {
-                throw new InvalidDataException(localizationService.Get("Рабочий каталог сборки не найден."));
+                throw new InvalidDataException(Texts.BuildWorkingDirectoryNotFound);
             }
 
             if (provider == ProjectBuildProvider.Custom && string.IsNullOrWhiteSpace(configuration.Command))
             {
-                throw new InvalidDataException(localizationService.Get("Укажите команду пользовательской сборки."));
+                throw new InvalidDataException(Texts.SpecifyCustomBuildCommand);
             }
 
             if (provider == ProjectBuildProvider.Cpp && string.IsNullOrWhiteSpace(configuration.ToolchainFile))
             {
-                throw new InvalidDataException(localizationService.Get("Укажите toolchainFile для сборки C++ под Linux."));
+                throw new InvalidDataException(Texts.EnterToolchainFileCLinuxBuild);
             }
 
             if ((configuration.BuildArguments ?? []).Concat(configuration.ConfigureArguments ?? [])
@@ -174,13 +175,13 @@ namespace KK.Var.Services.Implementations
                 (configuration.Environment ?? []).Any(pair => string.IsNullOrWhiteSpace(pair.Key) ||
                     pair.Key.Contains('=') || pair.Key.Any(char.IsControl) || pair.Value?.Contains('\0') == true))
             {
-                throw new InvalidDataException(localizationService.Get("Некорректные аргументы или переменные процесса сборки."));
+                throw new InvalidDataException(Texts.InvalidBuildArgumentsBuildProcessEnvironment);
             }
 
             if (provider == ProjectBuildProvider.Python &&
                 configuration.PythonDependencyFilePath?.Contains('{') == true)
             {
-                throw new InvalidDataException(localizationService.Get("Для Python укажите относительный путь без подстановок."));
+                throw new InvalidDataException(Texts.PythonSpecifyRelativePathWithoutPlaceholders);
             }
         }
 
@@ -216,8 +217,8 @@ namespace KK.Var.Services.Implementations
             return providers.Count switch
             {
                 1 => providers[0],
-                0 => throw new InvalidDataException(localizationService.Get("Не удалось автоматически определить способ сборки проекта.")),
-                _ => throw new InvalidDataException(localizationService.Get("Найдено несколько способов сборки. Выберите нужный в настройках проекта.")),
+                0 => throw new InvalidDataException(Texts.ProjectBuildTypeCouldNotDetectedAutomatically),
+                _ => throw new InvalidDataException(Texts.MultipleBuildTypesDetectedSelectCorrectOne),
             };
         }
     }

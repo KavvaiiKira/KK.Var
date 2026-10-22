@@ -7,6 +7,7 @@ using KK.Var.Data;
 using KK.Var.Models;
 using KK.Var.Services;
 using Microsoft.EntityFrameworkCore;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Repositories.Implementations
 {
@@ -78,7 +79,7 @@ namespace KK.Var.Repositories.Implementations
             var existing = await db.ProjectVersions.SingleOrDefaultAsync(
                 candidate => candidate.Id == version.Id,
                 cancellationToken) ??
-                throw new KeyNotFoundException(localizationService.Format("Версия «{0}» не найдена.", version.Id));
+                throw new KeyNotFoundException(localizationService.Format(Texts.VersionNotFound2, version.Id));
 
             db.Entry(existing).CurrentValues.SetValues(version);
             await db.SaveChangesAsync(cancellationToken);

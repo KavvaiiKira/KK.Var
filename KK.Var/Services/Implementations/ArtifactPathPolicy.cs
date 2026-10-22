@@ -4,10 +4,11 @@ using System.IO;
 using System.Linq;
 using KK.Var.Configuration;
 using KK.Var.Data;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
-    public sealed class ArtifactPathPolicy(ILocalizationService localizationService) : IArtifactPathPolicy
+    public sealed class ArtifactPathPolicy : IArtifactPathPolicy
     {
         public string GetEffectiveRoot(UserSettings settings) =>
             string.IsNullOrWhiteSpace(settings.ArtifactsDirectoryPath) ?
@@ -22,8 +23,7 @@ namespace KK.Var.Services.Implementations
 
             if (!Path.IsPathFullyQualified(candidate) || candidate.StartsWith("\\\\", StringComparison.Ordinal))
             {
-                throw new ArgumentException(localizationService.Get(
-                    "Каталог архивов должен быть абсолютным локальным путём."));
+                throw new ArgumentException(Texts.ArchiveDirectoryMustAbsoluteLocalPath);
             }
 
             var fullPath = Path.GetFullPath(candidate)
@@ -35,22 +35,19 @@ namespace KK.Var.Services.Implementations
             if (string.IsNullOrWhiteSpace(pathRoot) ||
                 string.Equals(fullPath, pathRoot, StringComparison.OrdinalIgnoreCase))
             {
-                throw new ArgumentException(localizationService.Get(
-                    "Каталог архивов не может быть корнем диска."));
+                throw new ArgumentException(Texts.ArchiveDirectoryCannotDriveRoot);
             }
 
             if (File.Exists(fullPath))
             {
-                throw new ArgumentException(localizationService.Get(
-                    "Каталог архивов не может указывать на файл."));
+                throw new ArgumentException(Texts.ArchiveDirectoryCannotPointFile);
             }
 
             foreach (var restrictedPath in GetRestrictedPaths())
             {
                 if (IsSameOrChild(fullPath, restrictedPath))
                 {
-                    throw new ArgumentException(localizationService.Get(
-                        "Каталог архивов не может находиться в системной директории."));
+                    throw new ArgumentException(Texts.ArchiveDirectoryCannotInsideSystemDirectory);
                 }
             }
 
@@ -62,15 +59,13 @@ namespace KK.Var.Services.Implementations
         {
             if (string.IsNullOrWhiteSpace(relativePath) || Path.IsPathRooted(relativePath))
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Путь к архиву версии должен быть относительным."));
+                throw new InvalidOperationException(Texts.VersionArchivePathMustRelative);
             }
 
             var segments = relativePath.Replace('\\', '/').Split('/');
             if (segments.Any(segment => string.IsNullOrWhiteSpace(segment) || segment is "." or ".."))
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Путь к архиву версии содержит недопустимый сегмент."));
+                throw new InvalidOperationException(Texts.VersionArchivePathContainsInvalidSegment);
             }
 
             var normalizedRoot = Path.GetFullPath(root)
@@ -82,8 +77,7 @@ namespace KK.Var.Services.Implementations
 
             if (!path.StartsWith(rootPrefix, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Путь к архиву версии выходит за пределы каталога архивов."));
+                throw new InvalidOperationException(Texts.VersionArchivePathOutsideArchiveDirectory);
             }
 
             EnsureExistingPathHasNoReparsePoints(Path.GetDirectoryName(path) ?? normalizedRoot);
@@ -99,8 +93,7 @@ namespace KK.Var.Services.Implementations
                 if (directory.Exists &&
                     (directory.Attributes & FileAttributes.ReparsePoint) != 0)
                 {
-                    throw new InvalidOperationException(localizationService.Get(
-                        "Путь к архивам не может проходить через reparse point."));
+                    throw new InvalidOperationException(Texts.ArchivePathCannotPassThroughReparsePoint);
                 }
 
                 directory = directory.Parent;
@@ -111,16 +104,14 @@ namespace KK.Var.Services.Implementations
         {
             if ((directory.Attributes & FileAttributes.ReparsePoint) != 0)
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Каталог архивов не может содержать reparse point."));
+                throw new InvalidOperationException(Texts.ArchiveDirectoryCannotContainReparsePoint);
             }
 
             foreach (var entry in directory.EnumerateFileSystemInfos())
             {
                 if ((entry.Attributes & FileAttributes.ReparsePoint) != 0)
                 {
-                    throw new InvalidOperationException(localizationService.Get(
-                        "Каталог архивов не может содержать reparse point."));
+                    throw new InvalidOperationException(Texts.ArchiveDirectoryCannotContainReparsePoint);
                 }
 
                 if (entry is DirectoryInfo childDirectory)
@@ -134,8 +125,7 @@ namespace KK.Var.Services.Implementations
         {
             if ((File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0)
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Файл архива не может быть reparse point."));
+                throw new InvalidOperationException(Texts.ArchiveFileCannotReparsePoint);
             }
         }
 

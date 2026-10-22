@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using KK.Var.Enums;
 using KK.Var.Models;
 using KK.Var.Repositories;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
@@ -28,14 +29,14 @@ namespace KK.Var.Services.Implementations
             CancellationToken cancellationToken = default)
         {
             _ = await projectRepository.GetByIdAsync(projectId, cancellationToken) ??
-                throw new KeyNotFoundException(localizationService.Format("Проект «{0}» не найден.", projectId));
+                throw new KeyNotFoundException(localizationService.Format(Texts.ProjectNotFound2, projectId));
 
             var version = await versionRepository.GetByIdAsync(versionId, cancellationToken) ??
-                throw new KeyNotFoundException(localizationService.Format("Версия «{0}» не найдена.", versionId));
+                throw new KeyNotFoundException(localizationService.Format(Texts.VersionNotFound2, versionId));
 
             if (version.KKProjectId != projectId)
             {
-                throw new ArgumentException(localizationService.Get("Версия не принадлежит указанному проекту."));
+                throw new ArgumentException(Texts.VersionDoesNotBelongSpecifiedProject);
             }
 
             ValidateJsonObject(variablesSnapshotJson, nameof(variablesSnapshotJson));
@@ -43,7 +44,7 @@ namespace KK.Var.Services.Implementations
             if (!Guid.TryParseExact(remoteOperationId, "N", out _))
             {
                 throw new ArgumentException(
-                    localizationService.Get("Недопустимый идентификатор удалённой операции."),
+                    Texts.InvalidRemoteOperationIdentifier,
                     nameof(remoteOperationId));
             }
 
@@ -95,20 +96,20 @@ namespace KK.Var.Services.Implementations
                 DeploymentStatus.Cancelled or
                 DeploymentStatus.Interrupted))
             {
-                throw new ArgumentException(localizationService.Get("Укажите конечный статус развёртывания."));
+                throw new ArgumentException(Texts.TerminalDeploymentStatusRequired);
             }
 
             var deployment = await deploymentRepository.GetByIdAsync(
                 deploymentId,
                 cancellationToken) ??
-                    throw new KeyNotFoundException(localizationService.Format("Операция развёртывания «{0}» не найдена.", deploymentId));
+                    throw new KeyNotFoundException(localizationService.Format(Texts.DeploymentNotFound, deploymentId));
 
             if (deployment.Status is DeploymentStatus.Succeeded or
                 DeploymentStatus.Failed or
                 DeploymentStatus.Cancelled or
                 DeploymentStatus.Interrupted)
             {
-                throw new InvalidOperationException(localizationService.Get("Операция развёртывания уже завершена."));
+                throw new InvalidOperationException(Texts.DeploymentAlreadyCompleted);
             }
 
             deployment.Status = status;
@@ -136,11 +137,11 @@ namespace KK.Var.Services.Implementations
             var deployment = await deploymentRepository.GetByIdAsync(
                 deploymentId,
                 CancellationToken.None) ??
-                    throw new KeyNotFoundException(localizationService.Format("Операция развёртывания «{0}» не найдена.", deploymentId));
+                    throw new KeyNotFoundException(localizationService.Format(Texts.DeploymentNotFound, deploymentId));
 
             if (deployment.Status != DeploymentStatus.Running)
             {
-                throw new InvalidOperationException(localizationService.Get("Операция развёртывания больше не выполняется."));
+                throw new InvalidOperationException(Texts.DeploymentNoLongerRunning);
             }
 
             deployment.Stage = checkpoint.Stage;
@@ -153,14 +154,14 @@ namespace KK.Var.Services.Implementations
         {
             if (string.IsNullOrWhiteSpace(json))
             {
-                throw new ArgumentException(localizationService.Get("Требуется JSON-объект."), parameterName);
+                throw new ArgumentException(Texts.JSONObjectRequired, parameterName);
             }
 
             using var document = JsonDocument.Parse(json);
 
             if (document.RootElement.ValueKind != JsonValueKind.Object)
             {
-                throw new ArgumentException(localizationService.Get("Требуется JSON-объект."), parameterName);
+                throw new ArgumentException(Texts.JSONObjectRequired, parameterName);
             }
         }
     }

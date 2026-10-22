@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using KK.Var.Enums;
 using KK.Var.Models;
 using KK.Var.Repositories;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
@@ -55,7 +56,7 @@ namespace KK.Var.Services.Implementations
             ArgumentNullException.ThrowIfNull(variables);
 
             _ = await projectRepository.GetByIdAsync(projectId, cancellationToken) ??
-                throw new KeyNotFoundException(localizationService.Format("Проект «{0}» не найден.", projectId));
+                throw new KeyNotFoundException(localizationService.Format(Texts.ProjectNotFound2, projectId));
 
             var entities = PrepareVariables(projectId, variables);
             await variableRepository.ReplaceAsync(
@@ -81,14 +82,14 @@ namespace KK.Var.Services.Implementations
                 if (!VariableNamePattern.IsMatch(name))
                 {
                     throw new ArgumentException(
-                        localizationService.Format("Недопустимое имя переменной окружения «{0}».", pair.Key),
+                        localizationService.Format(Texts.InvalidEnvironmentVariableName, pair.Key),
                         nameof(variables));
                 }
 
                 if (!names.Add(name))
                 {
                     throw new ArgumentException(
-                        localizationService.Format("Имя переменной окружения «{0}» повторяется.", name),
+                        localizationService.Format(Texts.EnvironmentVariableNameDuplicated, name),
                         nameof(variables));
                 }
 
@@ -110,7 +111,7 @@ namespace KK.Var.Services.Implementations
             CancellationToken cancellationToken = default)
         {
             var project = await projectRepository.GetByIdAsync(projectId, cancellationToken) ??
-                throw new KeyNotFoundException(localizationService.Format("Проект «{0}» не найден.", projectId));
+                throw new KeyNotFoundException(localizationService.Format(Texts.ProjectNotFound2, projectId));
 
             var variables = await variableRepository.GetByProjectIdAsync(
                 projectId,
@@ -125,7 +126,7 @@ namespace KK.Var.Services.Implementations
                 _ => throw new ArgumentOutOfRangeException(
                     nameof(project.EnvironmentFileFormat),
                     project.EnvironmentFileFormat,
-                    localizationService.Get("Неподдерживаемый формат файла окружения.")),
+                    Texts.UnsupportedEnvironmentFileFormat),
             };
         }
 
@@ -217,7 +218,7 @@ namespace KK.Var.Services.Implementations
                 if (!TryNormalizeArray(trimmed, out var normalized))
                 {
                     throw new ArgumentException(localizationService.Format(
-                        "Значение переменной «{0}» должно быть JSON-массивом только строк или только чисел.",
+                        Texts.VariableMustJSONArrayContainingOnlyStrings,
                         variableName));
                 }
 
@@ -300,12 +301,12 @@ namespace KK.Var.Services.Implementations
             if (string.IsNullOrWhiteSpace(projectRootDirectory))
             {
                 throw new ArgumentException(
-                    localizationService.Get("Укажите корневой каталог проекта."),
+                    Texts.ProjectRootDirectoryRequired,
                     nameof(projectRootDirectory));
             }
 
             var project = await projectRepository.GetByIdAsync(projectId, cancellationToken) ??
-                throw new KeyNotFoundException(localizationService.Format("Проект «{0}» не найден.", projectId));
+                throw new KeyNotFoundException(localizationService.Format(Texts.ProjectNotFound2, projectId));
 
             var rootPath = Path.GetFullPath(projectRootDirectory);
 
@@ -323,11 +324,11 @@ namespace KK.Var.Services.Implementations
                     StringComparison.Ordinal))
             {
                 throw new InvalidOperationException(
-                    localizationService.Get("Путь к файлу окружения выходит за пределы корневого каталога проекта."));
+                    Texts.EnvironmentFilePathOutsideProjectRootDirectory);
             }
 
             var targetDirectory = Path.GetDirectoryName(targetPath) ??
-                throw new InvalidOperationException(localizationService.Get("Не удалось определить каталог файла окружения."));
+                throw new InvalidOperationException(Texts.EnvironmentFileDirectoryCouldNotDetermined);
 
             Directory.CreateDirectory(targetDirectory);
 

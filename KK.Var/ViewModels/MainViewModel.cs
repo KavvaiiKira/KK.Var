@@ -1,6 +1,7 @@
 using System.Linq;
 using Avalonia.Threading;
 using KK.Var.Services;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.ViewModels
 {
@@ -172,69 +173,69 @@ namespace KK.Var.ViewModels
             {
                 if (MachineEditor.IsConnectionCheckRunning)
                 {
-                    return Localize("Проверка SSH-подключения");
+                    return Texts.CheckingSSHConnection;
                 }
 
                 if (GitHubAccount.IsGitHubAuthorizationPending)
                 {
-                    return Localize("Подключение GitHub");
+                    return Texts.ConnectingGitHub;
                 }
 
                 if (ProjectEditor.IsLoadingRepositories)
                 {
-                    return Localize("Загрузка репозиториев GitHub");
+                    return Texts.LoadingGitHubRepositories;
                 }
 
                 if (ProjectList.IsBusy)
                 {
-                    return Localize("Удаление проекта");
+                    return Texts.DeletingProject;
                 }
 
                 if (ProjectDetails.IsProjectDetailsLoading)
                 {
-                    return Localize("Загрузка проекта");
+                    return Texts.LoadingProject;
                 }
 
                 if (History.IsLoading)
                 {
-                    return Localize("Загрузка истории");
+                    return Texts.LoadingHistory;
                 }
 
                 if (IsPreflightChecking)
                 {
-                    return Localize("Предварительная проверка Deploy");
+                    return Texts.DeployPreflightChecks;
                 }
 
                 if (IsProjectTransferBusy)
                 {
-                    return Localize("Передача конфигурации проекта");
+                    return Texts.TransferringProjectConfiguration;
                 }
 
                 if (ArtifactStorage.IsArtifactStorageBusy)
                 {
-                    return Localize("Подготовка или перенос локальных архивов");
+                    return Texts.PreparingMovingLocalArchives;
                 }
 
                 if (EnvironmentEditor.IsEnvironmentSaving)
                 {
-                    return Localize("Сохранение переменных окружения");
+                    return Texts.SavingEnvironmentVariables;
                 }
 
                 if (DeploymentWorkspace.IsDeploymentRunning)
                 {
                     return string.IsNullOrWhiteSpace(DeploymentWorkspace.DeploymentProgressMessage) ?
-                        Localize("Выполнение deploy") :
+                        Texts.RunningDeploy :
                         DeploymentWorkspace.DeploymentProgressMessage;
                 }
 
                 if (ProjectDetails.IsVersionCleanupBusy)
                 {
-                    return Localize("Очистка локальных версий");
+                    return Texts.CleaningUpLocalVersions;
                 }
 
                 return ProjectEditor.IsSaving ?
-                    Localize("Сохранение проекта") :
-                    Localize("Нет активных операций");
+                    Texts.SavingProject :
+                    Texts.NoActiveOperations;
             }
         }
 

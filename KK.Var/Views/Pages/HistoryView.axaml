@@ -41,10 +41,10 @@
               ColumnDefinitions="*,Auto,Auto,280" RowDefinitions="Auto,Auto"
               ColumnSpacing="12">
             <StackPanel Spacing="5">
-                <TextBlock Text="{DynamicResource 'История'}"
+                <TextBlock Text="{DynamicResource History_Title}"
                            FontSize="30"
                            FontWeight="Bold" />
-                <TextBlock Text="{DynamicResource 'Deploy и rollback всех проектов в порядке выполнения'}"
+                <TextBlock Text="{DynamicResource DeployRollbackOperationsAllProjectsChronologicalOrder}"
                            FontSize="13"
                            Foreground="{DynamicResource AppTextMutedBrush}" />
             </StackPanel>
@@ -78,18 +78,18 @@
             <TextBox Grid.Column="3"
                      Classes="history-input"
                      VerticalAlignment="Center"
-                     PlaceholderText="{DynamicResource 'Проект, версия или дата'}"
+                     PlaceholderText="{DynamicResource ProjectVersionDate}"
                      Text="{Binding History.HistorySearchText, UpdateSourceTrigger=PropertyChanged}" />
             <StackPanel Grid.Row="1" Grid.ColumnSpan="4" Margin="0,10,0,0" Orientation="Horizontal" Spacing="10">
                 <ComboBox Width="280" ItemsSource="{Binding MachineEditor.MachineProfiles}" SelectedItem="{Binding SelectedHistoryMachine}"
-                          PlaceholderText="{DynamicResource 'Все машины'}">
+                          PlaceholderText="{DynamicResource AllMachines}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate x:DataType="models:RemoteMachine">
                             <TextBlock Text="{Binding Name}" />
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-                <Button Content="{DynamicResource 'Все машины'}" Click="ClearMachineFilter_OnClick" />
+                <Button Content="{DynamicResource AllMachines}" Click="ClearMachineFilter_OnClick" />
             </StackPanel>
         </Grid>
 
@@ -101,7 +101,7 @@
                 <TextBlock IsVisible="{Binding History.HasNoHistoryItems}"
                            Margin="0,70,0,0"
                            HorizontalAlignment="Center"
-                           Text="{DynamicResource 'История пока пуста'}"
+                           Text="{DynamicResource HistoryEmpty}"
                            FontSize="16"
                            Foreground="{DynamicResource AppTextMutedBrush}" />
 
@@ -118,24 +118,24 @@
                                     PointerPressed="DeploymentItem_OnPointerPressed">
                                 <Grid ColumnDefinitions="150,*,170,150,120" ColumnSpacing="16">
                                     <StackPanel Spacing="3">
-                                        <TextBlock Text="{DynamicResource 'Дата'}" FontSize="10" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                        <TextBlock Text="{DynamicResource Date}" FontSize="10" Foreground="{DynamicResource AppTextMutedBrush}" />
                                         <TextBlock Text="{Binding DateDisplay}" FontWeight="SemiBold" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="1" Spacing="3">
-                                        <TextBlock Text="{DynamicResource 'Проект'}" FontSize="10" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                        <TextBlock Text="{DynamicResource Project}" FontSize="10" Foreground="{DynamicResource AppTextMutedBrush}" />
                                         <TextBlock Text="{Binding ProjectName}" FontWeight="SemiBold" />
                                         <TextBlock Text="{Binding MachineDisplay}" FontSize="11" TextWrapping="Wrap" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="2" Spacing="3">
-                                        <TextBlock Text="{DynamicResource 'Версия'}" FontSize="10" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                        <TextBlock Text="{DynamicResource Version}" FontSize="10" Foreground="{DynamicResource AppTextMutedBrush}" />
                                         <TextBlock Text="{Binding VersionTag}" Foreground="{DynamicResource AppPrimaryHoverBrush}" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="3" Spacing="3">
-                                        <TextBlock Text="{DynamicResource 'Действие'}" FontSize="10" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                        <TextBlock Text="{DynamicResource Action}" FontSize="10" Foreground="{DynamicResource AppTextMutedBrush}" />
                                         <TextBlock Text="{Binding OperationDisplay}" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="4" Spacing="3">
-                                        <TextBlock Text="{DynamicResource 'Статус'}" FontSize="10" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                        <TextBlock Text="{DynamicResource Status}" FontSize="10" Foreground="{DynamicResource AppTextMutedBrush}" />
                                         <TextBlock Text="{Binding StatusDisplay}" FontWeight="SemiBold" />
                                     </StackPanel>
                                 </Grid>
@@ -152,7 +152,7 @@
                         Background="{DynamicResource AppSurfaceRaisedBrush}"
                         BorderBrush="{DynamicResource AppBorderBrush}"
                         BorderThickness="1"
-                        Content="{DynamicResource 'Показать ещё'}"
+                        Content="{DynamicResource ShowMore}"
                         Click="LoadMoreButton_OnClick" />
             </Grid>
         </ScrollViewer>

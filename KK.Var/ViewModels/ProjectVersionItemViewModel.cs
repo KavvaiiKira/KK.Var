@@ -2,6 +2,7 @@ using System;
 using KK.Var.Constants;
 using KK.Var.Models;
 using KK.Var.Services;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.ViewModels
 {
@@ -15,7 +16,7 @@ namespace KK.Var.ViewModels
         public KKProjectVersion Version { get; } = version;
 
         public string TargetArchitecture => string.IsNullOrWhiteSpace(Version.TargetArchitecture) || Version.TargetArchitecture == ArchitectureNames.Unknown ?
-            Localize("Архитектура неизвестна") :
+            Texts.UnknownArchitecture :
             Version.TargetArchitecture;
 
         public string Tag => Version.Tag;
@@ -34,10 +35,10 @@ namespace KK.Var.ViewModels
                 var size = artifactSize ?? Version.ArtifactSize;
                 return size switch
                 {
-                    >= 1_073_741_824 => $"{size / 1_073_741_824d:F2} {Localize("ГБ")}",
-                    >= 1_048_576 => $"{size / 1_048_576d:F2} {Localize("МБ")}",
-                    >= 1024 => $"{size / 1024d:F1} {Localize("КБ")}",
-                    _ => $"{size} {Localize("Б")}",
+                    >= 1_073_741_824 => $"{size / 1_073_741_824d:F2} {Texts.GB}",
+                    >= 1_048_576 => $"{size / 1_048_576d:F2} {Texts.MB}",
+                    >= 1024 => $"{size / 1024d:F1} {Texts.KB}",
+                    _ => $"{size} {Texts.B}",
                 };
             }
         }
@@ -53,14 +54,14 @@ namespace KK.Var.ViewModels
         public bool IsPinned => Version.IsPinned;
 
         public string PinActionText =>
-            Version.IsPinned ? Localize("Открепить") : Localize("Закрепить");
+            Version.IsPinned ? Texts.Unpin : Texts.Pin;
 
         public string AvailabilityDisplay =>
-            ArtifactExists ? Localize("Архив доступен") : Localize("Архив отсутствует");
+            ArtifactExists ? Texts.ArchiveAvailable : Texts.ArchiveMissing;
 
-        public string PinnedDisplay => Localize("Закреплена");
+        public string PinnedDisplay => Texts.Pinned;
 
-        public string ProtectedDisplay => Localize("Защищена от удаления");
+        public string ProtectedDisplay => Texts.ProtectedDeletion;
 
         public bool HasSourceCommit => !string.IsNullOrWhiteSpace(Version.SourceCommitSha);
 
@@ -71,7 +72,7 @@ namespace KK.Var.ViewModels
 
         public string Description =>
             string.IsNullOrWhiteSpace(Version.Description) ?
-                Localize("Без описания") :
+                Texts.NoDescription :
                 Version.Description;
 
         public void RefreshLocalization()

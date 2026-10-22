@@ -153,13 +153,13 @@
                                 Spacing="8">
                         <Button Classes="window-control minimize"
                                 Click="MinimizeButton_OnClick"
-                                ToolTip.Tip="{DynamicResource 'Скрыть окно'}" />
+                                ToolTip.Tip="{DynamicResource MinimizeWindow}" />
                         <Button Classes="window-control maximize"
                                 Click="MaximizeButton_OnClick"
-                                ToolTip.Tip="{DynamicResource 'Развернуть или восстановить'}" />
+                                ToolTip.Tip="{DynamicResource MaximizeRestore}" />
                         <Button Classes="window-control close"
                                 Click="CloseButton_OnClick"
-                                ToolTip.Tip="{DynamicResource 'Закрыть'}" />
+                                ToolTip.Tip="{DynamicResource Common_Close}" />
                     </StackPanel>
                 </Grid>
             </Border>
@@ -182,7 +182,7 @@
                                         <PathIcon Width="15"
                                                   Height="15"
                                                   Data="{StaticResource ProjectsIconData}" />
-                                        <TextBlock Text="{DynamicResource 'Проекты'}" VerticalAlignment="Center" />
+                                        <TextBlock Text="{DynamicResource Projects_Title}" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
                             </Grid>
@@ -193,7 +193,7 @@
                                     <PathIcon Width="15"
                                               Height="15"
                                               Data="{StaticResource HistoryIconData}" />
-                                    <TextBlock Text="{DynamicResource 'История'}" VerticalAlignment="Center" />
+                                    <TextBlock Text="{DynamicResource History_Title}" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
                             <Button x:Name="SettingsNavigationButton"
@@ -203,7 +203,7 @@
                                     <PathIcon Width="15"
                                               Height="15"
                                               Data="{StaticResource SettingsIconData}" />
-                                    <TextBlock Text="{DynamicResource 'Настройки'}" VerticalAlignment="Center" />
+                                    <TextBlock Text="{DynamicResource Settings_Title}" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
                         </StackPanel>
@@ -219,19 +219,19 @@
                           Margin="30,26,30,18"
                           ColumnDefinitions="*,Auto">
                         <StackPanel Spacing="5">
-                            <TextBlock Text="{DynamicResource 'Проекты'}"
+                            <TextBlock Text="{DynamicResource Projects_Title}"
                                        FontSize="30"
                                        FontWeight="Bold"
                                        Foreground="{DynamicResource AppTextBrush}" />
-                            <TextBlock Text="{DynamicResource 'Сборка, доставка и управление локальными релизами'}"
+                            <TextBlock Text="{DynamicResource BuildDeliveryLocalReleaseManagement}"
                                        FontSize="13"
                                        Foreground="{DynamicResource AppTextMutedBrush}" />
                         </StackPanel>
                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                            <Button Classes="project-action" Content="{DynamicResource 'Импорт проекта'}"
+                            <Button Classes="project-action" Content="{DynamicResource Projects_Import}"
                                     IsEnabled="{Binding !IsProjectTransferBusy}" Click="ImportProjectButton_OnClick" />
                             <Button Classes="primary"
-                                    Content="{DynamicResource '＋  Новый проект'}"
+                                    Content="{DynamicResource NewProject}"
                                     VerticalAlignment="Center"
                                     Click="NewProjectButton_OnClick" />
                         </StackPanel>
@@ -283,7 +283,7 @@
                                                       ColumnSpacing="12"
                                                       RowSpacing="13">
                                                     <StackPanel MinWidth="0" Spacing="3">
-                                                        <TextBlock Text="{DynamicResource 'Последний deploy'}"
+                                                        <TextBlock Text="{DynamicResource LastDeploy}"
                                                                    FontSize="11"
                                                                    Foreground="{DynamicResource AppTextMutedBrush}" />
                                                         <TextBlock Text="{Binding LastDeploymentDisplay}"
@@ -291,7 +291,7 @@
                                                                    FontWeight="SemiBold" />
                                                     </StackPanel>
                                                     <StackPanel Grid.Column="1" MinWidth="0" Spacing="3">
-                                                        <TextBlock Text="{DynamicResource 'Версия'}"
+                                                        <TextBlock Text="{DynamicResource Version}"
                                                                    FontSize="11"
                                                                    Foreground="{DynamicResource AppTextMutedBrush}" />
                                                         <TextBlock Text="{Binding LatestVersionTag}"
@@ -302,7 +302,7 @@
                                                     <StackPanel Grid.Row="1"
                                                                 MinWidth="0"
                                                                 Spacing="3">
-                                                        <TextBlock Text="{DynamicResource 'Systemd-сервис'}"
+                                                        <TextBlock Text="{DynamicResource SystemdService}"
                                                                    FontSize="11"
                                                                    Foreground="{DynamicResource AppTextMutedBrush}" />
                                                         <TextBlock Text="{Binding Project.RemoteServiceName}"
@@ -316,7 +316,7 @@
                                                                 Grid.Column="1"
                                                                 MinWidth="0"
                                                                 Spacing="3">
-                                                        <TextBlock Text="{DynamicResource 'Файл сервиса'}"
+                                                        <TextBlock Text="{DynamicResource ServiceFile}"
                                                                    FontSize="11"
                                                                    Foreground="{DynamicResource AppTextMutedBrush}" />
                                                         <TextBlock Text="{Binding Project.RemoteExecutablePath}"
@@ -333,11 +333,11 @@
                                                       ColumnDefinitions="Auto,*,Auto,Auto,Auto"
                                                       ColumnSpacing="8">
                                                     <Button Classes="deploy"
-                                                            Content="{DynamicResource 'Развернуть'}"
+                                                            Content="{DynamicResource Deploy}"
                                                             Click="DeployProjectButton_OnClick" />
                                                     <Button Grid.Column="2"
                                                             Classes="icon"
-                                                            ToolTip.Tip="{DynamicResource 'Открыть'}"
+                                                            ToolTip.Tip="{DynamicResource Open}"
                                                             Click="OpenProjectButton_OnClick">
                                                         <PathIcon Width="18"
                                                                   Height="18"
@@ -346,7 +346,7 @@
                                                     </Button>
                                                     <Button Grid.Column="3"
                                                             Classes="icon"
-                                                            ToolTip.Tip="{DynamicResource 'Редактировать'}"
+                                                            ToolTip.Tip="{DynamicResource Edit}"
                                                             Click="EditProjectButton_OnClick">
                                                         <PathIcon Width="18"
                                                                   Height="18"
@@ -355,7 +355,7 @@
                                                     </Button>
                                                     <Button Grid.Column="4"
                                                             Classes="icon"
-                                                            ToolTip.Tip="{DynamicResource 'Удалить'}"
+                                                            ToolTip.Tip="{DynamicResource Delete}"
                                                             Click="DeleteProjectButton_OnClick">
                                                         <PathIcon Width="18"
                                                                   Height="18"
@@ -386,7 +386,7 @@
                                                           HorizontalAlignment="Center"
                                                           Foreground="{DynamicResource AppPrimaryHoverBrush}"
                                                           Data="{StaticResource AddIconData}" />
-                                                <TextBlock Text="{DynamicResource 'Добавить проект'}"
+                                                <TextBlock Text="{DynamicResource AddProject}"
                                                            HorizontalAlignment="Center"
                                                            FontSize="14"
                                                            FontWeight="SemiBold" />
@@ -411,12 +411,12 @@
                                 BorderThickness="1"
                                 CornerRadius="16">
                             <StackPanel Spacing="13">
-                                <TextBlock Text="{DynamicResource 'Сначала настройте SSH-доступ'}"
+                                <TextBlock Text="{DynamicResource ConfigureSSHAccessFirst}"
                                            HorizontalAlignment="Center"
                                            TextAlignment="Center"
                                            FontSize="22"
                                            FontWeight="Bold" />
-                                <TextBlock Text="{DynamicResource 'Для создания и развёртывания проектов KK.Var должен знать, к какой Linux-машине подключаться.'}"
+                                <TextBlock Text="{DynamicResource CreateDeployProjectsKKVarNeedsKnow}"
                                            MaxWidth="400"
                                            TextAlignment="Center"
                                            TextWrapping="Wrap"
@@ -426,10 +426,10 @@
                                 <Button Classes="primary"
                                         Margin="0,8,0,0"
                                         HorizontalAlignment="Center"
-                                        Content="{DynamicResource 'Открыть настройки'}"
+                                        Content="{DynamicResource OpenSettings}"
                                         Click="OpenRequiredSettingsButton_OnClick" />
                                 <Button Classes="project-action" HorizontalAlignment="Center"
-                                        Content="{DynamicResource 'Импорт проекта'}" Click="ImportProjectButton_OnClick" />
+                                        Content="{DynamicResource Projects_Import}" Click="ImportProjectButton_OnClick" />
                             </StackPanel>
                         </Border>
                     </Border>
@@ -519,7 +519,7 @@
                             HorizontalContentAlignment="Center"
                             VerticalContentAlignment="Center"
                             Click="HelpButton_OnClick"
-                            ToolTip.Tip="{DynamicResource 'Помощь'}">
+                            ToolTip.Tip="{DynamicResource Help}">
                         <PathIcon Width="17"
                                   Height="17"
                                   Foreground="{DynamicResource AppTextBrush}"
@@ -542,14 +542,14 @@
                         BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="14">
                     <Grid RowDefinitions="Auto,*,Auto" RowSpacing="16">
                         <StackPanel Spacing="8">
-                            <TextBlock Text="{DynamicResource 'Импорт конфигурации проекта'}" FontSize="22" FontWeight="Bold" />
-                            <TextBlock Text="{DynamicResource 'Будет создан новый проект. Проверьте пути, имя и systemd-сервис; при конфликте измените их.'}"
+                            <TextBlock Text="{DynamicResource ImportProjectConfiguration}" FontSize="22" FontWeight="Bold" />
+                            <TextBlock Text="{DynamicResource NewProjectCreatedCheckPathsNameSystemd}"
                                        TextWrapping="Wrap" Foreground="{DynamicResource AppTextMutedBrush}" />
                         </StackPanel>
                         <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
                             <StackPanel Spacing="10" IsEnabled="{Binding !IsProjectTransferBusy}">
-                                <TextBlock Text="{DynamicResource 'Название проекта'}" />
-                                <TextBlock Text="{DynamicResource 'Машина проекта'}" />
+                                <TextBlock Text="{DynamicResource ProjectName}" />
+                                <TextBlock Text="{DynamicResource ProjectMachine}" />
                                 <ComboBox ItemsSource="{Binding MachineEditor.AvailableMachines}" SelectedItem="{Binding SelectedImportMachine}" HorizontalAlignment="Stretch">
                                     <ComboBox.ItemTemplate>
                                         <DataTemplate x:DataType="models:RemoteMachine">
@@ -559,24 +559,24 @@
                                 </ComboBox>
                                 <TextBox Text="{Binding ImportProjectName, Mode=TwoWay}" />
                                 <StackPanel IsVisible="{Binding IsImportLocalSource}" Spacing="6">
-                                    <TextBlock Text="{DynamicResource 'Локальная папка проекта'}" />
+                                    <TextBlock Text="{DynamicResource LocalProjectDirectory}" />
                                     <TextBox Text="{Binding ImportLocalDirectory, Mode=TwoWay}" />
                                 </StackPanel>
-                                <TextBlock Text="{DynamicResource 'Название systemd-сервиса'}" />
+                                <TextBlock Text="{DynamicResource SystemdServiceName}" />
                                 <TextBox Text="{Binding ImportServiceName, Mode=TwoWay}" />
-                                <TextBlock Text="{DynamicResource 'Директория на удалённой машине'}" />
+                                <TextBlock Text="{DynamicResource RemoteMachineDirectory}" />
                                 <TextBox Text="{Binding ImportDeploymentDirectory, Mode=TwoWay}" />
-                                <TextBlock Text="{DynamicResource 'Создаваемая конфигурация'}" FontWeight="SemiBold" />
+                                <TextBlock Text="{DynamicResource ConfigurationCreate}" FontWeight="SemiBold" />
                                 <TextBox Text="{Binding ImportPreviewJson}" IsReadOnly="True" AcceptsReturn="True"
                                          MinHeight="180" MaxHeight="260" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap" />
                                 <TextBlock Text="{Binding ImportError}" TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}" />
                             </StackPanel>
                         </ScrollViewer>
                         <Grid Grid.Row="2" ColumnDefinitions="*,12,*" IsEnabled="{Binding !IsProjectTransferBusy}">
-                            <Button Classes="nav" HorizontalAlignment="Stretch" Content="{DynamicResource 'Отмена'}"
+                            <Button Classes="nav" HorizontalAlignment="Stretch" Content="{DynamicResource Common_Cancel}"
                                     Click="CancelProjectImportButton_OnClick" />
                             <Button Grid.Column="2" Classes="primary" HorizontalAlignment="Stretch"
-                                    Content="{DynamicResource 'Создать проект'}" Click="ConfirmProjectImportButton_OnClick" />
+                                    Content="{DynamicResource CreateProject}" Click="ConfirmProjectImportButton_OnClick" />
                         </Grid>
                     </Grid>
                 </Border>
@@ -595,14 +595,14 @@
                         BorderThickness="1"
                         CornerRadius="14">
                     <StackPanel Spacing="12">
-                        <TextBlock Text="{DynamicResource 'Удалить проект?'}"
+                        <TextBlock Text="{DynamicResource DeleteProject}"
                                    FontSize="20"
                                    FontWeight="Bold" />
                         <TextBlock x:Name="DeleteProjectMessage"
                                    TextWrapping="Wrap"
                                    FontSize="13"
                                    Foreground="{DynamicResource AppTextMutedBrush}" />
-                        <TextBlock Text="{DynamicResource 'Версии, переменные окружения, история deploy и локальные архивы также будут удалены.'}"
+                        <TextBlock Text="{DynamicResource VersionsEnvironmentVariablesDeployHistoryLocalArchives}"
                                    TextWrapping="Wrap"
                                    FontSize="12"
                                    Foreground="{DynamicResource AppDangerBrush}" />
@@ -612,11 +612,11 @@
                                     Spacing="10">
                             <Button Classes="primary"
                                     Background="{DynamicResource AppSurfaceRaisedBrush}"
-                                    Content="{DynamicResource 'Отмена'}"
+                                    Content="{DynamicResource Common_Cancel}"
                                     Click="CancelDeleteProjectButton_OnClick" />
                             <Button Classes="primary"
                                     Background="{DynamicResource AppDangerBrush}"
-                                    Content="{DynamicResource 'Удалить'}"
+                                    Content="{DynamicResource Delete}"
                                     Click="ConfirmDeleteProjectButton_OnClick" />
                         </StackPanel>
                     </StackPanel>

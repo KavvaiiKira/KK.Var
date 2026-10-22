@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using KK.Var.Constants;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
@@ -65,7 +66,7 @@ namespace KK.Var.Services.Implementations
             {
                 process = Process.Start(startInfo) ??
                     throw new InvalidOperationException(localizationService.Format(
-                        "Не удалось запустить {0}.",
+                        Texts.CouldNotStart,
                         fileName));
             }
             catch (Win32Exception exception) when (exception.NativeErrorCode == 2)
@@ -101,7 +102,7 @@ namespace KK.Var.Services.Implementations
             if (process.ExitCode != 0)
             {
                 throw new InvalidOperationException(localizationService.Format(
-                    "Сборка завершилась с кодом {0}: {1}",
+                    Texts.BuildExitedCode,
                     process.ExitCode,
                     LastUsefulLine(error, output)));
             }
@@ -110,14 +111,11 @@ namespace KK.Var.Services.Implementations
         private string GetMissingBuildToolMessage(string fileName) =>
             Path.GetFileNameWithoutExtension(fileName).ToLowerInvariant() switch
             {
-                BuildConstants.GoExecutable => localizationService.Get(
-                    "Go SDK не найден. Установите Go и перезапустите KK.Var. При запуске из Visual Studio перезапустите также Visual Studio."),
-                BuildConstants.DotNetExecutable => localizationService.Get(
-                    ".NET SDK не найден. Установите .NET SDK и перезапустите KK.Var."),
-                BuildConstants.CmakeExecutable => localizationService.Get(
-                    "CMake не найден. Установите CMake и перезапустите KK.Var."),
+                BuildConstants.GoExecutable => Texts.GoSDKNotFoundInstallGoRestart,
+                BuildConstants.DotNetExecutable => Texts.NETSDKNotFoundInstallNETSDK,
+                BuildConstants.CmakeExecutable => Texts.CMakeNotFoundInstallCMakeRestartKK,
                 _ => localizationService.Format(
-                    "Команда сборки «{0}» не найдена. Установите необходимый инструмент и перезапустите KK.Var.",
+                    Texts.BuildCommandNotFoundInstallRequiredTool,
                     fileName),
             };
 
@@ -138,7 +136,7 @@ namespace KK.Var.Services.Implementations
 
             return useful ?? lines.LastOrDefault(line =>
                     !line.StartsWith(SeeAlsoPrefix, StringComparison.OrdinalIgnoreCase)) ??
-                        localizationService.Get("неизвестная ошибка");
+                        Texts.UnknownError;
         }
     }
 }

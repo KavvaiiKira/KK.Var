@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 using KK.Var.Constants;
 using KK.Var.Enums;
 using KK.Var.Models;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
     public sealed class SourcePreflightService(
         IGitHubService gitHubService,
         IGitHubAuthenticationService gitHubAuthenticationService,
-        IPreflightCheckFactory checkFactory,
-        ILocalizationService localizationService) : ISourcePreflightService
+        IPreflightCheckFactory checkFactory) : ISourcePreflightService
     {
         public async Task<(long Bytes, string? CommitSha)> CheckSourceAsync(
             KKProject project,
@@ -37,14 +37,14 @@ namespace KK.Var.Services.Implementations
                         () => EstimateSourceBytes(path, cancellationToken),
                         cancellationToken);
 
-                    checks.Add(checkFactory.Success(PreflightCheckKeys.Source, "Локальный исходный каталог доступен."));
+                    checks.Add(checkFactory.Success(PreflightCheckKeys.Source, Texts.LocalSourceDirectoryAvailable));
                     return (bytes, null);
                 }
                 catch (Exception exception) when (exception is not OperationCanceledException)
                 {
                     checks.Add(checkFactory.Error(
                         PreflightCheckKeys.Source,
-                        "Локальный исходный каталог недоступен.",
+                        Texts.LocalSourceDirectoryUnavailable,
                         exception.Message));
                     return (0, null);
                 }
@@ -55,8 +55,7 @@ namespace KK.Var.Services.Implementations
                 try
                 {
                     var token = await gitHubAuthenticationService.GetTokenAsync(cancellationToken) ??
-                        throw new InvalidOperationException(localizationService.Get(
-                            "Подключите GitHub в настройках перед сборкой проекта."));
+                        throw new InvalidOperationException(Texts.ConnectGitHubSettingsBuildingProject);
                     var commit = request.SourceCommitSha is not null ?
                         await gitHubService.GetCommitAsync(
                             project.GitHubRepositoryFullName ?? string.Empty,
@@ -69,24 +68,24 @@ namespace KK.Var.Services.Implementations
                             token.AccessToken,
                             cancellationToken);
                     var commitSha = commit.Sha;
-                    checks.Add(checkFactory.Success(PreflightCheckKeys.Source, "GitHub-репозиторий доступен.", commitSha));
+                    checks.Add(checkFactory.Success(PreflightCheckKeys.Source, Texts.GitHubRepositoryAvailable, commitSha));
                     checks.Add(checkFactory.Warning(
                         PreflightCheckKeys.SourceSize,
-                        "Размер GitHub-архива станет известен после загрузки."));
+                        Texts.GitHubArchiveSizeKnownDownload));
                     return (0, commitSha);
                 }
                 catch (Exception exception) when (exception is not OperationCanceledException)
                 {
                     checks.Add(checkFactory.Error(
                         PreflightCheckKeys.Source,
-                        "GitHub-репозиторий недоступен.",
+                        Texts.GitHubRepositoryUnavailable,
                         exception.Message));
                 }
 
                 return (0, null);
             }
 
-            checks.Add(checkFactory.Error(PreflightCheckKeys.Source, "Тип источника проекта недопустим."));
+            checks.Add(checkFactory.Error(PreflightCheckKeys.Source, Texts.ProjectSourceTypeInvalid));
             return (0, null);
         }
 

@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using KK.Var.Data;
 using KK.Var.Enums;
 using KK.Var.Models;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.ViewModels
 {
@@ -71,7 +72,7 @@ namespace KK.Var.ViewModels
 
             if (string.IsNullOrWhiteSpace(DeploymentVersionTag))
             {
-                PublishNotification(Localize("Укажите тег новой версии."), isError: true);
+                PublishNotification(Texts.EnterTagNewVersion, isError: true);
                 _versionTagError = VersionTagError.Required;
                 return false;
             }
@@ -117,9 +118,9 @@ namespace KK.Var.ViewModels
                     PublishNotification(
                         state.PreflightResult?.HasWarnings == true ?
                             LocalizeFormat(
-                                "Версия «{0}» развёрнута с предупреждениями preflight.",
+                                Texts.VersionDeployedPreflightWarnings,
                                 deployedTag) :
-                            LocalizeFormat("Версия «{0}» успешно развёрнута", deployedTag),
+                            LocalizeFormat(Texts.VersionDeployedSuccessfully, deployedTag),
                         isError: false);
                 }
 
@@ -129,18 +130,18 @@ namespace KK.Var.ViewModels
             }
             catch (OperationCanceledException)
             {
-                DeploymentWorkspace.AppendDeploymentLog(state, Localize("Операция отменена."));
+                DeploymentWorkspace.AppendDeploymentLog(state, Texts.OperationCancelled);
 
                 if (SelectedProject?.Id == projectId)
                 {
-                    PublishNotification(Localize("Операция отменена."), isError: false);
+                    PublishNotification(Texts.OperationCancelled, isError: false);
                 }
 
                 return false;
             }
             catch (Exception exception)
             {
-                DeploymentWorkspace.AppendDeploymentLog(state, LocalizeFormat("ОШИБКА: {0}", Localize(exception.Message)));
+                DeploymentWorkspace.AppendDeploymentLog(state, LocalizeFormat(Texts.ERROR, Localize(exception.Message)));
 
                 if (SelectedProject?.Id == projectId)
                 {
@@ -209,7 +210,7 @@ namespace KK.Var.ViewModels
                 if (SelectedProject?.Id == projectId)
                 {
                     PublishNotification(
-                        LocalizeFormat("Выполнен rollback на версию «{0}»", item.Tag),
+                        LocalizeFormat(Texts.RolledBackVersion, item.Tag),
                         isError: false);
                 }
 
@@ -219,18 +220,18 @@ namespace KK.Var.ViewModels
             }
             catch (OperationCanceledException)
             {
-                DeploymentWorkspace.AppendDeploymentLog(state, Localize("Операция отменена."));
+                DeploymentWorkspace.AppendDeploymentLog(state, Texts.OperationCancelled);
 
                 if (SelectedProject?.Id == projectId)
                 {
-                    PublishNotification(Localize("Операция отменена."), isError: false);
+                    PublishNotification(Texts.OperationCancelled, isError: false);
                 }
 
                 return false;
             }
             catch (Exception exception)
             {
-                DeploymentWorkspace.AppendDeploymentLog(state, LocalizeFormat("ОШИБКА: {0}", Localize(exception.Message)));
+                DeploymentWorkspace.AppendDeploymentLog(state, LocalizeFormat(Texts.ERROR, Localize(exception.Message)));
 
                 if (SelectedProject?.Id == projectId)
                 {

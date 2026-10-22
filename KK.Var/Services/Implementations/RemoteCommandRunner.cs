@@ -4,6 +4,7 @@ using System.Linq;
 using KK.Var.Models;
 using Renci.SshNet;
 using static KK.Var.Services.RemoteShell;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
@@ -18,8 +19,7 @@ namespace KK.Var.Services.Implementations
             KKProject project,
             TextWriter log)
         {
-            log.WriteLine(localizationService.Get(
-                "Диагностика новой версии перед автоматическим rollback:"));
+            log.WriteLine(Texts.NewVersionDiagnosticsAutomaticRollback);
 
             try
             {
@@ -36,7 +36,7 @@ namespace KK.Var.Services.Implementations
             catch (Exception exception)
             {
                 log.WriteLine(localizationService.Format(
-                    "Не удалось полностью собрать диагностику: {0}",
+                    Texts.CouldNotCollectAllDiagnostics,
                     exception));
             }
         }
@@ -84,11 +84,10 @@ namespace KK.Var.Services.Implementations
                 var message = output.Contains(
                     MissingEnsurePipMessage,
                     StringComparison.OrdinalIgnoreCase) ?
-                        localizationService.Get(
-                            "Не удалось создать виртуальное окружение Python: на удалённой машине отсутствует venv/ensurepip. Для Debian или Ubuntu установите пакет python3-venv.") :
+                        Texts.CouldNotCreatePythonVirtualEnvironmentVenv :
                         string.IsNullOrWhiteSpace(output) ?
                             localizationService.Format(
-                                "Удалённая команда завершилась с кодом {0}.",
+                                Texts.RemoteCommandExitedCode,
                                 result.ExitStatus) :
                             LastUsefulLine(output);
                 throw new InvalidOperationException(message);
@@ -110,7 +109,7 @@ namespace KK.Var.Services.Implementations
                 throw new InvalidOperationException(
                     string.IsNullOrWhiteSpace(result.Error) ?
                         localizationService.Format(
-                            "Удалённая команда завершилась с кодом {0}.",
+                            Texts.RemoteCommandExitedCode,
                             result.ExitStatus) :
                         result.Error.Trim());
             }

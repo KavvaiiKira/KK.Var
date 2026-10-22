@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using KK.Var.Constants;
 using KK.Var.Models;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
@@ -17,7 +18,7 @@ namespace KK.Var.Services.Implementations
             var parts = repositoryFullName.Split('/');
             if (parts.Length != 2 || parts.Any(string.IsNullOrWhiteSpace))
             {
-                throw new ArgumentException(_localizationService.Get("Некорректное имя репозитория GitHub."));
+                throw new ArgumentException(Texts.InvalidGitHubRepositoryName);
             }
             return string.Join('/', parts.Select(Uri.EscapeDataString));
         }
@@ -91,7 +92,7 @@ namespace KK.Var.Services.Implementations
         {
             if (commitSha.Length != 40 || !commitSha.All(Uri.IsHexDigit))
             {
-                throw new InvalidDataException(_localizationService.Get("Некорректный Git commit SHA."));
+                throw new InvalidDataException(Texts.InvalidGitCommitSHA);
             }
             using var document = await ReadRepositoryApiAsync(
                 repositoryFullName,
@@ -106,7 +107,7 @@ namespace KK.Var.Services.Implementations
             var sha = element.GetProperty(GitHubProtocol.ShaField).GetString() ?? string.Empty;
             if (sha.Length != 40 || !sha.All(Uri.IsHexDigit))
             {
-                throw new InvalidDataException(_localizationService.Get("Некорректный Git commit SHA."));
+                throw new InvalidDataException(Texts.InvalidGitCommitSHA);
             }
             var commit = element.GetProperty(GitHubProtocol.CommitField);
             return new GitHubCommit(

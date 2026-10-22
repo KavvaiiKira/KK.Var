@@ -4,14 +4,14 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using KK.Var.Models;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
     public sealed class ArtifactStorageService(
         IUserSettingsService userSettingsService,
         IArtifactStorageActivity storageActivity,
-        IArtifactPathPolicy pathPolicy,
-        ILocalizationService localizationService) : IArtifactStorageService
+        IArtifactPathPolicy pathPolicy) : IArtifactStorageService
     {
         public async Task<string> GetEffectiveRootAsync(
             CancellationToken cancellationToken = default)
@@ -46,8 +46,7 @@ namespace KK.Var.Services.Implementations
 
             if ((attributes.Value & FileAttributes.Directory) != 0)
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Путь к архиву версии недопустим."));
+                throw new InvalidOperationException(Texts.VersionArchivePathInvalid);
             }
 
             pathPolicy.EnsureNotReparsePoint(path);
@@ -70,13 +69,12 @@ namespace KK.Var.Services.Implementations
 
             if (projectId == Guid.Empty)
             {
-                throw new ArgumentException(localizationService.Get("Укажите идентификатор проекта."), nameof(projectId));
+                throw new ArgumentException(Texts.ProjectIdentifierRequired, nameof(projectId));
             }
 
             if (storageActivity.IsCleanupRunning)
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Нельзя удалять проект во время очистки версий."));
+                throw new InvalidOperationException(Texts.ProjectCannotDeletedDuringVersionCleanup);
             }
 
             var root = await GetEffectiveRootAsync(cancellationToken);
@@ -106,8 +104,7 @@ namespace KK.Var.Services.Implementations
 
             if ((attributes.Value & FileAttributes.Directory) != 0)
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Путь к архиву версии недопустим."));
+                throw new InvalidOperationException(Texts.VersionArchivePathInvalid);
             }
 
             pathPolicy.EnsureNotReparsePoint(path);

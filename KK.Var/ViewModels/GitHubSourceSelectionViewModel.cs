@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using KK.Var.Models;
 using KK.Var.Services;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.ViewModels
 {
@@ -73,7 +74,7 @@ namespace KK.Var.ViewModels
             _commitCancellation?.Cancel();
             _branchesCancellation?.Cancel();
             Branches.Clear();
-            Branches.Add(new GitHubBranchOption(string.Empty, Localize("Ветка по умолчанию в GitHub")));
+            Branches.Add(new GitHubBranchOption(string.Empty, Texts.GitHubDefaultBranch));
             if (!string.IsNullOrWhiteSpace(branch))
             {
                 Branches.Add(new GitHubBranchOption(branch, branch));
@@ -93,7 +94,7 @@ namespace KK.Var.ViewModels
             {
                 Branches.Remove(previous);
             }
-            Branches.Insert(0, new GitHubBranchOption(string.Empty, Localize("Ветка по умолчанию в GitHub")));
+            Branches.Insert(0, new GitHubBranchOption(string.Empty, Texts.GitHubDefaultBranch));
             SelectedBranch = Branches.FirstOrDefault(option => option.Name == selected);
             _configuring = false;
             ErrorMessage = string.Empty;
@@ -122,7 +123,7 @@ namespace KK.Var.ViewModels
                 var selected = BranchName;
                 _configuring = true;
                 Branches.Clear();
-                Branches.Add(new GitHubBranchOption(string.Empty, Localize("Ветка по умолчанию в GitHub")));
+                Branches.Add(new GitHubBranchOption(string.Empty, Texts.GitHubDefaultBranch));
                 foreach (var branch in branches.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal))
                 {
                     Branches.Add(new GitHubBranchOption(branch, branch));
@@ -203,7 +204,7 @@ namespace KK.Var.ViewModels
 
         private async Task<GitHubToken> GetTokenAsync(CancellationToken cancellationToken) =>
             await _authentication!.GetTokenAsync(cancellationToken) ??
-            throw new InvalidOperationException(Localize("Подключите GitHub в настройках перед сборкой проекта."));
+            throw new InvalidOperationException(Texts.ConnectGitHubSettingsBuildingProject);
 
         partial void OnSelectedBranchChanged(GitHubBranchOption? value)
         {

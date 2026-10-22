@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using CommunityToolkit.Mvvm.Input;
 using KK.Var.Constants;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.ViewModels
 {
@@ -107,7 +108,7 @@ namespace KK.Var.ViewModels
             {
                 if (!IsLocalSource || !Directory.Exists(LocalDirectoryPath))
                 {
-                    ErrorMessage = Localize("Для автоопределения выберите доступную локальную папку. Для GitHub выберите тип сборки вручную.");
+                    ErrorMessage = Texts.SelectAccessibleLocalDirectoryDetectionGitHubSelect;
                     return;
                 }
 

@@ -1,6 +1,7 @@
 using KK.Var.Enums;
 using KK.Var.Models;
 using KK.Var.Services;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.ViewModels
 {
@@ -20,19 +21,19 @@ namespace KK.Var.ViewModels
 
         public string OperationDisplay => Deployment.OperationType switch
         {
-            DeploymentOperationType.Deploy => Localize("Развёртывание"),
-            DeploymentOperationType.Rollback => Localize("Откат"),
+            DeploymentOperationType.Deploy => Texts.Deployment,
+            DeploymentOperationType.Rollback => Texts.Rollback,
             _ => Deployment.OperationType.ToString(),
         };
 
         public string StatusDisplay => Deployment.Status switch
         {
-            DeploymentStatus.Pending => Localize("Ожидает"),
-            DeploymentStatus.Running => Localize("Выполняется"),
-            DeploymentStatus.Succeeded => Localize("Успешно"),
-            DeploymentStatus.Failed => Localize("Ошибка"),
-            DeploymentStatus.Cancelled => Localize("Отменено"),
-            DeploymentStatus.Interrupted => Localize("Прервано"),
+            DeploymentStatus.Pending => Texts.Pending,
+            DeploymentStatus.Running => Texts.Running,
+            DeploymentStatus.Succeeded => Texts.Succeeded,
+            DeploymentStatus.Failed => Texts.Failed,
+            DeploymentStatus.Cancelled => Texts.Cancelled,
+            DeploymentStatus.Interrupted => Texts.Interrupted,
             _ => Deployment.Status.ToString(),
         };
 

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using KK.Var.Constants;
 using KK.Var.Enums;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.ViewModels
 {
@@ -15,8 +16,8 @@ namespace KK.Var.ViewModels
 
         public string LanguageButtonToolTip =>
             _localizationService.CurrentLanguage == ApplicationLanguage.English ?
-                Localize("Переключить на русский") :
-                Localize("Переключить на английский");
+                Texts.SwitchRussian :
+                Texts.SwitchEnglish;
 
         public async Task SwitchLanguageAsync()
         {
@@ -95,7 +96,7 @@ namespace KK.Var.ViewModels
 
             GitHubAccount.GitHubAccountDisplay =
                 string.IsNullOrWhiteSpace(AppSettings.Settings.GitHub.AccountLogin) ?
-                    Localize("Не подключён") :
+                    Texts.NotConnected :
                     AppSettings.Settings.GitHub.AccountLogin;
         }
 

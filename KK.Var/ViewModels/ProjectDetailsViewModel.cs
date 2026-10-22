@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using KK.Var.Models;
 using KK.Var.Services;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.ViewModels
 {
@@ -56,7 +57,7 @@ namespace KK.Var.ViewModels
         public bool HasMissingProjectArtifacts => MissingProjectArtifactCount > 0;
 
         public string MissingProjectArtifactsDisplay =>
-            LocalizeFormat("Отсутствует архивов: {0}", MissingProjectArtifactCount);
+            LocalizeFormat(Texts.MissingArchives, MissingProjectArtifactCount);
 
         public bool HasNoProjectHistory => ProjectHistory.Count == 0;
 
@@ -203,7 +204,7 @@ namespace KK.Var.ViewModels
 
         public string VersionCleanupPreview => PendingVersionCleanup is { } plan ?
             LocalizeFormat(
-                "Будет удалено версий: {0}, байт: {1}. Отменить это действие нельзя.",
+                Texts.VersionsDeleteBytesActionCannotUndone,
                 plan.VersionCount,
                 plan.BytesToDelete.ToString("N0")) :
             string.Empty;
@@ -251,7 +252,7 @@ namespace KK.Var.ViewModels
                 if (ReferenceEquals(SelectedProject, project))
                 {
                     PublishNotification(
-                        LocalizeFormat("Версия «{0}» удалена", item.Tag),
+                        LocalizeFormat(Texts.VersionDeleted, item.Tag),
                         isError: false);
                     await LoadAsync(project);
                 }
@@ -288,7 +289,7 @@ namespace KK.Var.ViewModels
 
                 if (plan.VersionCount == 0)
                 {
-                    PublishNotification(Localize("Очистка версий не требуется."), isError: false);
+                    PublishNotification(Texts.NoVersionCleanupNeeded, isError: false);
                 }
             }
             catch (Exception exception)
@@ -328,7 +329,7 @@ namespace KK.Var.ViewModels
                 if (ReferenceEquals(SelectedProject, project))
                 {
                     PublishNotification(LocalizeFormat(
-                        "Очищено версий: {0}, байт: {1}.",
+                        Texts.DeletedVersionsBytes,
                         result.VersionCount,
                         result.BytesToDelete.ToString("N0")), isError: false);
                 }

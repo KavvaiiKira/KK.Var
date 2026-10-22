@@ -94,7 +94,7 @@
         <Grid Margin="30,24,30,14" ColumnDefinitions="Auto,*,Auto">
             <Button Width="42" Height="42" Margin="0,0,14,0" Padding="0"
                     HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                    Classes="details-secondary" Click="BackButton_OnClick" ToolTip.Tip="{DynamicResource 'Назад к проектам'}">
+                    Classes="details-secondary" Click="BackButton_OnClick" ToolTip.Tip="{DynamicResource BackProjects}">
                 <PathIcon Width="19" Height="19"
                           Data="M20,11H7.8L13.4,5.4L12,4L4,12L12,20L13.4,18.6L7.8,13H20V11Z" />
             </Button>
@@ -108,22 +108,22 @@
             <StackPanel Grid.Column="2" VerticalAlignment="Center" Orientation="Horizontal" Spacing="10">
                 <Button Classes="deploy"
                         Padding="16,10"
-                        Content="{DynamicResource 'Развернуть'}"
+                        Content="{DynamicResource Deploy}"
                         Click="DeployButton_OnClick" />
-                <Button Classes="details-secondary" Content="{DynamicResource 'Редактировать'}" Click="EditButton_OnClick" />
-                <Button Classes="details-secondary" Content="{DynamicResource 'Экспорт'}"
-                        ToolTip.Tip="{DynamicResource 'Экспорт включает значения переменных проекта и процесса сборки.'}"
+                <Button Classes="details-secondary" Content="{DynamicResource Edit}" Click="EditButton_OnClick" />
+                <Button Classes="details-secondary" Content="{DynamicResource Export}"
+                        ToolTip.Tip="{DynamicResource ExportIncludesProjectBuildProcessEnvironmentValues}"
                         IsEnabled="{Binding CanExportProjectConfiguration}" Click="ExportProjectButton_OnClick" />
                 <Button Classes="details-secondary" Foreground="{DynamicResource AppDangerBrush}"
-                        Content="{DynamicResource 'Удалить'}" Click="DeleteButton_OnClick" />
+                        Content="{DynamicResource Delete}" Click="DeleteButton_OnClick" />
             </StackPanel>
         </Grid>
 
         <StackPanel Grid.Row="1" Margin="30,0,30,16" Orientation="Horizontal" Spacing="6">
-            <Button x:Name="OverviewTab" Classes="details-tab active" Content="{DynamicResource 'Обзор'}" Click="OverviewTab_OnClick" />
-            <Button x:Name="EnvironmentTab" Classes="details-tab" Content="{DynamicResource 'Переменные'}" Click="EnvironmentTab_OnClick" />
-            <Button x:Name="VersionsTab" Classes="details-tab" Content="{DynamicResource 'Версии'}" Click="VersionsTab_OnClick" />
-            <Button x:Name="ProjectHistoryTab" Classes="details-tab" Content="{DynamicResource 'История'}" Click="ProjectHistoryTab_OnClick" />
+            <Button x:Name="OverviewTab" Classes="details-tab active" Content="{DynamicResource Overview}" Click="OverviewTab_OnClick" />
+            <Button x:Name="EnvironmentTab" Classes="details-tab" Content="{DynamicResource Variables}" Click="EnvironmentTab_OnClick" />
+            <Button x:Name="VersionsTab" Classes="details-tab" Content="{DynamicResource Versions_Title}" Click="VersionsTab_OnClick" />
+            <Button x:Name="ProjectHistoryTab" Classes="details-tab" Content="{DynamicResource History_Title}" Click="ProjectHistoryTab_OnClick" />
         </StackPanel>
 
         <ScrollViewer Grid.Row="2" Margin="30,0,20,24" HorizontalContentAlignment="Stretch"
@@ -134,19 +134,19 @@
                             BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="14">
                         <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="20" RowSpacing="20">
                             <StackPanel>
-                                <TextBlock Classes="details-label" Text="{DynamicResource 'Источник'}" />
+                                <TextBlock Classes="details-label" Text="{DynamicResource Source}" />
                                 <TextBlock Classes="details-value" Text="{Binding SelectedProjectSourceDisplay}" />
                             </StackPanel>
                             <StackPanel Grid.Column="1">
-                                <TextBlock Classes="details-label" Text="{DynamicResource 'Тип сборки'}" />
+                                <TextBlock Classes="details-label" Text="{DynamicResource BuildType}" />
                                 <TextBlock Classes="details-value" Text="{Binding SelectedProject.BuildProvider}" />
                             </StackPanel>
                             <StackPanel Grid.Row="1">
-                                <TextBlock Classes="details-label" Text="{DynamicResource 'Последний deploy'}" />
+                                <TextBlock Classes="details-label" Text="{DynamicResource LastDeploy}" />
                                 <TextBlock Classes="details-value" Text="{Binding SelectedProjectLastDeploymentDisplay}" />
                             </StackPanel>
                             <StackPanel Grid.Row="1" Grid.Column="1">
-                                <TextBlock Classes="details-label" Text="{DynamicResource 'Версия'}" />
+                                <TextBlock Classes="details-label" Text="{DynamicResource Version}" />
                                 <TextBlock Classes="details-value" Foreground="{DynamicResource AppPrimaryHoverBrush}"
                                            Text="{Binding SelectedProjectLatestVersionTag}" />
                             </StackPanel>
@@ -157,17 +157,17 @@
                             BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="14">
                         <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="20" RowSpacing="20">
                             <StackPanel>
-                                <TextBlock Classes="details-label" Text="{DynamicResource 'Systemd-сервис'}" />
+                                <TextBlock Classes="details-label" Text="{DynamicResource SystemdService}" />
                                 <TextBlock Classes="details-value" FontFamily="Consolas"
                                            Text="{Binding SelectedProject.RemoteServiceName}" />
                             </StackPanel>
                             <StackPanel Grid.Column="1">
-                                <TextBlock Classes="details-label" Text="{DynamicResource 'Файл сервиса'}" />
+                                <TextBlock Classes="details-label" Text="{DynamicResource ServiceFile}" />
                                 <TextBlock Classes="details-value" FontFamily="Consolas"
                                            Text="{Binding SelectedProject.RemoteExecutablePath}" />
                             </StackPanel>
                             <StackPanel Grid.Row="1" Grid.ColumnSpan="2">
-                                <TextBlock Classes="details-label" Text="{DynamicResource 'Файл переменных окружения'}" />
+                                <TextBlock Classes="details-label" Text="{DynamicResource EnvironmentVariablesFile}" />
                                 <TextBlock Classes="details-value" FontFamily="Consolas"
                                            Text="{Binding SelectedProject.ProjectEnvironmentFilePath}" />
                             </StackPanel>
@@ -178,8 +178,8 @@
                 <StackPanel x:Name="EnvironmentPanel" IsVisible="False" Spacing="14">
                     <Grid ColumnDefinitions="*,220,Auto" ColumnSpacing="12">
                         <StackPanel Spacing="4">
-                            <TextBlock Text="{DynamicResource 'Переменные окружения'}" FontSize="20" FontWeight="Bold" />
-                            <TextBlock Text="{DynamicResource 'Во время deploy они будут записаны в выбранном формате по пути, указанному в проекте.'}"
+                            <TextBlock Text="{DynamicResource EnvironmentVariables}" FontSize="20" FontWeight="Bold" />
+                            <TextBlock Text="{DynamicResource DuringDeployTheyWrittenSelectedFormatPath}"
                                        FontSize="12" Foreground="{DynamicResource AppTextMutedBrush}" />
                         </StackPanel>
                         <ComboBox Grid.Column="1"
@@ -187,7 +187,7 @@
                                   VerticalAlignment="Center"
                                   ItemsSource="{Binding EnvironmentEditor.EnvironmentFileFormats}"
                                   SelectedItem="{Binding EnvironmentEditor.SelectedEnvironmentFileFormat}" />
-                        <Button Grid.Column="2" Classes="details-secondary" Content="{DynamicResource '＋ Добавить'}"
+                        <Button Grid.Column="2" Classes="details-secondary" Content="{DynamicResource Add}"
                                 Click="AddVariableButton_OnClick" />
                     </Grid>
 
@@ -196,11 +196,11 @@
                             <DataTemplate x:DataType="vm:EnvironmentVariableRowViewModel">
                                 <Grid Margin="0,0,0,9" ColumnDefinitions="280,*,42" ColumnSpacing="10">
                                     <TextBox Classes="environment-input"
-                                             PlaceholderText="{DynamicResource 'ИМЯ_ПЕРЕМЕННОЙ'}"
+                                             PlaceholderText="{DynamicResource VARIABLENAME}"
                                              Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
                                     <TextBox Grid.Column="1"
                                              Classes="environment-input"
-                                             PlaceholderText="{DynamicResource 'Значение'}"
+                                             PlaceholderText="{DynamicResource Value}"
                                              Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" />
                                     <Button Grid.Column="2" Width="42" Classes="details-secondary" Content="×"
                                             Foreground="{DynamicResource AppDangerBrush}"
@@ -213,7 +213,7 @@
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
                         <Button Classes="deploy"
                                 HorizontalAlignment="Left"
-                                Content="{DynamicResource 'Сохранить сейчас'}"
+                                Content="{DynamicResource SaveNow}"
                                 Click="SaveVariablesButton_OnClick" />
                         <TextBlock Grid.Column="1"
                                    VerticalAlignment="Center"
@@ -224,20 +224,20 @@
                 </StackPanel>
 
                 <StackPanel x:Name="VersionsPanel" IsVisible="False" Spacing="14">
-                    <TextBlock Text="{DynamicResource 'Версии'}" FontSize="20" FontWeight="Bold" />
+                    <TextBlock Text="{DynamicResource Versions_Title}" FontSize="20" FontWeight="Bold" />
                     <StackPanel Spacing="5">
-                        <TextBlock Text="{DynamicResource 'Версия создаётся автоматически после успешной сборки. Архив и контрольная сумма неизменяемы.'}"
+                        <TextBlock Text="{DynamicResource Versions_CreationHint}"
                                    TextWrapping="Wrap"
                                    FontSize="12"
                                    Foreground="{DynamicResource AppTextMutedBrush}" />
-                        <TextBlock Text="{DynamicResource 'Закрепление защищает версию от автоматической очистки. «Открепить» снимает защиту, но не удаляет версию. Версия на сервере не меняется.'}"
+                        <TextBlock Text="{DynamicResource Versions_PinningHint}"
                                    TextWrapping="Wrap"
                                    FontSize="12"
                                    Foreground="{DynamicResource AppTextMutedBrush}" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Spacing="16">
                         <TextBlock Foreground="{DynamicResource AppTextMutedBrush}">
-                            <Run Text="{DynamicResource 'Общий размер проекта'}" />
+                            <Run Text="{DynamicResource TotalProjectSize}" />
                             <Run Text=": " />
                             <Run Text="{Binding ProjectDetails.ProjectArtifactsSizeDisplay}" />
                         </TextBlock>
@@ -248,10 +248,10 @@
                     <Button Classes="details-secondary"
                             HorizontalAlignment="Left"
                             IsEnabled="{Binding !ProjectDetails.IsVersionCleanupBusy}"
-                            Content="{DynamicResource 'Очистить версии'}"
+                            Content="{DynamicResource CleanUpVersions}"
                             Click="PrepareVersionCleanupButton_OnClick" />
                     <TextBlock IsVisible="{Binding ProjectDetails.HasNoProjectVersions}" Margin="0,36,0,0"
-                               HorizontalAlignment="Center" Text="{DynamicResource 'У проекта пока нет собранных версий'}"
+                               HorizontalAlignment="Center" Text="{DynamicResource ProjectNoBuiltVersionsYet}"
                                Foreground="{DynamicResource AppTextMutedBrush}" />
                     <ItemsControl ItemsSource="{Binding ProjectDetails.ProjectVersions}">
                         <ItemsControl.ItemTemplate>
@@ -289,14 +289,14 @@
                                                 Content="{Binding PinActionText}"
                                                 Click="PinVersionButton_OnClick" />
                                         <Button Grid.Column="5" Classes="details-secondary"
-                                                Padding="12,8" Content="{DynamicResource 'Откатить'}"
+                                                Padding="12,8" Content="{DynamicResource Rollback2}"
                                                 IsEnabled="{Binding ArtifactExists}"
                                                 Click="RollbackButton_OnClick" />
                                         <Button Grid.Column="6" Classes="details-secondary"
                                                 Padding="12,8"
                                                 IsEnabled="{Binding CanDelete}"
                                                 Foreground="{DynamicResource AppDangerBrush}"
-                                                Content="{DynamicResource 'Удалить'}"
+                                                Content="{DynamicResource Delete}"
                                                 Click="DeleteVersionButton_OnClick" />
                                     </Grid>
                                 </Border>
@@ -306,9 +306,9 @@
                 </StackPanel>
 
                 <StackPanel x:Name="HistoryPanel" IsVisible="False" Spacing="14">
-                    <TextBlock Text="{DynamicResource 'История проекта'}" FontSize="20" FontWeight="Bold" />
+                    <TextBlock Text="{DynamicResource ProjectHistory}" FontSize="20" FontWeight="Bold" />
                     <TextBlock IsVisible="{Binding ProjectDetails.HasNoProjectHistory}" Margin="0,36,0,0"
-                               HorizontalAlignment="Center" Text="{DynamicResource 'Deploy и rollback ещё не выполнялись'}"
+                               HorizontalAlignment="Center" Text="{DynamicResource NoDeployRollbackOperationsYet}"
                                Foreground="{DynamicResource AppTextMutedBrush}" />
                     <ItemsControl ItemsSource="{Binding ProjectDetails.ProjectHistory}">
                         <ItemsControl.ItemTemplate>
@@ -333,7 +333,7 @@
                             Background="{DynamicResource AppSurfaceRaisedBrush}"
                             BorderBrush="{DynamicResource AppBorderBrush}"
                             BorderThickness="1"
-                            Content="{DynamicResource 'Показать ещё'}"
+                            Content="{DynamicResource ShowMore}"
                             Click="LoadMoreProjectHistoryButton_OnClick" />
                 </StackPanel>
 
@@ -341,8 +341,8 @@
                         Background="{DynamicResource AppSurfaceBrush}"
                         BorderBrush="{DynamicResource AppPrimaryBrush}" BorderThickness="1" CornerRadius="14">
                     <StackPanel Spacing="12">
-                        <TextBlock Text="{DynamicResource 'Deploy проекта'}" FontSize="22" FontWeight="Bold" />
-                        <TextBlock Text="{DynamicResource 'KK.Var соберёт исходный код, создаст локальную версию, передаст файлы на Linux-машину и перезапустит systemd-сервис.'}"
+                        <TextBlock Text="{DynamicResource ProjectDeploy}" FontSize="22" FontWeight="Bold" />
+                        <TextBlock Text="{DynamicResource KKVarBuildSourceCodeCreateLocal}"
                                    MaxWidth="680" HorizontalAlignment="Left" TextWrapping="Wrap" LineHeight="20"
                                    Foreground="{DynamicResource AppTextMutedBrush}" />
                         <Border Padding="16"
@@ -351,11 +351,11 @@
                                 BorderThickness="1"
                                 CornerRadius="10">
                             <StackPanel Spacing="6">
-                                <TextBlock Text="{DynamicResource 'Исходный код'}"
+                                <TextBlock Text="{DynamicResource Source_Title}"
                                            FontWeight="SemiBold" />
                                 <SelectableTextBlock Text="{Binding SelectedProjectSourceDisplay}"
                                                      TextWrapping="Wrap" />
-                                <TextBlock Text="{DynamicResource 'Источник задан в настройках проекта.'}"
+                                <TextBlock Text="{DynamicResource SourceConfiguredProjectSettings}"
                                            FontSize="12"
                                            Foreground="{DynamicResource AppTextMutedBrush}" />
                             </StackPanel>
@@ -369,7 +369,7 @@
                             <StackPanel Spacing="14">
                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
                                     <StackPanel VerticalAlignment="Center" Spacing="5">
-                                        <TextBlock Text="{DynamicResource 'Ветка проекта GitHub'}"
+                                        <TextBlock Text="{DynamicResource ProjectGitHubBranch}"
                                                    FontSize="12"
                                                    Foreground="{DynamicResource AppTextMutedBrush}" />
                                         <TextBlock Text="{Binding DeploymentGitHubSource.SelectedBranch.Label}"
@@ -380,11 +380,11 @@
                                             IsEnabled="{Binding !DeploymentWorkspace.IsSelectedProjectDeploymentActive}"
                                             Classes="details-secondary"
                                             VerticalAlignment="Center"
-                                            Content="{DynamicResource 'Обновить коммит'}"
+                                            Content="{DynamicResource RefreshCommit}"
                                             Click="DeploymentCommit_OnClick" />
                                 </Grid>
                                 <TextBlock IsVisible="{Binding DeploymentGitHubSource.IsResolving}"
-                                           Text="{DynamicResource 'Загрузка коммита…'}"
+                                           Text="{DynamicResource LoadingCommit}"
                                            Foreground="{DynamicResource AppTextMutedBrush}" />
                                 <TextBlock IsVisible="{Binding DeploymentGitHubSource.HasError}"
                                            Text="{Binding DeploymentGitHubSource.ErrorMessage}"
@@ -398,12 +398,12 @@
                             </StackPanel>
                         </Border>
                         <Grid Margin="0,12,0,0" ColumnDefinitions="220,*" RowDefinitions="Auto,Auto" RowSpacing="12">
-                            <TextBlock VerticalAlignment="Center" Text="{DynamicResource 'Следующая версия'}" Foreground="{DynamicResource AppTextMutedBrush}" />
-                            <TextBox x:Name="DeploymentTagInput" Classes="deploy-input" Grid.Column="1" PlaceholderText="{DynamicResource 'Например, release-1'}"
+                            <TextBlock VerticalAlignment="Center" Text="{DynamicResource NextVersion}" Foreground="{DynamicResource AppTextMutedBrush}" />
+                            <TextBox x:Name="DeploymentTagInput" Classes="deploy-input" Grid.Column="1" PlaceholderText="{DynamicResource ExampleRelease1}"
                                      IsReadOnly="{Binding DeploymentWorkspace.IsSelectedProjectDeploymentActive}"
                                      Text="{Binding DeploymentVersionTag}" />
-                            <TextBlock Grid.Row="1" VerticalAlignment="Center" Text="{DynamicResource 'Описание'}" Foreground="{DynamicResource AppTextMutedBrush}" />
-                            <TextBox Classes="deploy-input" Grid.Row="1" Grid.Column="1" PlaceholderText="{DynamicResource 'Что изменилось в этой версии'}"
+                            <TextBlock Grid.Row="1" VerticalAlignment="Center" Text="{DynamicResource Common_Description}" Foreground="{DynamicResource AppTextMutedBrush}" />
+                            <TextBox Classes="deploy-input" Grid.Row="1" Grid.Column="1" PlaceholderText="{DynamicResource WhatChangedVersion}"
                                      IsReadOnly="{Binding DeploymentWorkspace.IsSelectedProjectDeploymentActive}"
                                      Text="{Binding DeploymentDescription}" />
                         </Grid>
@@ -419,14 +419,14 @@
                                     Classes="details-secondary"
                                     Padding="12,7"
                                     IsVisible="{Binding DeploymentWorkspace.IsSelectedProjectDeploymentWaiting}"
-                                    Content="{DynamicResource 'Отменить операцию'}"
+                                    Content="{DynamicResource CancelOperation}"
                                     Click="CancelDeploymentButton_OnClick" />
                         </Grid>
                         <ProgressBar Height="4" Minimum="0" Maximum="100"
                                      IsVisible="{Binding DeploymentWorkspace.IsSelectedProjectDeploymentRunning}"
                                      Value="{Binding DeploymentWorkspace.DeploymentProgressPercentage}" />
                         <TextBlock IsVisible="{Binding IsPreflightChecking}"
-                                   Text="{DynamicResource 'Выполняется предварительная проверка…'}"
+                                   Text="{DynamicResource RunningPreflightChecks}"
                                    Foreground="{DynamicResource AppTextMutedBrush}" />
                         <Border IsVisible="{Binding DeploymentWorkspace.HasDeploymentPreflightResult}"
                                 Padding="12"
@@ -457,13 +457,13 @@
                                         <DataTemplate x:DataType="vm:DeploymentPreflightItemViewModel">
                                             <Grid ColumnDefinitions="130,*" ColumnSpacing="12" Margin="0,4" Focusable="True">
                                                 <TextBlock IsVisible="{Binding IsSuccess}"
-                                                           Text="{DynamicResource 'Успешно'}"
+                                                           Text="{DynamicResource Succeeded}"
                                                            Foreground="{DynamicResource AppSuccessBrush}" />
                                                 <TextBlock IsVisible="{Binding IsWarning}"
-                                                           Text="{DynamicResource 'Предупреждение'}"
+                                                           Text="{DynamicResource Warning}"
                                                            Foreground="{DynamicResource AppPrimaryHoverBrush}" />
                                                 <TextBlock IsVisible="{Binding IsError}"
-                                                           Text="{DynamicResource 'Ошибка'}"
+                                                           Text="{DynamicResource Failed}"
                                                            Foreground="{DynamicResource AppDangerBrush}" />
                                                 <StackPanel Grid.Column="1" Spacing="6">
                                                     <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
@@ -475,7 +475,7 @@
                                                                           Data="M3,1 L8,6 L3,11 Z"
                                                                           RenderTransformOrigin="50%,50%"
                                                                           Foreground="{DynamicResource AppPrimaryHoverBrush}" />
-                                                                <TextBlock Text="{DynamicResource 'Технические подробности'}" />
+                                                                <TextBlock Text="{DynamicResource Preflight_Details}" />
                                                             </StackPanel>
                                                         </ToggleButton>
                                                         <Border IsVisible="{Binding IsDetailExpanded}"
@@ -519,11 +519,11 @@
                         <WrapPanel Margin="0,12,0,0" ItemSpacing="12" LineSpacing="8">
                             <Button Classes="details-secondary"
                                     IsEnabled="{Binding CanCheckDeployment}"
-                                    Content="{DynamicResource 'Проверить'}"
+                                    Content="{DynamicResource Check}"
                                     Click="CheckDeploymentButton_OnClick" />
                             <Button Classes="deploy"
                                     IsEnabled="{Binding CanCheckDeployment}"
-                                    Content="{DynamicResource 'Собрать и выполнить deploy'}"
+                                    Content="{DynamicResource BuildDeploy}"
                                     Click="RunDeployButton_OnClick" />
                         </WrapPanel>
                     </StackPanel>
@@ -544,10 +544,10 @@
                     BorderThickness="1"
                     CornerRadius="14">
                 <StackPanel Spacing="12">
-                    <TextBlock Text="{DynamicResource 'Переменные ещё не сохранены'}"
+                    <TextBlock Text="{DynamicResource VariablesNotSaved}"
                                FontSize="20"
                                FontWeight="Bold" />
-                    <TextBlock Text="{DynamicResource 'Автосохранение не завершилось или в списке есть незаполненная переменная.'}"
+                    <TextBlock Text="{DynamicResource AutosaveNotCompletedVariableIncomplete}"
                                TextWrapping="Wrap"
                                FontSize="13"
                                Foreground="{DynamicResource AppTextMutedBrush}" />
@@ -556,15 +556,15 @@
                                 Orientation="Horizontal"
                                 Spacing="10">
                         <Button Classes="details-secondary"
-                                Content="{DynamicResource 'Остаться'}"
+                                Content="{DynamicResource Stay}"
                                 Click="StayOnEnvironmentButton_OnClick" />
                         <Button Classes="details-secondary"
                                 Foreground="{DynamicResource AppDangerBrush}"
-                                Content="{DynamicResource 'Уйти без сохранения'}"
+                                Content="{DynamicResource DiscardLeave}"
                                 Click="DiscardEnvironmentButton_OnClick" />
                         <Button Classes="deploy"
                                 Padding="16,10"
-                                Content="{DynamicResource 'Сохранить и перейти'}"
+                                Content="{DynamicResource SaveContinue}"
                                 Click="SaveEnvironmentAndContinueButton_OnClick" />
                     </StackPanel>
                 </StackPanel>
@@ -583,7 +583,7 @@
                     BorderThickness="1"
                     CornerRadius="14">
                 <StackPanel Spacing="12">
-                    <TextBlock Text="{DynamicResource 'Очистить версии?'}"
+                    <TextBlock Text="{DynamicResource CleanUpVersions2}"
                                FontSize="20"
                                FontWeight="Bold" />
                     <TextBlock Text="{Binding ProjectDetails.VersionCleanupPreview}"
@@ -595,11 +595,11 @@
                                 Orientation="Horizontal"
                                 Spacing="10">
                         <Button Classes="details-secondary"
-                                Content="{DynamicResource 'Отмена'}"
+                                Content="{DynamicResource Common_Cancel}"
                                 Click="CancelVersionCleanupButton_OnClick" />
                         <Button Classes="details-secondary"
                                 Foreground="{DynamicResource AppDangerBrush}"
-                                Content="{DynamicResource 'Очистить версии'}"
+                                Content="{DynamicResource CleanUpVersions}"
                                 Click="ConfirmVersionCleanupButton_OnClick" />
                     </StackPanel>
                 </StackPanel>
@@ -619,7 +619,7 @@
                     BorderThickness="1"
                     CornerRadius="14">
                 <StackPanel Spacing="12">
-                    <TextBlock Text="{DynamicResource 'Удалить локальную версию?'}"
+                    <TextBlock Text="{DynamicResource DeleteLocalVersion}"
                                FontSize="20"
                                FontWeight="Bold" />
                     <TextBlock x:Name="DeleteVersionMessage"
@@ -631,11 +631,11 @@
                                 Orientation="Horizontal"
                                 Spacing="10">
                         <Button Classes="details-secondary"
-                                Content="{DynamicResource 'Отмена'}"
+                                Content="{DynamicResource Common_Cancel}"
                                 Click="CancelDeleteVersionButton_OnClick" />
                         <Button Classes="details-secondary"
                                 Foreground="{DynamicResource AppDangerBrush}"
-                                Content="{DynamicResource 'Удалить'}"
+                                Content="{DynamicResource Delete}"
                                 Click="ConfirmDeleteVersionButton_OnClick" />
                     </StackPanel>
                 </StackPanel>

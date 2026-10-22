@@ -35,12 +35,12 @@
                         Click="BackButton_OnClick">
                     <StackPanel Orientation="Horizontal" Spacing="7">
                         <TextBlock Text="←" />
-                        <TextBlock Text="{DynamicResource 'Назад'}" />
+                        <TextBlock Text="{DynamicResource Common_Back}" />
                     </StackPanel>
                 </Button>
 
                 <StackPanel Grid.Column="1" Spacing="4">
-                    <TextBlock Text="{DynamicResource 'Детали операции'}"
+                    <TextBlock Text="{DynamicResource OperationDetails}"
                                FontSize="30"
                                FontWeight="Bold" />
                     <TextBlock Foreground="{DynamicResource AppTextMutedBrush}">
@@ -54,7 +54,7 @@
                         Classes="primary"
                         Padding="18,10"
                         VerticalAlignment="Center"
-                        Content="{DynamicResource 'Повторить Deploy'}"
+                        Content="{DynamicResource RepeatDeploy}"
                         Click="RepeatDeployButton_OnClick" />
             </Grid>
 
@@ -67,38 +67,38 @@
                     CornerRadius="12">
                 <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="34" RowSpacing="17">
                     <StackPanel Spacing="4">
-                        <TextBlock Text="{DynamicResource 'Тип операции'}" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
+                        <TextBlock Text="{DynamicResource OperationType}" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
                         <TextBlock Text="{Binding OperationDisplay}" FontSize="16" FontWeight="SemiBold" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Spacing="4">
-                        <TextBlock Text="{DynamicResource 'Итоговый статус'}" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
+                        <TextBlock Text="{DynamicResource FinalStatus}" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
                         <TextBlock Text="{Binding StatusDisplay}" FontSize="16" FontWeight="SemiBold" />
                     </StackPanel>
 
                     <StackPanel Grid.Row="1" Spacing="4">
-                        <TextBlock Text="{DynamicResource 'Начало'}" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
+                        <TextBlock Text="{DynamicResource Started}" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
                         <TextBlock Text="{Binding StartedAtDisplay}" />
                     </StackPanel>
                     <StackPanel Grid.Row="1" Grid.Column="1" Spacing="4">
-                        <TextBlock Text="{DynamicResource 'Завершение'}" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
+                        <TextBlock Text="{DynamicResource Completed}" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
                         <TextBlock Text="{Binding CompletedAtDisplay}" />
                     </StackPanel>
 
                     <StackPanel Grid.Row="2" Spacing="4">
-                        <TextBlock Text="{DynamicResource 'Длительность'}" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
+                        <TextBlock Text="{DynamicResource Duration}" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
                         <TextBlock Text="{Binding DurationDisplay}" />
                     </StackPanel>
                     <StackPanel Grid.Row="2" Grid.Column="1" Spacing="4">
-                        <TextBlock Text="{DynamicResource 'Последний этап'}" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
+                        <TextBlock Text="{DynamicResource LastStage}" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
                         <TextBlock Text="{Binding StageDisplay}" />
                     </StackPanel>
 
                     <StackPanel Grid.Row="3" Spacing="4">
-                        <TextBlock Text="{DynamicResource 'Изменение unit-файла'}" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
+                        <TextBlock Text="{DynamicResource UnitFileChange}" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
                         <TextBlock Text="{Binding UnitChangeDisplay}" />
                     </StackPanel>
                     <StackPanel Grid.Row="3" Grid.Column="1" Spacing="4">
-                        <TextBlock Text="{DynamicResource 'Выполнен daemon-reload'}" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
+                        <TextBlock Text="{DynamicResource DaemonReloadPerformed}" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
                         <TextBlock Text="{Binding DaemonReloadDisplay}" />
                     </StackPanel>
                 </Grid>
@@ -111,7 +111,7 @@
                     BorderThickness="1"
                     CornerRadius="12">
                 <StackPanel Spacing="6">
-                    <TextBlock Text="{DynamicResource 'Commit GitHub'}" FontWeight="SemiBold" />
+                    <TextBlock Text="{DynamicResource GitHubCommit}" FontWeight="SemiBold" />
                     <TextBlock Text="{Binding CommitSha}" FontFamily="Cascadia Mono, Consolas" TextWrapping="Wrap" />
                 </StackPanel>
             </Border>
@@ -123,7 +123,7 @@
                     BorderThickness="1"
                     CornerRadius="12">
                 <StackPanel Spacing="6">
-                    <TextBlock Text="{DynamicResource 'Ошибка операции'}" FontWeight="SemiBold" Foreground="{DynamicResource AppDangerBrush}" />
+                    <TextBlock Text="{DynamicResource OperationError}" FontWeight="SemiBold" Foreground="{DynamicResource AppDangerBrush}" />
                     <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" />
                 </StackPanel>
             </Border>
@@ -134,8 +134,8 @@
                     BorderThickness="1"
                     CornerRadius="12">
                 <StackPanel Spacing="9">
-                    <TextBlock Text="{DynamicResource 'Снимок переменных окружения'}" FontWeight="SemiBold" />
-                    <TextBlock Text="{DynamicResource 'Сохранённые значения не предназначены для секретов.'}"
+                    <TextBlock Text="{DynamicResource EnvironmentVariablesSnapshot}" FontWeight="SemiBold" />
+                    <TextBlock Text="{DynamicResource StoredValuesNotIntendedSecrets}"
                                FontSize="12"
                                Foreground="{DynamicResource AppTextMutedBrush}" />
                     <TextBox Classes="operation-code"
@@ -156,7 +156,7 @@
                     BorderThickness="1"
                     CornerRadius="12">
                 <StackPanel Spacing="9">
-                    <TextBlock Text="{DynamicResource 'Лог операции'}" FontWeight="SemiBold" />
+                    <TextBlock Text="{DynamicResource OperationLog}" FontWeight="SemiBold" />
                     <TextBox Classes="operation-code"
                              Height="280"
                              IsReadOnly="True"

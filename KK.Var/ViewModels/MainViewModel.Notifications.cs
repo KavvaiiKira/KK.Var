@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using KK.Var.Enums;
 using KK.Var.Models;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.ViewModels
 {
@@ -15,16 +16,16 @@ namespace KK.Var.ViewModels
             try
             {
                 var project = await ProjectList.GetByIdAsync(notice.ProjectId) ??
-                    throw new InvalidOperationException(Localize("Проект не найден."));
+                    throw new InvalidOperationException(Texts.ProjectNotFound);
                 SelectedProject = project;
                 await LoadProjectDetailsAsync(project);
                 if (notice.DeploymentId is { } deploymentId)
                 {
                     var deployment = await _deploymentHistory.GetByIdAsync(deploymentId) ??
-                        throw new InvalidOperationException(Localize("Операция больше недоступна."));
+                        throw new InvalidOperationException(Texts.OperationNoLongerAvailable);
                     if (deployment.KKProjectId != project.Id)
                     {
-                        throw new InvalidOperationException(Localize("Операция больше недоступна."));
+                        throw new InvalidOperationException(Texts.OperationNoLongerAvailable);
                     }
                     deployment.Project = project;
                     await LoadDeploymentDetailsAsync(new DeploymentHistoryItemViewModel(
@@ -44,18 +45,18 @@ namespace KK.Var.ViewModels
         {
             if (notice.AutomaticRollbackFailed)
             {
-                return Localize("Ошибка Deploy и автоматического rollback");
+                return Texts.DeployAutomaticRollbackFailed;
             }
             if (notice.AutomaticRollbackCompleted)
             {
-                return Localize("Ошибка Deploy: автоматический rollback выполнен");
+                return Texts.DeployFailedAutomaticRollbackCompleted;
             }
             return (notice.OperationType, notice.Status) switch
             {
-                (DeploymentOperationType.Rollback, DeploymentStatus.Succeeded) => Localize("Rollback завершён"),
-                (DeploymentOperationType.Rollback, _) => Localize("Rollback завершился ошибкой"),
-                (_, DeploymentStatus.Succeeded) => Localize("Deploy завершён"),
-                _ => Localize("Deploy завершился ошибкой"),
+                (DeploymentOperationType.Rollback, DeploymentStatus.Succeeded) => Texts.RollbackCompleted,
+                (DeploymentOperationType.Rollback, _) => Texts.RollbackFailed,
+                (_, DeploymentStatus.Succeeded) => Texts.DeployCompleted,
+                _ => Texts.DeployFailed,
             };
         }
 

@@ -6,6 +6,7 @@ using Avalonia.Threading;
 using KK.Var.Models;
 using KK.Var.Services.Implementations;
 using KK.Var.ViewModels;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Views
 {
@@ -55,7 +56,7 @@ namespace KK.Var.Views
                 notice,
                 "KK.Var - " + viewModel.NotificationTitle(notice),
                 string.IsNullOrWhiteSpace(notice.ProjectName) ?
-                    viewModel.Localize("Откройте подробности операции.") :
+                    viewModel.Localize(Texts.OpenOperationDetails) :
                     notice.ProjectName);
         }
 

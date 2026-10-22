@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 using KK.Var.Enums;
 using KK.Var.Models;
 using Microsoft.Extensions.Logging;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
     public sealed class DeploymentOperationQueue(
-        ILocalizationService localizationService,
         ILogger<DeploymentOperationQueue> logger) : IDeploymentOperationQueue
     {
         private const string SubscriberFailureMessage = "Deployment queue change subscriber failed.";
@@ -75,12 +75,12 @@ namespace KK.Var.Services.Implementations
 
             if (projectId == Guid.Empty)
             {
-                throw new ArgumentException(localizationService.Get("Укажите идентификатор проекта."), nameof(projectId));
+                throw new ArgumentException(Texts.ProjectIdentifierRequired, nameof(projectId));
             }
 
             if (string.IsNullOrWhiteSpace(version))
             {
-                throw new ArgumentException(localizationService.Get("Укажите версию."), nameof(version));
+                throw new ArgumentException(Texts.VersionRequired, nameof(version));
             }
 
             var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
@@ -105,8 +105,7 @@ namespace KK.Var.Services.Implementations
                         DeploymentQueueStatus.Running))
                 {
                     cancellationTokenSource.Dispose();
-                    throw new InvalidOperationException(localizationService.Get(
-                        "Для этого проекта уже есть активная операция."));
+                    throw new InvalidOperationException(Texts.ProjectAlreadyActiveOperation);
                 }
 
                 _items.Add(item);

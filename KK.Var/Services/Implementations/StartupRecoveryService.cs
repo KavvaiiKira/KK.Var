@@ -9,6 +9,7 @@ using KK.Var.Data;
 using KK.Var.Enums;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
@@ -78,7 +79,7 @@ namespace KK.Var.Services.Implementations
             if ((source.Attributes & FileAttributes.ReparsePoint) != 0)
             {
                 throw new InvalidOperationException(
-                    localizationService.Format("Источник восстановления не может быть reparse point: {0}", sourcePath));
+                    localizationService.Format(Texts.RecoverySourceCannotReparsePoint, sourcePath));
             }
 
             var destination = Path.Combine(recoveryDirectory, source.Name);

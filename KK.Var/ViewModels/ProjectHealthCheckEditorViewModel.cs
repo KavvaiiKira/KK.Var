@@ -2,6 +2,7 @@ using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using KK.Var.Enums;
 using KK.Var.Services;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.ViewModels
 {
@@ -83,8 +84,7 @@ namespace KK.Var.ViewModels
             if (IsStabilityDelayHealthCheck &&
                 HealthCheckStabilityDelaySeconds is < 1 or > 3600)
             {
-                return Localize(
-                    "Задержка стабильности должна быть от 1 до 3600 секунд.");
+                return Texts.StabilityDelayMustBetween13600Seconds;
             }
 
             if (!HasHealthCheckRetrySettings)
@@ -94,20 +94,17 @@ namespace KK.Var.ViewModels
 
             if (HealthCheckTimeoutSeconds is < 1 or > 3600)
             {
-                return Localize(
-                    "Timeout health-check должен быть от 1 до 3600 секунд.");
+                return Texts.HealthCheckTimeoutMustBetween13600;
             }
 
             if (HealthCheckIntervalSeconds is < 1 or > 3600)
             {
-                return Localize(
-                    "Интервал health-check должен быть от 1 до 3600 секунд.");
+                return Texts.HealthCheckIntervalMustBetween13600;
             }
 
             if (HealthCheckAttempts is < 1 or > 100)
             {
-                return Localize(
-                    "Количество попыток health-check должно быть от 1 до 100.");
+                return Texts.NumberHealthCheckAttemptsMustBetween1;
             }
 
             if (IsHttpHealthCheck &&
@@ -115,18 +112,17 @@ namespace KK.Var.ViewModels
                     (!string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) &&
                         !string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))))
             {
-                return Localize(
-                    "Укажите абсолютный HTTP- или HTTPS-адрес health-check.");
+                return Texts.EnterAbsoluteHTTPHTTPSHealthCheckAddress;
             }
 
             if (IsTcpHealthCheck && HealthCheckTcpPort is < 1 or > 65535)
             {
-                return Localize("TCP-порт должен быть от 1 до 65535.");
+                return Texts.TCPPortMustBetween165535;
             }
 
             if (IsCommandHealthCheck && string.IsNullOrWhiteSpace(HealthCheckCommand))
             {
-                return Localize("Укажите команду health-check.");
+                return Texts.EnterHealthCheckCommand;
             }
 
             return string.Empty;

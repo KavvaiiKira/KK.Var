@@ -10,6 +10,7 @@ using KK.Var.Enums;
 using KK.Var.Models;
 using static KK.Var.Services.ProjectRuntime;
 using static KK.Var.Services.RemoteShell;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
@@ -108,8 +109,7 @@ namespace KK.Var.Services.Implementations
                 sshHostKeyValidator.RequiresConfirmation ||
                 sftpHostKeyValidator.RequiresConfirmation)
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Ключ SSH-сервера не совпадает с подтверждённым отпечатком. Проверьте подключение в настройках."));
+                throw new InvalidOperationException(Texts.SSHServerKeyDoesNotMatchTrusted);
             }
 
             try
@@ -118,7 +118,7 @@ namespace KK.Var.Services.Implementations
 
                 progress?.Report(new DeploymentProgress(
                     55,
-                    localizationService.Get("Проверка удалённой машины")));
+                    Texts.CheckingRemoteMachine));
 
                 commandRunner.RunChecked(ssh, RemoteCommands.CheckSudo, log);
                 commandRunner.RunChecked(ssh, RemoteCommands.CheckDeploymentTools, log);
@@ -131,7 +131,7 @@ namespace KK.Var.Services.Implementations
                     StringComparison.OrdinalIgnoreCase))
                 {
                     throw new InvalidOperationException(localizationService.Format(
-                        "Архитектура удалённой машины изменилась: ожидалась {0}, получена {1}. Выполните проверку подключения ещё раз.",
+                        Texts.RemoteMachineArchitectureChangedExpectedReceivedRun,
                         ArchitectureCompatibility.Normalize(settings.Architecture),
                         actualArchitecture));
                 }
@@ -147,10 +147,10 @@ namespace KK.Var.Services.Implementations
 
                 progress?.Report(new DeploymentProgress(
                     58,
-                    localizationService.Get("Удалённая машина готова к Deploy")));
+                    Texts.RemoteMachineReadyDeploy));
                 progress?.Report(new DeploymentProgress(
                     60,
-                    localizationService.Get("Загрузка архива на удалённую машину")));
+                    Texts.UploadingArchiveRemoteMachine));
 
                 using (var archive = File.OpenRead(artifactPath))
                 {
@@ -164,7 +164,7 @@ namespace KK.Var.Services.Implementations
 
                 progress?.Report(new DeploymentProgress(
                     65,
-                    localizationService.Get("Распаковка новой версии")));
+                    Texts.ExtractingNewVersion));
 
                 commandRunner.RunChecked(
                     ssh,
@@ -225,7 +225,7 @@ namespace KK.Var.Services.Implementations
                     unitState = DeploymentUnitChange.Created;
                     progress?.Report(new DeploymentProgress(
                         70,
-                        localizationService.Get("Systemd unit будет создан")));
+                        Texts.SystemdUnitCreated));
                 }
                 else if (commandRunner.Run(ssh, $"sudo cmp -s -- {Q(remoteUnit)} {Q(unitPath)}", log).ExitStatus != 0)
                 {
@@ -233,20 +233,20 @@ namespace KK.Var.Services.Implementations
                     commandRunner.RunChecked(ssh, $"sudo cp -- {Q(unitPath)} {Q(unitBackup)}", log);
                     progress?.Report(new DeploymentProgress(
                         70,
-                        localizationService.Get("Systemd unit будет обновлён")));
+                        Texts.SystemdUnitUpdated));
                 }
                 else
                 {
                     progress?.Report(new DeploymentProgress(
                         70,
-                        localizationService.Get("Systemd unit не изменился")));
+                        Texts.SystemdUnitUnchanged));
                 }
 
                 SaveCheckpoint(checkpoint, DeploymentStage.ReadyToSwitch, unitState);
 
                 progress?.Report(new DeploymentProgress(
                     75,
-                    localizationService.Get("Переключение версии")));
+                    Texts.SwitchingVersion));
 
                 SaveCheckpoint(checkpoint, DeploymentStage.SwitchingVersion, unitState);
 
@@ -273,7 +273,7 @@ namespace KK.Var.Services.Implementations
                         log);
                     progress?.Report(new DeploymentProgress(
                         82,
-                        localizationService.Get("Systemd перечитал изменённый unit")));
+                        Texts.SystemdReloadedUpdatedUnit));
                 }
 
                 SaveCheckpoint(checkpoint, DeploymentStage.UnitUpdated, unitState);
@@ -283,7 +283,7 @@ namespace KK.Var.Services.Implementations
                     commandRunner.RunChecked(ssh, $"sudo systemctl enable {Q(project.RemoteServiceName)}", log);
                 }
 
-                progress?.Report(new DeploymentProgress(88, localizationService.Get("Запуск systemd-сервиса")));
+                progress?.Report(new DeploymentProgress(88, Texts.StartingSystemdService));
 
                 SaveCheckpoint(checkpoint, DeploymentStage.StartingService, unitState);
 
@@ -299,7 +299,7 @@ namespace KK.Var.Services.Implementations
                 {
                     progress?.Report(new DeploymentProgress(
                         96,
-                        localizationService.Get("Systemd-сервис успешно запущен")));
+                        Texts.SystemdServiceStartedSuccessfully));
                 }
                 else
                 {
@@ -308,7 +308,7 @@ namespace KK.Var.Services.Implementations
 
                     progress?.Report(new DeploymentProgress(
                         92,
-                        localizationService.Get("Проверка health-check")));
+                        Texts.RunningHealthCheck));
 
                     healthCheckService.RunHealthCheck(
                         ssh,
@@ -322,7 +322,7 @@ namespace KK.Var.Services.Implementations
                     healthCheckInProgress = false;
                     progress?.Report(new DeploymentProgress(
                         96,
-                        localizationService.Get("Health-check пройден")));
+                        Texts.HealthCheckPassed));
                 }
 
                 SaveCheckpoint(checkpoint, DeploymentStage.Committed, unitState);
@@ -338,18 +338,18 @@ namespace KK.Var.Services.Implementations
 
                 progress?.Report(new DeploymentProgress(
                     100,
-                    localizationService.Get("Deploy завершён")));
+                    Texts.DeployCompleted));
             }
             catch (Exception exception)
             {
                 progress?.Report(new DeploymentProgress(
                     0,
                     localizationService.Get(healthCheckInProgress ?
-                        "Health-check не пройден, восстановление предыдущей версии" :
-                        "Ошибка Deploy, восстановление предыдущей версии")));
+                        Texts.HealthCheckFailedRestoringPreviousVersion :
+                        Texts.DeployFailedRestoringPreviousVersion)));
 
                 log.WriteLine(localizationService.Format(
-                    "Удалённая операция завершилась ошибкой: {0}",
+                    Texts.RemoteOperationFailed,
                     exception));
 
                 string? rollbackResult = null;
@@ -377,7 +377,7 @@ namespace KK.Var.Services.Implementations
                 {
                     rollbackException = caughtRollbackException;
                     log.WriteLine(localizationService.Format(
-                        "Автоматический rollback завершился ошибкой: {0}",
+                        Texts.AutomaticRollbackFailed,
                         caughtRollbackException));
                 }
 
@@ -393,8 +393,7 @@ namespace KK.Var.Services.Implementations
                 }
                 else
                 {
-                    log.WriteLine(localizationService.Get(
-                        "Временные файлы сохранены на удалённой машине для восстановления."));
+                    log.WriteLine(Texts.TemporaryFilesKeptRemoteMachineRecovery);
                 }
 
                 if (!targetMoved)
@@ -405,20 +404,20 @@ namespace KK.Var.Services.Implementations
                 if (rollbackException is not null)
                 {
                     throw new RemoteDeploymentFailureException(localizationService.Format(
-                        "Удалённая операция завершилась ошибкой: {0} Автоматический rollback завершился ошибкой: {1}",
+                        Texts.RemoteOperationFailedAutomaticRollbackFailed,
                         exception.Message,
                         rollbackException.Message),
                         new AggregateException(exception, rollbackException), automaticRollbackCompleted: false);
                 }
 
                 log.WriteLine(localizationService.Format(
-                    "Результат автоматического rollback: {0}",
+                    Texts.AutomaticRollbackResult,
                     rollbackResult));
 
                 if (exception is OperationCanceledException)
                 {
                     throw new OperationCanceledException(localizationService.Format(
-                        "Удалённая операция отменена: {0} Результат автоматического rollback: {1}",
+                        Texts.RemoteOperationCancelledAutomaticRollbackResult,
                         exception.Message,
                         rollbackResult),
                         exception,
@@ -426,7 +425,7 @@ namespace KK.Var.Services.Implementations
                 }
 
                 throw new RemoteDeploymentFailureException(localizationService.Format(
-                    "Удалённая операция завершилась ошибкой: {0} Результат автоматического rollback: {1}",
+                    Texts.RemoteOperationFailedAutomaticRollbackResult,
                     exception.Message,
                     rollbackResult),
                     exception, automaticRollbackCompleted: true);

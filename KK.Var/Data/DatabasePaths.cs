@@ -1,12 +1,13 @@
 using System;
 using System.IO;
 using KK.Var.Constants;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Data
 {
     public static class DatabasePaths
     {
-        private const string InvalidDatabaseFileNameMessage = "Имя файла базы данных не должно содержать путь к каталогу.";
+        private static string InvalidDatabaseFileNameMessage => Texts.DatabaseFileNameMustNotContainDirectory;
 
         public static string UserDataDirectory =>
             Path.Combine(

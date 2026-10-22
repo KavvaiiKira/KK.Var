@@ -4,6 +4,7 @@ using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using KK.Var.Models;
 using KK.Var.ViewModels;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Views.Pages
 {
@@ -87,7 +88,7 @@ namespace KK.Var.Views.Pages
             var folders = await storageProvider.OpenFolderPickerAsync(
                 new FolderPickerOpenOptions
                 {
-                    Title = viewModel.Localize("Выберите папку проекта"),
+                    Title = viewModel.Localize(Texts.SelectProjectFolder),
                     AllowMultiple = false,
                 });
 

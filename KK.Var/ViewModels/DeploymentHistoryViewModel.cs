@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using KK.Var.Enums;
 using KK.Var.Models;
 using KK.Var.Services;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.ViewModels
 {
@@ -78,7 +79,7 @@ namespace KK.Var.ViewModels
             {
                 var selectedProjectId = SelectedHistoryProject?.Id;
                 HistoryProjectFilters.Clear();
-                HistoryProjectFilters.Add(new ProjectFilterOption(null, null, Localize("Все проекты")));
+                HistoryProjectFilters.Add(new ProjectFilterOption(null, null, Texts.AllProjects));
 
                 foreach (var project in projects.OrderBy(project => project.Name, StringComparer.OrdinalIgnoreCase))
                 {
@@ -245,13 +246,13 @@ namespace KK.Var.ViewModels
             try
             {
                 HistoryStatusFilters.Clear();
-                HistoryStatusFilters.Add(new EnumOption(null, Localize("Все статусы")));
-                HistoryStatusFilters.Add(new EnumOption(DeploymentStatus.Succeeded, Localize("Успешно")));
-                HistoryStatusFilters.Add(new EnumOption(DeploymentStatus.Failed, Localize("Ошибка")));
-                HistoryStatusFilters.Add(new EnumOption(DeploymentStatus.Interrupted, Localize("Прервано")));
-                HistoryStatusFilters.Add(new EnumOption(DeploymentStatus.Cancelled, Localize("Отменено")));
-                HistoryStatusFilters.Add(new EnumOption(DeploymentStatus.Running, Localize("Выполняется")));
-                HistoryStatusFilters.Add(new EnumOption(DeploymentStatus.Pending, Localize("Ожидает")));
+                HistoryStatusFilters.Add(new EnumOption(null, Texts.AllStatuses));
+                HistoryStatusFilters.Add(new EnumOption(DeploymentStatus.Succeeded, Texts.Succeeded));
+                HistoryStatusFilters.Add(new EnumOption(DeploymentStatus.Failed, Texts.Failed));
+                HistoryStatusFilters.Add(new EnumOption(DeploymentStatus.Interrupted, Texts.Interrupted));
+                HistoryStatusFilters.Add(new EnumOption(DeploymentStatus.Cancelled, Texts.Cancelled));
+                HistoryStatusFilters.Add(new EnumOption(DeploymentStatus.Running, Texts.Running));
+                HistoryStatusFilters.Add(new EnumOption(DeploymentStatus.Pending, Texts.Pending));
                 SelectedHistoryStatus = selectedStatus;
                 OnPropertyChanged(nameof(SelectedHistoryStatusFilter));
             }
@@ -269,7 +270,7 @@ namespace KK.Var.ViewModels
                 if (HistoryProjectFilters.Count > 0)
                 {
                     var allProjects = HistoryProjectFilters[0];
-                    HistoryProjectFilters[0] = allProjects with { Label = Localize("Все проекты") };
+                    HistoryProjectFilters[0] = allProjects with { Label = Texts.AllProjects };
                     if (SelectedHistoryProject?.Id is null)
                     {
                         SelectedHistoryProject = HistoryProjectFilters[0];

@@ -83,7 +83,7 @@
 
             <!-- Shared scrollbar palette for pages, text fields, lists and popups. -->
             <SolidColorBrush x:Key="ScrollBarBackground" Color="{StaticResource AppSurfaceRaisedColor}" />
-            <SolidColorBrush x:Key="ScrollBarBackgroundPointerOver" Color="{StaticResource AppSurfaceRaisedColor}" />
+            <SolidColorBrush x:Key="ScrollBarBackgroundPointerOver" Color="Transparent" />
             <SolidColorBrush x:Key="ScrollBarTrackFill" Color="{StaticResource AppSurfaceRaisedColor}" />
             <SolidColorBrush x:Key="ScrollBarTrackFillPointerOver" Color="{StaticResource AppSurfaceRaisedColor}" />
             <SolidColorBrush x:Key="ScrollBarPanningThumbBackground" Color="{StaticResource AppPrimaryColor}" Opacity="0.5" />
@@ -94,7 +94,8 @@
             <SolidColorBrush x:Key="ScrollBarButtonArrowForeground" Color="{StaticResource AppTextMutedColor}" />
             <SolidColorBrush x:Key="ScrollBarButtonArrowForegroundPointerOver" Color="{StaticResource AppPrimaryHoverColor}" />
             <SolidColorBrush x:Key="ScrollBarButtonArrowForegroundPressed" Color="{StaticResource AppAccentColor}" />
-            <SolidColorBrush x:Key="ScrollBarButtonBackground" Color="{StaticResource AppSurfaceRaisedColor}" />
+            <SolidColorBrush x:Key="ScrollBarButtonBackground" Color="Transparent" />
+            <SolidColorBrush x:Key="ScrollBarButtonBackgroundDisabled" Color="Transparent" />
             <SolidColorBrush x:Key="ScrollBarButtonBackgroundPointerOver" Color="{StaticResource AppSurfaceHoverColor}" />
             <SolidColorBrush x:Key="ScrollBarButtonBackgroundPressed" Color="{StaticResource AppSurfaceHoverColor}" />
             <SolidColorBrush x:Key="ScrollViewerScrollBarsSeparatorBackground" Color="{StaticResource AppSurfaceRaisedColor}" />
@@ -127,11 +128,15 @@
         </Style>
         <Style Selector="ScrollBar /template/ Border#VerticalRoot, ScrollBar /template/ Border#HorizontalRoot">
             <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="ClipToBounds" Value="True" />
         </Style>
         <Style Selector="ScrollBar /template/ Rectangle#TrackRect">
             <Setter Property="RadiusX" Value="6" />
             <Setter Property="RadiusY" Value="6" />
             <Setter Property="StrokeThickness" Value="0" />
+        </Style>
+        <Style Selector="ScrollBar /template/ RepeatButton /template/ ContentPresenter">
+            <Setter Property="CornerRadius" Value="6" />
         </Style>
         <!-- Keep Thumb bounds unchanged: Track uses them to adjust an active drag. -->
         <Style Selector="ScrollBar /template/ Thumb">

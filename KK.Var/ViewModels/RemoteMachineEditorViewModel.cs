@@ -8,6 +8,7 @@ using KK.Var.Configuration;
 using KK.Var.Enums;
 using KK.Var.Models;
 using KK.Var.Services;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.ViewModels
 {
@@ -55,13 +56,13 @@ namespace KK.Var.ViewModels
             string.Join(", ", machine.Projects.Select(project => project.Name)) : string.Empty;
 
         public string ConfirmMachineIdentityCaption => Localize(_pendingMachineCandidate?.Result.RequiresHostKeyConfirmation == true ?
-            "Подтвердить fingerprint и проверить вход" : _machineEditorOriginal is null ?
-                "Подтвердить и сохранить профиль" :
-                "Да, это та же машина");
+            Texts.ConfirmFingerprintVerifyLogin : _machineEditorOriginal is null ?
+                Texts.ConfirmSaveProfile :
+                Texts.YesSameMachine);
 
         public string ArchiveMachineCaption => Localize(SelectedMachineProfile?.IsArchived == true ?
-            "Восстановить профиль" :
-            "Архивировать профиль");
+            Texts.RestoreProfile :
+            Texts.ArchiveProfile);
 
         public bool IsMachineFingerprintMatch => _pendingMachineCandidate is { } candidate &&
             _machineEditorOriginal?.HostKeyFingerprint == candidate.Result.HostKeyFingerprint;
@@ -218,7 +219,7 @@ namespace KK.Var.ViewModels
             }
             if (string.IsNullOrWhiteSpace(MachineProfileName))
             {
-                SettingsError = Localize("Укажите имя профиля машины.");
+                SettingsError = Texts.EnterMachineProfileName;
                 return;
             }
             IsConnectionCheckRunning = true;
@@ -228,7 +229,7 @@ namespace KK.Var.ViewModels
                 var original = _machineEditorOriginal;
                 if (original?.IsArchived == true)
                 {
-                    throw new InvalidOperationException(Localize("Сначала восстановите архивированный профиль."));
+                    throw new InvalidOperationException(Texts.RestoreArchivedProfileFirst);
                 }
                 if (original is not null)
                 {
@@ -256,7 +257,7 @@ namespace KK.Var.ViewModels
                     _pendingMachineCandidate = candidate;
                     PendingHostKeyFingerprint = result.HostKeyFingerprint;
                     MachineIdentityMessage = LocalizeFormat(
-                        "Старый адрес: {0}\nНовый адрес: {1}\nСтарый fingerprint: {2}\nНовый fingerprint: {3}",
+                        Texts.OldAddressNewAddressOldFingerprintNew,
                         original is null ? "-" : $"{original.Host}:{original.Port}",
                         $"{connection.Host}:{connection.Port}",
                         original?.HostKeyFingerprint ?? "-",
@@ -292,14 +293,14 @@ namespace KK.Var.ViewModels
                 var result = await _remoteConnectionService.CheckAsync(candidate.Connection);
                 if (!result.IsSuccessful)
                 {
-                    SettingsError = result.ErrorMessage.Length == 0 ? Localize("SSH-ключ снова изменился. Повторите проверку.") : result.ErrorMessage;
+                    SettingsError = result.ErrorMessage.Length == 0 ? Texts.SSHKeyChangedAgainRepeatCheck : result.ErrorMessage;
                     return;
                 }
                 if (candidate.Result.RequiresHostKeyConfirmation && candidate.ExpectedUpdatedAt.HasValue)
                 {
                     _pendingMachineCandidate = candidate with { Result = result };
                     MachineIdentityMessage += Environment.NewLine + LocalizeFormat(
-                        "Проверенная архитектура нового адреса: {0}",
+                        Texts.VerifiedArchitectureNewAddress,
                         result.Architecture);
                     OnPropertyChanged(nameof(ConfirmMachineIdentityCaption));
                     return;
@@ -334,7 +335,7 @@ namespace KK.Var.ViewModels
                 await verified();
             }
             SettingsError = string.Empty;
-            SettingsStatus = Localize("Профиль машины сохранён и проверен.");
+            SettingsStatus = Texts.MachineProfileSavedVerified;
         }
 
         [RelayCommand]
@@ -382,9 +383,9 @@ namespace KK.Var.ViewModels
             }
         }
 
-        private const string PrivateKeyAuthentication = "SSH-ключ";
+        private static string PrivateKeyAuthentication => Texts.SSHKey;
 
-        private const string PasswordAuthentication = "Пароль";
+        private static string PasswordAuthentication => Texts.Password;
 
         [ObservableProperty]
         public partial string SettingsStatus { get; set; } = string.Empty;
@@ -403,7 +404,7 @@ namespace KK.Var.ViewModels
 
         [ObservableProperty]
         public partial string RemoteMachineArchitecture { get; set; } =
-            localizationService.Get("Будет определена автоматически при проверке подключения");
+            Texts.DetectedAutomaticallyDuringConnectionCheck;
 
         public ObservableCollection<EnumOption> AuthenticationMethods { get; } = [];
 
@@ -457,29 +458,29 @@ namespace KK.Var.ViewModels
         {
             if (string.IsNullOrWhiteSpace(MachineConnection.Host))
             {
-                return Localize("Укажите адрес удалённой машины.");
+                return Texts.EnterRemoteMachineAddress;
             }
 
             if (MachineConnection.Port is < 1 or > 65535)
             {
-                return Localize("SSH-порт должен находиться в диапазоне от 1 до 65535.");
+                return Texts.SSHPortMustBetween165535;
             }
 
             if (string.IsNullOrWhiteSpace(MachineConnection.UserName))
             {
-                return Localize("Укажите пользователя SSH.");
+                return Texts.EnterSSHUser;
             }
 
             if (IsPrivateKeyAuthentication &&
                 string.IsNullOrWhiteSpace(MachineConnection.PrivateKeyPath))
             {
-                return Localize("Укажите путь к приватному SSH-ключу.");
+                return Texts.EnterPrivateSSHKeyPath;
             }
 
             if (IsPasswordAuthentication &&
                 string.IsNullOrWhiteSpace(MachineConnection.Password))
             {
-                return Localize("Укажите пароль SSH.");
+                return Texts.EnterSSHPassword;
             }
 
             if (requireTrustedHostKey &&
@@ -490,7 +491,7 @@ namespace KK.Var.ViewModels
                      StringComparison.OrdinalIgnoreCase) ||
                  MachineConnection.HostKeyPort != MachineConnection.Port))
             {
-                return Localize("Проверьте подключение и подтвердите отпечаток SSH-сервера.");
+                return Texts.CheckConnectionConfirmSSHServerFingerprint;
             }
 
             return string.Empty;
@@ -498,8 +499,8 @@ namespace KK.Var.ViewModels
 
         public string FormatArchitecture(string? architecture) =>
             string.IsNullOrWhiteSpace(architecture) ?
-                Localize("Будет определена автоматически при проверке подключения") :
-                LocalizeFormat("Определена автоматически: {0}", architecture);
+                Texts.DetectedAutomaticallyDuringConnectionCheck :
+                LocalizeFormat(Texts.DetectedAutomatically, architecture);
 
         public event Action? PreflightInvalidated;
 

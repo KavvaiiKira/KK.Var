@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.Input;
 using KK.Var.Enums;
 using KK.Var.Models;
 using KK.Var.Services;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.ViewModels
 {
@@ -138,12 +139,12 @@ namespace KK.Var.ViewModels
         public bool IsEditing => _editingProjectId.HasValue;
 
         public string EditorTitle => IsEditing ?
-            Localize("Редактирование проекта") :
-            Localize("Новый проект");
+            Texts.EditProject :
+            Texts.NewProject2;
 
         public string SaveButtonText => IsEditing ?
-            Localize("Сохранить изменения") :
-            Localize("Сохранить проект");
+            Texts.SaveChanges :
+            Texts.SaveProject;
 
         public void Reset()
         {
@@ -362,7 +363,7 @@ namespace KK.Var.ViewModels
                 var token = await _gitHubAuthenticationService.GetTokenAsync();
                 if (token is null)
                 {
-                    ErrorMessage = Localize("Сначала подключите GitHub на странице настроек.");
+                    ErrorMessage = Texts.ConnectGitHubSettingsPageFirst;
                     return;
                 }
 

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using KK.Var.Constants;
 using KK.Var.Enums;
 using KK.Var.Models;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
@@ -49,10 +50,10 @@ namespace KK.Var.Services.Implementations
                         PreflightStatus.Success :
                         PreflightStatus.Error,
                     localizationService.Get(drive.AvailableFreeSpace >= minimumFreeBytes ?
-                        "Локальный архив можно создать; свободное место проверено." :
-                        "Недостаточно места для локального архива."),
+                        Texts.LocalArchiveCanCreatedFreeSpaceChecked :
+                        Texts.ThereNotEnoughSpaceLocalArchive),
                     localizationService.Format(
-                        "Доступно байт: {0}; требуется минимум: {1}.",
+                        Texts.AvailableBytesMinimumRequired,
                         drive.AvailableFreeSpace,
                         minimumFreeBytes)));
             }
@@ -60,7 +61,7 @@ namespace KK.Var.Services.Implementations
             {
                 checks.Add(checkFactory.Error(
                     PreflightCheckKeys.LocalSpace,
-                    "Не удалось подготовить локальный архив.",
+                    Texts.LocalArchiveCannotPrepared,
                     exception.Message));
             }
         }
@@ -83,8 +84,8 @@ namespace KK.Var.Services.Implementations
                 IsSafeRelativeFilePath(project.RemoteExecutableFileName);
 
             checks.Add(valid ?
-                checkFactory.Success(PreflightCheckKeys.RemotePath, "Удалённый путь безопасен для Deploy.") :
-                checkFactory.Error(PreflightCheckKeys.RemotePath, "Удалённый путь Deploy небезопасен."));
+                checkFactory.Success(PreflightCheckKeys.RemotePath, Texts.RemoteDeploymentPathSafe) :
+                checkFactory.Error(PreflightCheckKeys.RemotePath, Texts.RemoteDeploymentPathUnsafe));
         }
 
         private static bool IsSafeRelativeFilePath(string? value)

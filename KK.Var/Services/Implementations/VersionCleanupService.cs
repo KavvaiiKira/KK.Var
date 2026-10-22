@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using KK.Var.Constants;
 using KK.Var.Models;
 using KK.Var.Repositories;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
@@ -34,8 +35,7 @@ namespace KK.Var.Services.Implementations
 
             if (operationQueue.HasActiveOperations())
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Нельзя очищать версии во время активной операции."));
+                throw new InvalidOperationException(Texts.VersionsCannotCleanedUpDuringActiveOperation);
             }
 
             return await BuildPlanAsync(projectId, cancellationToken);
@@ -57,8 +57,7 @@ namespace KK.Var.Services.Implementations
 
             if (!afterSuccessfulDeploy && operationQueue.HasActiveOperations())
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Нельзя очищать версии во время активной операции."));
+                throw new InvalidOperationException(Texts.VersionsCannotCleanedUpDuringActiveOperation);
             }
 
             var plan = await BuildPlanAsync(projectId, cancellationToken);
@@ -71,8 +70,7 @@ namespace KK.Var.Services.Implementations
                      StringComparison.OrdinalIgnoreCase) ||
                  !expectedPlan.Items.SequenceEqual(plan.Items)))
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "План очистки изменился. Рассчитайте его повторно."));
+                throw new InvalidOperationException(Texts.CleanupPlanChangedCalculateAgain);
             }
 
             foreach (var item in plan.Items)
@@ -89,7 +87,7 @@ namespace KK.Var.Services.Implementations
                 catch (Exception exception) when (exception is not OperationCanceledException)
                 {
                     throw new InvalidOperationException(localizationService.Format(
-                        "Очистка остановлена на версии «{0}»: {1}",
+                        Texts.CleanupStoppedVersion,
                         item.ArtifactRelativePath,
                         exception.Message), exception);
                 }
@@ -104,16 +102,15 @@ namespace KK.Var.Services.Implementations
         {
             if (projectId == Guid.Empty)
             {
-                throw new ArgumentException(localizationService.Get("Укажите идентификатор проекта."), nameof(projectId));
+                throw new ArgumentException(Texts.ProjectIdentifierRequired, nameof(projectId));
             }
 
             var project = await projectRepository.GetByIdAsync(projectId, cancellationToken) ??
-                throw new KeyNotFoundException(localizationService.Get("Проект не найден."));
+                throw new KeyNotFoundException(Texts.ProjectNotFound);
             if (project.MaxStoredVersions <= 0 ||
                 project.MaxStoredVersionBytes is <= 0)
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Политика хранения проекта недопустима."));
+                throw new InvalidOperationException(Texts.ProjectSVersionStoragePolicyInvalid);
             }
 
             var artifactRoot = await artifactStorageService.GetEffectiveRootAsync(cancellationToken);
@@ -138,8 +135,7 @@ namespace KK.Var.Services.Implementations
                     cancellationToken);
                 if (System.IO.Directory.Exists(state.AbsolutePath))
                 {
-                    throw new InvalidOperationException(localizationService.Get(
-                        "Путь к архиву версии недопустим."));
+                    throw new InvalidOperationException(Texts.VersionArchivePathInvalid);
                 }
 
                 totalBytes = checked(totalBytes + state.Size);
@@ -181,8 +177,7 @@ namespace KK.Var.Services.Implementations
                 storageActivity.IsMigrationRunning ||
                 storageActivity.IsCleanupRunning)
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Нельзя очищать версии во время активной операции."));
+                throw new InvalidOperationException(Texts.VersionsCannotCleanedUpDuringActiveOperation);
             }
         }
 
@@ -196,8 +191,7 @@ namespace KK.Var.Services.Implementations
                     projectId.ToString("N") + "/",
                     StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Путь к архиву версии недопустим."));
+                throw new InvalidOperationException(Texts.VersionArchivePathInvalid);
             }
         }
     }

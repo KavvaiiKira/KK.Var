@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using KK.Var.Enums;
 using KK.Var.Models;
 using KK.Var.Repositories;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
@@ -36,12 +37,11 @@ namespace KK.Var.Services.Implementations
             if (storageActivity.IsMigrationRunning ||
                 storageActivity.IsCleanupRunning)
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Нельзя начать Deploy во время переноса локальных версий."));
+                throw new InvalidOperationException(Texts.DeployCannotStartWhileLocalVersionsBeing);
             }
 
             var queuedProject = await projectRepository.GetByIdAsync(request.ProjectId, cancellationToken) ??
-                throw new KeyNotFoundException(localizationService.Get("Проект не найден."));
+                throw new KeyNotFoundException(Texts.ProjectNotFound);
             request = request with { RemoteMachineId = queuedProject.RemoteMachineId };
             await using var machineReservation = await machineService.ReserveAsync(
                 queuedProject.RemoteMachineId,
@@ -68,7 +68,7 @@ namespace KK.Var.Services.Implementations
         {
             progress?.Report(new DeploymentProgress(
                 1,
-                localizationService.Get("Предварительная проверка Deploy")));
+                Texts.DeployPreflightChecks));
             var preflight = await preflightService.CheckAsync(
                 request,
                 currentOperationOwnsQueue: true,
@@ -78,7 +78,7 @@ namespace KK.Var.Services.Implementations
             if (preflight.FirstError is { } firstError)
             {
                 var message = localizationService.Format(
-                    "Предварительная проверка остановила Deploy: {0}",
+                    Texts.PreflightStoppedDeploy,
                     firstError.Message);
                 if (firstError.VersionError is { } versionError)
                 {
@@ -96,7 +96,7 @@ namespace KK.Var.Services.Implementations
                 cancellationToken))
             {
                 throw new VersionTagException(VersionTagError.AlreadyExists, localizationService.Format(
-                    "Версия «{0}» уже существует.",
+                    Texts.VersionAlreadyExists,
                     versionTag));
             }
 
@@ -106,8 +106,7 @@ namespace KK.Var.Services.Implementations
 
             if (string.IsNullOrWhiteSpace(architecture))
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Сначала проверьте SSH-подключение, чтобы определить архитектуру удалённой машины."));
+                throw new InvalidOperationException(Texts.CheckSSHConnectionFirstDetectRemoteMachine);
             }
 
             var artifact = await artifactService.CreateAsync(
@@ -151,7 +150,7 @@ namespace KK.Var.Services.Implementations
             catch (Exception exception)
             {
                 throw new InvalidOperationException(localizationService.Format(
-                    "Deploy завершён, но очистка версий не удалась: {0}",
+                    Texts.DeployCompletedButVersionCleanupFailed,
                     exception.Message), exception);
             }
 
@@ -167,21 +166,19 @@ namespace KK.Var.Services.Implementations
             if (storageActivity.IsMigrationRunning ||
                 storageActivity.IsCleanupRunning)
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Нельзя начать rollback во время переноса локальных версий."));
+                throw new InvalidOperationException(Texts.RollbackCannotStartWhileLocalVersionsBeing);
             }
 
             var queuedVersion = await versionRepository.GetByIdAsync(versionId, cancellationToken) ??
-                throw new KeyNotFoundException(localizationService.Get("Версия не найдена."));
+                throw new KeyNotFoundException(Texts.VersionNotFound);
 
             if (queuedVersion.KKProjectId != projectId)
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Версия принадлежит другому проекту."));
+                throw new InvalidOperationException(Texts.VersionBelongsAnotherProject);
             }
 
             var queuedProject = await projectRepository.GetByIdAsync(projectId, cancellationToken) ??
-                throw new KeyNotFoundException(localizationService.Get("Проект не найден."));
+                throw new KeyNotFoundException(Texts.ProjectNotFound);
             await using var machineReservation = await machineService.ReserveAsync(
                 queuedProject.RemoteMachineId,
                 cancellationToken);
@@ -215,12 +212,11 @@ namespace KK.Var.Services.Implementations
             var project = operationProject;
 
             var version = await versionRepository.GetByIdAsync(versionId, cancellationToken) ??
-                throw new KeyNotFoundException(localizationService.Get("Версия не найдена."));
+                throw new KeyNotFoundException(Texts.VersionNotFound);
 
             if (version.KKProjectId != projectId)
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Версия принадлежит другому проекту."));
+                throw new InvalidOperationException(Texts.VersionBelongsAnotherProject);
             }
 
             var artifactPath = await artifactStorageService.ResolvePathAsync(
@@ -233,7 +229,7 @@ namespace KK.Var.Services.Implementations
             var connection = await machineService.GetConnectionAsync(machineId, cancellationToken);
             if (!ArchitectureCompatibility.IsCompatible(version.TargetArchitecture, connection.Architecture))
             {
-                throw new InvalidOperationException(localizationService.Get("Архитектура архива несовместима с выбранной машиной."));
+                throw new InvalidOperationException(Texts.ArchiveArchitectureIncompatibleSelectedMachine);
             }
             var remoteChecks = await remoteConnectionService.CheckDeploymentAsync(
                 connection,
@@ -264,8 +260,7 @@ namespace KK.Var.Services.Implementations
             if (!File.Exists(path))
             {
                 throw new FileNotFoundException(
-                    localizationService.Get(
-                                        "Локальный архив выбранной версии не найден."),
+                    Texts.LocalArchiveSelectedVersionNotFound,
                     path);
             }
 
@@ -277,7 +272,7 @@ namespace KK.Var.Services.Implementations
 
             if (!string.Equals(hash, version.ArtifactSha256, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidDataException(localizationService.Get("Контрольная сумма архива версии не совпадает."));
+                throw new InvalidDataException(Texts.VersionArchiveChecksumDoesNotMatch);
             }
         }
     }

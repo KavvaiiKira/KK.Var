@@ -6,6 +6,7 @@ using KK.Var.Enums;
 using KK.Var.Services;
 using KK.Var.ViewModels;
 using KK.Var.Views.Design;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Views
 {
@@ -81,7 +82,7 @@ namespace KK.Var.Views
             ToolTip.SetTip(
                 LanguageButton,
                 _localizationService.Get(
-                                isEnglish ? "Переключить на русский" : "Переключить на английский"));
+                                isEnglish ? Texts.SwitchRussian : Texts.SwitchEnglish));
         }
 
         private void UpdateSlide()
@@ -97,8 +98,8 @@ namespace KK.Var.Views
             BackButton.IsEnabled = _currentSlideIndex > 0;
 
             NextButton.Content = _currentSlideIndex == LastSlideIndex ?
-                _localizationService.Get("Открыть настройки") :
-                _localizationService.Get("Далее");
+                Texts.OpenSettings :
+                Texts.Next;
         }
     }
 }

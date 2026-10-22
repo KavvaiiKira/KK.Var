@@ -3,6 +3,7 @@ using System.Text.Json;
 using KK.Var.Enums;
 using KK.Var.Models;
 using KK.Var.Services;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.ViewModels
 {
@@ -23,19 +24,19 @@ namespace KK.Var.ViewModels
 
         public string OperationDisplay => Deployment.OperationType switch
         {
-            DeploymentOperationType.Deploy => Localize("Развёртывание"),
-            DeploymentOperationType.Rollback => Localize("Откат"),
+            DeploymentOperationType.Deploy => Texts.Deployment,
+            DeploymentOperationType.Rollback => Texts.Rollback,
             _ => Deployment.OperationType.ToString(),
         };
 
         public string StatusDisplay => Deployment.Status switch
         {
-            DeploymentStatus.Pending => Localize("Ожидает"),
-            DeploymentStatus.Running => Localize("Выполняется"),
-            DeploymentStatus.Succeeded => Localize("Успешно"),
-            DeploymentStatus.Failed => Localize("Ошибка"),
-            DeploymentStatus.Cancelled => Localize("Отменено"),
-            DeploymentStatus.Interrupted => Localize("Прервано"),
+            DeploymentStatus.Pending => Texts.Pending,
+            DeploymentStatus.Running => Texts.Running,
+            DeploymentStatus.Succeeded => Texts.Succeeded,
+            DeploymentStatus.Failed => Texts.Failed,
+            DeploymentStatus.Cancelled => Texts.Cancelled,
+            DeploymentStatus.Interrupted => Texts.Interrupted,
             _ => Deployment.Status.ToString(),
         };
 
@@ -72,31 +73,31 @@ namespace KK.Var.ViewModels
 
         public string StageDisplay => Deployment.Stage switch
         {
-            DeploymentStage.Preparing => Localize("Подготовка"),
-            DeploymentStage.ReadyToSwitch => Localize("Готово к переключению"),
-            DeploymentStage.SwitchingVersion => Localize("Переключение версии"),
-            DeploymentStage.VersionSwitched => Localize("Версия переключена"),
-            DeploymentStage.UpdatingUnit => Localize("Обновление unit-файла"),
-            DeploymentStage.UnitUpdated => Localize("Unit-файл обновлён"),
-            DeploymentStage.StartingService => Localize("Запуск сервиса"),
-            DeploymentStage.ServiceStarted => Localize("Сервис запущен"),
-            DeploymentStage.HealthChecking => Localize("Проверка работоспособности"),
-            DeploymentStage.Committed => Localize("Операция завершена"),
+            DeploymentStage.Preparing => Texts.Preparing,
+            DeploymentStage.ReadyToSwitch => Texts.ReadySwitch,
+            DeploymentStage.SwitchingVersion => Texts.SwitchingVersion,
+            DeploymentStage.VersionSwitched => Texts.VersionSwitched,
+            DeploymentStage.UpdatingUnit => Texts.UpdatingUnitFile,
+            DeploymentStage.UnitUpdated => Texts.UnitFileUpdated,
+            DeploymentStage.StartingService => Texts.StartingService,
+            DeploymentStage.ServiceStarted => Texts.ServiceStarted,
+            DeploymentStage.HealthChecking => Texts.HealthCheck,
+            DeploymentStage.Committed => Texts.OperationCompleted,
             _ => Deployment.Stage.ToString(),
         };
 
         public string UnitChangeDisplay => Deployment.UnitChange switch
         {
-            DeploymentUnitChange.Unchanged => Localize("Не изменялся"),
-            DeploymentUnitChange.Created => Localize("Создан"),
-            DeploymentUnitChange.Changed => Localize("Изменён"),
+            DeploymentUnitChange.Unchanged => Texts.Unchanged,
+            DeploymentUnitChange.Created => Texts.Created,
+            DeploymentUnitChange.Changed => Texts.Changed,
             _ => Deployment.UnitChange.ToString(),
         };
 
         public string DaemonReloadDisplay =>
             Deployment.UnitChange == DeploymentUnitChange.Unchanged ?
-                Localize("Нет") :
-                Localize("Да");
+                Texts.No :
+                Texts.Yes;
 
         public bool HasError => !string.IsNullOrWhiteSpace(Deployment.ErrorMessage);
 
@@ -104,7 +105,7 @@ namespace KK.Var.ViewModels
 
         public string VariablesSnapshotDisplay => FormatJson(Deployment.VariablesSnapshotJson);
 
-        public string LogDisplay => logText ?? Localize("Файл лога операции отсутствует или недоступен.");
+        public string LogDisplay => logText ?? Texts.OperationLogFileMissingUnavailable;
 
         public void RefreshLocalization()
         {

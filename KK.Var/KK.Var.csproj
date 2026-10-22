@@ -5,6 +5,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
     <Nullable>enable</Nullable>
+    <NeutralLanguage>ru</NeutralLanguage>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\Brand\kk-var.ico</ApplicationIcon>
     <Version>0.1.0</Version>
@@ -15,6 +16,15 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/KavvaiiKira/KK.Var</RepositoryUrl>
   </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\Strings.resx">
+      <StronglyTypedLanguage>C#</StronglyTypedLanguage>
+      <StronglyTypedNamespace>KK.Var.Resources</StronglyTypedNamespace>
+      <StronglyTypedClassName>Strings</StronglyTypedClassName>
+      <StronglyTypedFileName>$(IntermediateOutputPath)Strings.Designer.cs</StronglyTypedFileName>
+    </EmbeddedResource>
+  </ItemGroup>
 
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" Exclude="Assets\Fonts\Exo2-OFL.txt" />

@@ -23,7 +23,7 @@
     </UserControl.Styles>
     <Border Classes="commit-frame">
         <StackPanel Spacing="12">
-            <TextBlock Text="{DynamicResource 'Коммит ветки'}"
+            <TextBlock Text="{DynamicResource Commit_Title}"
                        FontSize="11"
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource AppPrimaryHoverBrush}" />
@@ -41,7 +41,7 @@
                   RowDefinitions="Auto,Auto"
                   ColumnSpacing="16"
                   RowSpacing="8">
-                <TextBlock Text="{DynamicResource 'Автор'}"
+                <TextBlock Text="{DynamicResource Commit_Author}"
                            FontSize="12"
                            Foreground="{DynamicResource AppTextMutedBrush}" />
                 <SelectableTextBlock Grid.Column="1"

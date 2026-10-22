@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using KK.Var.Models;
 using KK.Var.Services;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.ViewModels
 {
@@ -25,7 +26,7 @@ namespace KK.Var.ViewModels
         {
             Projects.Add(project);
             RebuildProjectTiles();
-            PublishNotification(LocalizeFormat("Проект «{0}» добавлен", project.Name), isError: false);
+            PublishNotification(LocalizeFormat(Texts.ProjectAdded, project.Name), isError: false);
         }
 
         public void Update(KKProject project)
@@ -36,10 +37,16 @@ namespace KK.Var.ViewModels
                 Projects[Projects.IndexOf(previous)] = project;
             }
             RebuildProjectTiles();
-            PublishNotification(LocalizeFormat("Проект «{0}» изменён", project.Name), isError: false);
+            PublishNotification(LocalizeFormat(Texts.ProjectUpdated, project.Name), isError: false);
         }
 
-        public override void RefreshLocalization() => RebuildProjectTiles();
+        public override void RefreshLocalization()
+        {
+            foreach (var tile in ProjectTiles)
+            {
+                tile.RefreshLocalization();
+            }
+        }
 
         public async Task LoadAsync()
         {
@@ -71,7 +78,7 @@ namespace KK.Var.ViewModels
 
                 RebuildProjectTiles();
                 PublishNotification(
-                    LocalizeFormat("Проект «{0}» удалён", project.Name),
+                    LocalizeFormat(Texts.ProjectDeleted, project.Name),
                     isError: false);
 
                 return true;
@@ -94,7 +101,7 @@ namespace KK.Var.ViewModels
 
             foreach (var project in Projects.OrderBy(project => project.Name))
             {
-                ProjectTiles.Add(new ProjectTileViewModel(project, _localizationService));
+                ProjectTiles.Add(new ProjectTileViewModel(project));
             }
 
             ProjectTiles.Add(ProjectTileViewModel.AddTile);

@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using KK.Var.Models;
 using KK.Var.Repositories;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
@@ -38,16 +39,14 @@ namespace KK.Var.Services.Implementations
         {
             if (operationQueue.HasActiveOperations())
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Нельзя менять каталог архивов во время активной операции."));
+                throw new InvalidOperationException(Texts.ArchiveDirectoryCannotChangedDuringActiveOperation);
             }
 
             await using var lease = await storageActivity.AcquireMigrationLeaseAsync(cancellationToken);
 
             if (operationQueue.HasActiveOperations())
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Нельзя менять каталог архивов во время активной операции."));
+                throw new InvalidOperationException(Texts.ArchiveDirectoryCannotChangedDuringActiveOperation);
             }
 
             var settings = await userSettingsService.LoadAsync(cancellationToken);
@@ -91,7 +90,7 @@ namespace KK.Var.Services.Implementations
                     }
 
                     var targetDirectory = Path.GetDirectoryName(targetPath) ??
-                        throw new InvalidOperationException(localizationService.Get("Целевой каталог архивов недопустим."));
+                        throw new InvalidOperationException(Texts.ArtifactTargetDirectoryInvalid);
                     Directory.CreateDirectory(targetDirectory);
                     pathPolicy.EnsureExistingPathHasNoReparsePoints(targetDirectory);
 
@@ -150,14 +149,12 @@ namespace KK.Var.Services.Implementations
                 targetRoot,
                 sourceRoot))
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Исходный и новый каталоги архивов не могут быть вложены друг в друга."));
+                throw new InvalidOperationException(Texts.SourceTargetArchiveDirectoriesCannotNestedInside);
             }
 
             if (File.Exists(targetRoot))
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Выбранный путь указывает на файл."));
+                throw new InvalidOperationException(Texts.SelectedPathPointsFile);
             }
 
             Directory.CreateDirectory(targetRoot);
@@ -185,7 +182,7 @@ namespace KK.Var.Services.Implementations
                 if (!File.Exists(sourcePath))
                 {
                     throw new FileNotFoundException(localizationService.Format(
-                        "Не найден архив версии «{0}» в текущем каталоге.",
+                        Texts.ArchiveVersionNotFoundCurrentDirectory,
                         version.Tag), sourcePath);
                 }
 
@@ -216,7 +213,7 @@ namespace KK.Var.Services.Implementations
             if (file.Length != version.ArtifactSize)
             {
                 throw new InvalidDataException(localizationService.Format(
-                    "Размер архива версии «{0}» не совпадает с сохранённым.",
+                    Texts.ArchiveSizeVersionDoesNotMatchStored,
                     version.Tag));
             }
 
@@ -228,7 +225,7 @@ namespace KK.Var.Services.Implementations
             if (!string.Equals(hash, version.ArtifactSha256, StringComparison.OrdinalIgnoreCase))
             {
                 throw new InvalidDataException(localizationService.Format(
-                    "Контрольная сумма архива версии «{0}» не совпадает.",
+                    Texts.ArchiveChecksumVersionDoesNotMatch,
                     version.Tag));
             }
         }
@@ -269,14 +266,12 @@ namespace KK.Var.Services.Implementations
             });
             var requiredBytes = totalBytes - existingBytes;
             var driveRoot = Path.GetPathRoot(targetRoot) ??
-                throw new InvalidOperationException(localizationService.Get(
-                    "Не удалось определить диск выбранного каталога."));
+                throw new InvalidOperationException(Texts.CouldNotDetermineDriveSelectedDirectory);
             var drive = new DriveInfo(driveRoot);
 
             if (drive.AvailableFreeSpace < requiredBytes)
             {
-                throw new IOException(localizationService.Get(
-                    "В выбранном каталоге недостаточно свободного места."));
+                throw new IOException(Texts.ThereNotEnoughFreeSpaceSelectedDirectory);
             }
         }
 
@@ -312,7 +307,7 @@ namespace KK.Var.Services.Implementations
             return failures.Count == 0 ?
                 null :
                 localizationService.Format(
-                    "Новый каталог уже используется, но не удалось удалить исходных файлов: {0}.",
+                    Texts.NewDirectoryActiveButSourceFileS,
                     failures.Count);
         }
     }

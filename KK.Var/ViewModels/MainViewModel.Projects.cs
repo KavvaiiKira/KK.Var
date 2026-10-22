@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using KK.Var.Enums;
 using KK.Var.Models;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.ViewModels
 {
@@ -22,7 +23,7 @@ namespace KK.Var.ViewModels
                 string.Empty :
                 SelectedProject.SourceType == ProjectSourceType.GitHubRepository ?
                     $"GitHub · {SelectedProject.GitHubRepositoryFullName}" :
-                    $"{Localize("Локальная папка")} · {SelectedProject.LocalDirectoryPath}";
+                    $"{Texts.LocalFolder} · {SelectedProject.LocalDirectoryPath}";
 
         public string SelectedProjectLastDeploymentDisplay
         {
@@ -30,13 +31,13 @@ namespace KK.Var.ViewModels
             {
                 var deployment = SelectedProject?.Deployments.MaxBy(item => item.StartedAtUtc);
                 return deployment is null ?
-                    Localize("Не выполнялся") :
+                    Texts.Never :
                     deployment.StartedAtUtc.ToLocalTime().ToString("g");
             }
         }
 
         public string SelectedProjectLatestVersionTag =>
-            SelectedProject?.Versions.MaxBy(version => version.CreatedAtUtc)?.Tag ?? Localize("Нет версий");
+            SelectedProject?.Versions.MaxBy(version => version.CreatedAtUtc)?.Tag ?? Texts.NoVersions;
 
         public async Task LoadProjectDetailsAsync(KKProject project)
         {
@@ -136,7 +137,7 @@ namespace KK.Var.ViewModels
             await ProjectList.LoadAsync();
 
             var project = ProjectList.Projects.FirstOrDefault(item => item.Id == projectId) ??
-                throw new KeyNotFoundException(Localize("Проект не найден после обновления."));
+                throw new KeyNotFoundException(Texts.ProjectNotFoundRefresh);
 
             if (SelectedProject?.Id == projectId)
             {

@@ -9,6 +9,7 @@ using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using KK.Var.Constants;
 using KK.Var.ViewModels;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Views.Pages
 {
@@ -43,7 +44,7 @@ namespace KK.Var.Views.Pages
                 }
                 var file = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
                 {
-                    Title = viewModel.Localize("Экспорт конфигурации проекта"),
+                    Title = viewModel.Localize(Texts.ExportProjectConfiguration),
                     SuggestedFileName = UiConstants.ProjectExportFileName,
                     DefaultExtension = UiConstants.JsonFileExtension,
                     FileTypeChoices = [FilePickerFileTypes.Json],
@@ -58,7 +59,7 @@ namespace KK.Var.Views.Pages
                 await writer.WriteAsync(json);
                 await writer.FlushAsync();
                 viewModel.ShowNotification(
-                    viewModel.Localize("Конфигурация проекта экспортирована."),
+                    viewModel.Localize(Texts.ProjectConfigurationExported),
                     isError: false);
             }
             catch (Exception exception)
@@ -302,7 +303,7 @@ namespace KK.Var.Views.Pages
 
             _versionPendingDelete = version;
             DeleteVersionMessage.Text = viewModel.LocalizeFormat(
-                "Версия «{0}» и её локальный архив будут удалены. Отменить это действие нельзя.",
+                Texts.VersionLocalArchiveDeletedActionCannotUndone,
                 version.Tag);
             DeleteVersionConfirmation.IsVisible = true;
         }

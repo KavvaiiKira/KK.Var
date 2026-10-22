@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using KK.Var.Enums;
 using KK.Var.Models;
 using static KK.Var.Services.SourceFiles;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
@@ -41,13 +42,12 @@ namespace KK.Var.Services.Implementations
             if (project.SourceType == ProjectSourceType.LocalDirectory)
             {
                 var source = project.LocalDirectoryPath ??
-                    throw new InvalidOperationException(localizationService.Get(
-                        "Не указана локальная папка проекта."));
+                    throw new InvalidOperationException(Texts.LocalProjectFolderNotConfigured);
 
                 if (!Directory.Exists(source))
                 {
                     throw new DirectoryNotFoundException(localizationService.Format(
-                        "Локальная папка проекта не найдена: {0}",
+                        Texts.LocalProjectFolderNotFound,
                         source));
                 }
 
@@ -59,14 +59,12 @@ namespace KK.Var.Services.Implementations
             }
 
             var repository = project.GitHubRepositoryFullName ??
-                throw new InvalidOperationException(localizationService.Get(
-                    "Не указан репозиторий GitHub."));
+                throw new InvalidOperationException(Texts.GitHubRepositoryNotConfigured);
 
             var token = await gitHubAuthenticationService.GetTokenAsync(cancellationToken);
             if (token is null)
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Подключите GitHub в настройках перед сборкой проекта."));
+                throw new InvalidOperationException(Texts.ConnectGitHubSettingsBuildingProject);
             }
 
             var commit = sourceCommitSha is not null ?
@@ -113,8 +111,7 @@ namespace KK.Var.Services.Implementations
         {
             if (depth >= 8)
             {
-                throw new InvalidOperationException(localizationService.Get(
-                    "Слишком большая вложенность Git submodule."));
+                throw new InvalidOperationException(Texts.GitSubmoduleNestingTooDeep);
             }
 
             var submodules = await gitHubService.GetSubmodulesAsync(
@@ -139,7 +136,7 @@ namespace KK.Var.Services.Implementations
                 if (!configurations.TryGetValue(normalizedPath, out var url))
                 {
                     throw new InvalidDataException(localizationService.Format(
-                        "Для Git submodule «{0}» не найден URL в .gitmodules.",
+                        Texts.NoURLFoundGitmodulesGitSubmodule,
                         normalizedPath));
                 }
 
@@ -250,7 +247,7 @@ namespace KK.Var.Services.Implementations
             else
             {
                 throw new InvalidDataException(localizationService.Format(
-                    "Git submodule использует неподдерживаемый URL: {0}",
+                    Texts.GitSubmoduleUsesUnsupportedURL,
                     url));
             }
 
@@ -264,7 +261,7 @@ namespace KK.Var.Services.Implementations
             if (value.Split('/').Length != 2)
             {
                 throw new InvalidDataException(localizationService.Format(
-                    "Некорректный GitHub URL для submodule: {0}",
+                    Texts.InvalidGitHubURLSubmodule,
                     url));
             }
 
@@ -279,7 +276,7 @@ namespace KK.Var.Services.Implementations
                 relativePath.Replace('/', Path.DirectorySeparatorChar)));
 
             return !target.StartsWith(rootPath, StringComparison.OrdinalIgnoreCase) ?
-                throw new InvalidDataException(localizationService.Get("Путь к подмодулю Git выходит за пределы репозитория.")) :
+                throw new InvalidDataException(Texts.GitSubmodulePathOutsideRepository) :
                 target;
         }
 
@@ -288,7 +285,7 @@ namespace KK.Var.Services.Implementations
             var prefix = zip.Entries
                 .Select(entry => entry.FullName.Split('/')[0])
                 .FirstOrDefault(segment => !string.IsNullOrWhiteSpace(segment)) ??
-                    throw new InvalidDataException(localizationService.Get("Архив GitHub пуст."));
+                    throw new InvalidDataException(Texts.GitHubArchiveEmpty);
 
             var destinationRoot = Path.GetFullPath(destination) + Path.DirectorySeparatorChar;
 
@@ -308,8 +305,7 @@ namespace KK.Var.Services.Implementations
 
                 if (!target.StartsWith(destinationRoot, StringComparison.OrdinalIgnoreCase))
                 {
-                    throw new InvalidDataException(localizationService.Get(
-                        "Архив GitHub содержит небезопасный путь."));
+                    throw new InvalidDataException(Texts.GitHubArchiveContainsUnsafePath);
                 }
 
                 if (entry.FullName.EndsWith('/'))

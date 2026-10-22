@@ -1,0 +1,2010 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>2.0</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms</value>
+    </resheader>
+    <data name="AccessRepositoryListThroughGitHubDeviceFlow" xml:space="preserve">
+        <value>Access your repository list through GitHub Device Flow</value>
+    </data>
+    <data name="Account" xml:space="preserve">
+        <value>Account</value>
+    </data>
+    <data name="Action" xml:space="preserve">
+        <value>Action</value>
+    </data>
+    <data name="Add" xml:space="preserve">
+        <value>＋ Add</value>
+    </data>
+    <data name="AddProfile" xml:space="preserve">
+        <value>Add profile</value>
+    </data>
+    <data name="AddProject" xml:space="preserve">
+        <value>Add project</value>
+    </data>
+    <data name="AdditionalBuildArguments" xml:space="preserve">
+        <value>Additional build arguments</value>
+    </data>
+    <data name="AddressIP" xml:space="preserve">
+        <value>Address or IP</value>
+    </data>
+    <data name="AllChangesSaved" xml:space="preserve">
+        <value>All changes saved</value>
+    </data>
+    <data name="AllMachines" xml:space="preserve">
+        <value>All machines</value>
+    </data>
+    <data name="AllProjects" xml:space="preserve">
+        <value>All projects</value>
+    </data>
+    <data name="AllStatuses" xml:space="preserve">
+        <value>All statuses</value>
+    </data>
+    <data name="ArchiveArchitectureIncompatibleSelectedMachine" xml:space="preserve">
+        <value>The archive architecture is incompatible with the selected machine.</value>
+    </data>
+    <data name="ArchiveAvailable" xml:space="preserve">
+        <value>Archive available</value>
+    </data>
+    <data name="ArchiveChecksumVersionDoesNotMatch" xml:space="preserve">
+        <value>The archive checksum for version "{0}" does not match.</value>
+    </data>
+    <data name="ArchiveDirectoryCannotChangedDuringActiveOperation" xml:space="preserve">
+        <value>The archive directory cannot be changed during an active operation.</value>
+    </data>
+    <data name="ArchiveDirectoryCannotContainReparsePoint" xml:space="preserve">
+        <value>The archive directory cannot contain a reparse point.</value>
+    </data>
+    <data name="ArchiveDirectoryCannotDriveRoot" xml:space="preserve">
+        <value>The archive directory cannot be a drive root.</value>
+    </data>
+    <data name="ArchiveDirectoryCannotInsideSystemDirectory" xml:space="preserve">
+        <value>The archive directory cannot be inside a system directory.</value>
+    </data>
+    <data name="ArchiveDirectoryCannotPointFile" xml:space="preserve">
+        <value>The archive directory cannot point to a file.</value>
+    </data>
+    <data name="ArchiveDirectoryMustAbsoluteLocalPath" xml:space="preserve">
+        <value>The archive directory must be an absolute local path.</value>
+    </data>
+    <data name="ArchiveFileCannotReparsePoint" xml:space="preserve">
+        <value>An archive file cannot be a reparse point.</value>
+    </data>
+    <data name="ArchiveMigrationPlan" xml:space="preserve">
+        <value>Archive migration plan</value>
+    </data>
+    <data name="ArchiveMissing" xml:space="preserve">
+        <value>Archive missing</value>
+    </data>
+    <data name="ArchivePathCannotPassThroughReparsePoint" xml:space="preserve">
+        <value>The archive path cannot pass through a reparse point.</value>
+    </data>
+    <data name="ArchiveProfile" xml:space="preserve">
+        <value>Archive profile</value>
+    </data>
+    <data name="ArchiveSizeVersionDoesNotMatchStored" xml:space="preserve">
+        <value>The archive size for version "{0}" does not match the stored value.</value>
+    </data>
+    <data name="ArchiveVersionNotFoundCurrentDirectory" xml:space="preserve">
+        <value>The archive for version "{0}" was not found in the current directory.</value>
+    </data>
+    <data name="Archived" xml:space="preserve">
+        <value>Archived</value>
+    </data>
+    <data name="ArtifactPathCannotContainSegments" xml:space="preserve">
+        <value>The artifact path cannot contain '.' or '..' segments.</value>
+    </data>
+    <data name="ArtifactPathMustRelative" xml:space="preserve">
+        <value>The artifact path must be relative.</value>
+    </data>
+    <data name="ArtifactSizeCannotNegative" xml:space="preserve">
+        <value>Artifact size cannot be negative.</value>
+    </data>
+    <data name="ArtifactTargetDirectoryInvalid" xml:space="preserve">
+        <value>Artifact target directory is invalid.</value>
+    </data>
+    <data name="ArtifactVersionAlreadyExists" xml:space="preserve">
+        <value>An artifact for version “{0}” already exists.</value>
+    </data>
+    <data name="AssignAnotherMachineProfileSProjectsFirst" xml:space="preserve">
+        <value>Assign another machine to this profile's projects first.</value>
+    </data>
+    <data name="AuthenticationMethod" xml:space="preserve">
+        <value>Authentication method</value>
+    </data>
+    <data name="AutomaticCsprojSelection" xml:space="preserve">
+        <value>Automatic .csproj selection</value>
+    </data>
+    <data name="AutomaticDetectionCanOverriddenManually" xml:space="preserve">
+        <value>Automatic detection can be overridden manually</value>
+    </data>
+    <data name="AutomaticRollbackFailed" xml:space="preserve">
+        <value>Automatic rollback failed: {0}</value>
+    </data>
+    <data name="AutomaticRollbackResult" xml:space="preserve">
+        <value>Automatic rollback result: {0}</value>
+    </data>
+    <data name="AutosaveNotCompletedVariableIncomplete" xml:space="preserve">
+        <value>Autosave has not completed or a variable is incomplete.</value>
+    </data>
+    <data name="AvailableBytesMinimumRequired" xml:space="preserve">
+        <value>Available bytes: {0}; minimum required: {1}.</value>
+    </data>
+    <data name="B" xml:space="preserve">
+        <value>B</value>
+    </data>
+    <data name="BackProjects" xml:space="preserve">
+        <value>Back to projects</value>
+    </data>
+    <data name="BackUpReset" xml:space="preserve">
+        <value>Back up and reset</value>
+    </data>
+    <data name="Backup" xml:space="preserve">
+        <value>Backup: {0}</value>
+    </data>
+    <data name="Browse" xml:space="preserve">
+        <value>Browse...</value>
+    </data>
+    <data name="Build" xml:space="preserve">
+        <value>Build</value>
+    </data>
+    <data name="Build2" xml:space="preserve">
+        <value>Build: {0}</value>
+    </data>
+    <data name="BuildArgumentsEnvironmentVariableNamesMustNot" xml:space="preserve">
+        <value>Build arguments and environment variable names must not be empty.</value>
+    </data>
+    <data name="BuildArgumentsEnvironmentVariablesInvalid" xml:space="preserve">
+        <value>Build arguments or environment variables are invalid.</value>
+    </data>
+    <data name="BuildCommand" xml:space="preserve">
+        <value>Build command</value>
+    </data>
+    <data name="BuildCommandCheckedPlaceholdersResolved" xml:space="preserve">
+        <value>The build command will be checked after placeholders are resolved.</value>
+    </data>
+    <data name="BuildCommandNotFoundInstallRequiredTool" xml:space="preserve">
+        <value>Build command “{0}” was not found. Install the required tool and restart KK.Var.</value>
+    </data>
+    <data name="BuildConfiguration" xml:space="preserve">
+        <value>Build configuration</value>
+    </data>
+    <data name="BuildConfigurationEmpty" xml:space="preserve">
+        <value>Build configuration is empty.</value>
+    </data>
+    <data name="BuildConfigurationLocalToolAvailable" xml:space="preserve">
+        <value>Build configuration and the local tool are available.</value>
+    </data>
+    <data name="BuildConfigurationToolUnavailable" xml:space="preserve">
+        <value>Build configuration or tool is unavailable.</value>
+    </data>
+    <data name="BuildDeliveryLocalReleaseManagement" xml:space="preserve">
+        <value>Build, delivery, and local release management</value>
+    </data>
+    <data name="BuildDeploy" xml:space="preserve">
+        <value>Build and deploy</value>
+    </data>
+    <data name="BuildExitedCode" xml:space="preserve">
+        <value>Build exited with code {0}: {1}</value>
+    </data>
+    <data name="BuildInputFilesCheckedGitHubArchiveDownloaded" xml:space="preserve">
+        <value>Build input files will be checked after the GitHub archive is downloaded.</value>
+    </data>
+    <data name="BuildParametersContainInvalidJSON" xml:space="preserve">
+        <value>Build parameters contain invalid JSON.</value>
+    </data>
+    <data name="BuildParametersMustJSONObject" xml:space="preserve">
+        <value>Build parameters must be a JSON object.</value>
+    </data>
+    <data name="BuildPathsMustStayInsideSourceDirectory" xml:space="preserve">
+        <value>Build paths must stay inside the source directory.</value>
+    </data>
+    <data name="BuildProcessEnvironment" xml:space="preserve">
+        <value>Build process environment</value>
+    </data>
+    <data name="BuildProviderDetectedSourceDownload" xml:space="preserve">
+        <value>The build provider will be detected after source download.</value>
+    </data>
+    <data name="BuildRun" xml:space="preserve">
+        <value>Build and run</value>
+    </data>
+    <data name="BuildToolNotFound" xml:space="preserve">
+        <value>Build tool "{0}" was not found.</value>
+    </data>
+    <data name="BuildType" xml:space="preserve">
+        <value>Build type</value>
+    </data>
+    <data name="BuildWorkingDirectoryNotFound" xml:space="preserve">
+        <value>The build working directory was not found.</value>
+    </data>
+    <data name="Build_WorkingDirectory" xml:space="preserve">
+        <value>Build working directory</value>
+    </data>
+    <data name="CGORequiresCCompilerTargetingLinuxArchitecture" xml:space="preserve">
+        <value>CGO requires a C compiler targeting the Linux architecture.</value>
+    </data>
+    <data name="CMakeConfigureArguments" xml:space="preserve">
+        <value>CMake configure arguments</value>
+    </data>
+    <data name="CMakeGenerator" xml:space="preserve">
+        <value>CMake generator</value>
+    </data>
+    <data name="CMakeNotFoundInstallCMakeRestartKK" xml:space="preserve">
+        <value>CMake was not found. Install CMake and restart KK.Var.</value>
+    </data>
+    <data name="CanConnectGitHubNowLater" xml:space="preserve">
+        <value>You can connect GitHub now or later.</value>
+    </data>
+    <data name="CancelOperation" xml:space="preserve">
+        <value>Cancel operation</value>
+    </data>
+    <data name="Cancelled" xml:space="preserve">
+        <value>Cancelled</value>
+    </data>
+    <data name="Changed" xml:space="preserve">
+        <value>Changed</value>
+    </data>
+    <data name="Check" xml:space="preserve">
+        <value>Check</value>
+    </data>
+    <data name="CheckBuildEnvironmentNamesEmptyDuplicateNames" xml:space="preserve">
+        <value>Check build environment names: empty and duplicate names are not allowed.</value>
+    </data>
+    <data name="CheckConnectionConfirmSSHServerFingerprint" xml:space="preserve">
+        <value>Check the connection and confirm the SSH server fingerprint.</value>
+    </data>
+    <data name="CheckPathsBuildSettings" xml:space="preserve">
+        <value>Check the paths in the build settings.</value>
+    </data>
+    <data name="CheckSSHConnectionFirstDetectRemoteMachine" xml:space="preserve">
+        <value>Check the SSH connection first to detect the remote machine architecture.</value>
+    </data>
+    <data name="CheckingRemoteMachine" xml:space="preserve">
+        <value>Checking remote machine</value>
+    </data>
+    <data name="CheckingSSHConnection" xml:space="preserve">
+        <value>Checking SSH connection</value>
+    </data>
+    <data name="CleanUpVersions" xml:space="preserve">
+        <value>Clean up versions</value>
+    </data>
+    <data name="CleanUpVersions2" xml:space="preserve">
+        <value>Clean up versions?</value>
+    </data>
+    <data name="CleaningUpLocalVersions" xml:space="preserve">
+        <value>Cleaning up local versions</value>
+    </data>
+    <data name="CleanupPlanChangedCalculateAgain" xml:space="preserve">
+        <value>The cleanup plan changed. Calculate it again.</value>
+    </data>
+    <data name="CleanupStoppedVersion" xml:space="preserve">
+        <value>Cleanup stopped at version "{0}": {1}</value>
+    </data>
+    <data name="Command" xml:space="preserve">
+        <value>Command</value>
+    </data>
+    <data name="CommandHealthCheckFailedAttempts" xml:space="preserve">
+        <value>Command health-check failed after {0} attempts.</value>
+    </data>
+    <data name="CommandRemoteMachine" xml:space="preserve">
+        <value>Command on the remote machine</value>
+    </data>
+    <data name="Commit_Author" xml:space="preserve">
+        <value>Author</value>
+    </data>
+    <data name="Commit_Title" xml:space="preserve">
+        <value>Branch commit</value>
+    </data>
+    <data name="Common_Back" xml:space="preserve">
+        <value>Back</value>
+    </data>
+    <data name="Common_Cancel" xml:space="preserve">
+        <value>Cancel</value>
+    </data>
+    <data name="Common_Close" xml:space="preserve">
+        <value>Close</value>
+    </data>
+    <data name="Common_Description" xml:space="preserve">
+        <value>Description</value>
+    </data>
+    <data name="CompareFingerprintRemoteMachineAdministratorSRecords" xml:space="preserve">
+        <value>Compare the fingerprint with the remote machine administrator's records.</value>
+    </data>
+    <data name="CompleteProfileSuccessfullyVerifySSHConnection" xml:space="preserve">
+        <value>Complete the profile and successfully verify the SSH connection.</value>
+    </data>
+    <data name="CompleteRequiredRemoteConnectionFieldsSaveSettings" xml:space="preserve">
+        <value>Complete the required remote connection fields and save the settings.</value>
+    </data>
+    <data name="CompleteRequiredSetup" xml:space="preserve">
+        <value>Complete the required setup</value>
+    </data>
+    <data name="Completed" xml:space="preserve">
+        <value>Completed</value>
+    </data>
+    <data name="ConfigurationCreate" xml:space="preserve">
+        <value>Configuration to create</value>
+    </data>
+    <data name="ConfigurationFormatVersionNotSupported" xml:space="preserve">
+        <value>Configuration format version {0} is not supported.</value>
+    </data>
+    <data name="ConfigureAccessContinue" xml:space="preserve">
+        <value>Configure access to continue</value>
+    </data>
+    <data name="ConfigureSSHAccessFirst" xml:space="preserve">
+        <value>Configure SSH access first</value>
+    </data>
+    <data name="ConfirmFingerprintVerifyLogin" xml:space="preserve">
+        <value>Confirm fingerprint and verify login</value>
+    </data>
+    <data name="ConfirmProjectSMachineChange" xml:space="preserve">
+        <value>Confirm the project's machine change.</value>
+    </data>
+    <data name="ConfirmSSHHostFingerprintSettings" xml:space="preserve">
+        <value>Confirm the SSH host fingerprint in settings.</value>
+    </data>
+    <data name="ConfirmSSHServer" xml:space="preserve">
+        <value>Confirm SSH server</value>
+    </data>
+    <data name="ConfirmSaveProfile" xml:space="preserve">
+        <value>Confirm and save profile</value>
+    </data>
+    <data name="ConfirmSignGitHub" xml:space="preserve">
+        <value>Confirm sign-in to GitHub</value>
+    </data>
+    <data name="ConfirmWhetherNewAddressBelongsSameMachine" xml:space="preserve">
+        <value>Confirm whether the new address belongs to the same machine.</value>
+    </data>
+    <data name="ConnectGitHub" xml:space="preserve">
+        <value>Connect GitHub</value>
+    </data>
+    <data name="ConnectGitHubSettingsBuildingProject" xml:space="preserve">
+        <value>Connect GitHub in settings before building the project.</value>
+    </data>
+    <data name="ConnectGitHubSettingsPageFirst" xml:space="preserve">
+        <value>Connect GitHub on the settings page first.</value>
+    </data>
+    <data name="Connected" xml:space="preserve">
+        <value>Connected</value>
+    </data>
+    <data name="ConnectingGitHub" xml:space="preserve">
+        <value>Connecting GitHub</value>
+    </data>
+    <data name="ConnectionCheckFailed" xml:space="preserve">
+        <value>Connection check failed: {0}</value>
+    </data>
+    <data name="ConnectionSettings" xml:space="preserve">
+        <value>Connection settings</value>
+    </data>
+    <data name="ContinueEditing" xml:space="preserve">
+        <value>Continue editing</value>
+    </data>
+    <data name="CopyCode" xml:space="preserve">
+        <value>Copy code</value>
+    </data>
+    <data name="CouldNotCollectAllDiagnostics" xml:space="preserve">
+        <value>Could not collect all diagnostics: {0}</value>
+    </data>
+    <data name="CouldNotCompletePreflightCheck" xml:space="preserve">
+        <value>Could not complete the preflight check.</value>
+    </data>
+    <data name="CouldNotCreatePythonVirtualEnvironmentVenv" xml:space="preserve">
+        <value>Could not create the Python virtual environment: venv/ensurepip is missing on the remote machine. On Debian or Ubuntu, install the python3-venv package.</value>
+    </data>
+    <data name="CouldNotDetermineDriveSelectedDirectory" xml:space="preserve">
+        <value>Could not determine the drive for the selected directory.</value>
+    </data>
+    <data name="CouldNotEstablishSSHConnection" xml:space="preserve">
+        <value>Could not establish an SSH connection: {0}</value>
+    </data>
+    <data name="CouldNotOpenDatabase" xml:space="preserve">
+        <value>Could not open the database</value>
+    </data>
+    <data name="CouldNotReadSettings" xml:space="preserve">
+        <value>Could not read settings</value>
+    </data>
+    <data name="CouldNotRecoverInterruptedDeploy" xml:space="preserve">
+        <value>Could not recover interrupted Deploy: {0}</value>
+    </data>
+    <data name="CouldNotRefreshGitHubSessionConnectGitHub" xml:space="preserve">
+        <value>Could not refresh the GitHub session. Connect GitHub again.</value>
+    </data>
+    <data name="CouldNotRemoveTemporaryFilesCompletedDeploy" xml:space="preserve">
+        <value>Could not remove temporary files after the completed Deploy: {0}</value>
+    </data>
+    <data name="CouldNotRemoveTemporaryRemoteOperationFiles" xml:space="preserve">
+        <value>Could not remove temporary remote operation files: {0}</value>
+    </data>
+    <data name="CouldNotStart" xml:space="preserve">
+        <value>Could not start {0}.</value>
+    </data>
+    <data name="CreateDeployProjectsKKVarNeedsKnow" xml:space="preserve">
+        <value>To create and deploy projects, KK.Var needs to know which Linux machine to connect to.</value>
+    </data>
+    <data name="CreateProject" xml:space="preserve">
+        <value>Create project</value>
+    </data>
+    <data name="Created" xml:space="preserve">
+        <value>Created</value>
+    </data>
+    <data name="CreatingBackup" xml:space="preserve">
+        <value>Creating backup...</value>
+    </data>
+    <data name="CreatingLocalArchive" xml:space="preserve">
+        <value>Creating local archive</value>
+    </data>
+    <data name="CurrentPreviousDeployedVersionsCannotDeleted" xml:space="preserve">
+        <value>The current and previous deployed versions cannot be deleted.</value>
+    </data>
+    <data name="CustomScript" xml:space="preserve">
+        <value>Custom script</value>
+    </data>
+    <data name="DaemonReloadPerformed" xml:space="preserve">
+        <value>daemon-reload performed</value>
+    </data>
+    <data name="DatabaseFileNameMustNotContainDirectory" xml:space="preserve">
+        <value>The database file name must not contain a directory path.</value>
+    </data>
+    <data name="Date" xml:space="preserve">
+        <value>Date</value>
+    </data>
+    <data name="Default" xml:space="preserve">
+        <value>Default</value>
+    </data>
+    <data name="Delete" xml:space="preserve">
+        <value>Delete</value>
+    </data>
+    <data name="DeleteLocalVersion" xml:space="preserve">
+        <value>Delete local version?</value>
+    </data>
+    <data name="DeleteProject" xml:space="preserve">
+        <value>Delete project?</value>
+    </data>
+    <data name="DeletedVersionsBytes" xml:space="preserve">
+        <value>Deleted versions: {0}; bytes: {1}.</value>
+    </data>
+    <data name="DeletingProject" xml:space="preserve">
+        <value>Deleting project</value>
+    </data>
+    <data name="Deploy" xml:space="preserve">
+        <value>Deploy</value>
+    </data>
+    <data name="DeployAutomaticRollbackFailed" xml:space="preserve">
+        <value>Deploy and automatic rollback failed</value>
+    </data>
+    <data name="DeployCannotStartWhileLocalVersionsBeing" xml:space="preserve">
+        <value>Deploy cannot start while local versions are being moved.</value>
+    </data>
+    <data name="DeployCompleted" xml:space="preserve">
+        <value>Deploy completed</value>
+    </data>
+    <data name="DeployCompletedButVersionCleanupFailed" xml:space="preserve">
+        <value>Deploy completed, but version cleanup failed: {0}</value>
+    </data>
+    <data name="DeployFailed" xml:space="preserve">
+        <value>Deploy failed</value>
+    </data>
+    <data name="DeployFailedAutomaticRollbackCompleted" xml:space="preserve">
+        <value>Deploy failed: automatic rollback completed</value>
+    </data>
+    <data name="DeployFailedRestoringPreviousVersion" xml:space="preserve">
+        <value>Deploy failed, restoring previous version</value>
+    </data>
+    <data name="DeployPreflightChecks" xml:space="preserve">
+        <value>Deploy preflight checks</value>
+    </data>
+    <data name="DeployRollbackOperationsAllProjectsChronologicalOrder" xml:space="preserve">
+        <value>Deploy and rollback operations for all projects in chronological order</value>
+    </data>
+    <data name="Deployment" xml:space="preserve">
+        <value>Deployment</value>
+    </data>
+    <data name="DeploymentAlreadyCompleted" xml:space="preserve">
+        <value>Deployment is already completed.</value>
+    </data>
+    <data name="DeploymentNoLongerRunning" xml:space="preserve">
+        <value>Deployment is no longer running.</value>
+    </data>
+    <data name="DeploymentNotFound" xml:space="preserve">
+        <value>Deployment "{0}" was not found.</value>
+    </data>
+    <data name="DeploymentPathCannotContainSegments" xml:space="preserve">
+        <value>The deployment path cannot contain . or .. segments.</value>
+    </data>
+    <data name="DetectAutomatically" xml:space="preserve">
+        <value>Detect automatically</value>
+    </data>
+    <data name="DetectBuildSettings" xml:space="preserve">
+        <value>Detect build settings</value>
+    </data>
+    <data name="DetectedAutomatically" xml:space="preserve">
+        <value>Detected automatically: {0}</value>
+    </data>
+    <data name="DetectedAutomaticallyDuringConnectionCheck" xml:space="preserve">
+        <value>Detected automatically during the connection check</value>
+    </data>
+    <data name="DeviceFlowNotEnabledGitHubOAuthApp" xml:space="preserve">
+        <value>Device Flow is not enabled for the GitHub OAuth App.</value>
+    </data>
+    <data name="DirectoryContainsVersionArchivesAllProjects" xml:space="preserve">
+        <value>The directory contains version archives for all projects.</value>
+    </data>
+    <data name="DirectoryUnavailable" xml:space="preserve">
+        <value>Directory unavailable</value>
+    </data>
+    <data name="Discard" xml:space="preserve">
+        <value>Discard</value>
+    </data>
+    <data name="DiscardChanges" xml:space="preserve">
+        <value>Discard changes?</value>
+    </data>
+    <data name="DiscardLeave" xml:space="preserve">
+        <value>Discard and leave</value>
+    </data>
+    <data name="Disconnect" xml:space="preserve">
+        <value>Disconnect</value>
+    </data>
+    <data name="DotnetProcessCouldNotStarted" xml:space="preserve">
+        <value>The dotnet process could not be started.</value>
+    </data>
+    <data name="Duration" xml:space="preserve">
+        <value>Duration</value>
+    </data>
+    <data name="DuringDeployTheyWrittenSelectedFormatPath" xml:space="preserve">
+        <value>During deploy, they will be written in the selected format to the path configured in the project.</value>
+    </data>
+    <data name="ERROR" xml:space="preserve">
+        <value>ERROR: {0}</value>
+    </data>
+    <data name="Edit" xml:space="preserve">
+        <value>Edit</value>
+    </data>
+    <data name="EditProject" xml:space="preserve">
+        <value>Edit project</value>
+    </data>
+    <data name="EffectivePath" xml:space="preserve">
+        <value>Effective path</value>
+    </data>
+    <data name="EnableCGO" xml:space="preserve">
+        <value>Enable CGO</value>
+    </data>
+    <data name="EnterAbsoluteHTTPHTTPSHealthCheckAddress" xml:space="preserve">
+        <value>Enter an absolute HTTP or HTTPS health-check address.</value>
+    </data>
+    <data name="EnterAbsoluteLinuxPathDedicatedApplicationDirectory" xml:space="preserve">
+        <value>Enter an absolute Linux path to a dedicated application directory.</value>
+    </data>
+    <data name="EnterCodeGitHubPage" xml:space="preserve">
+        <value>Enter this code on the GitHub page</value>
+    </data>
+    <data name="EnterCommandCustomBuild" xml:space="preserve">
+        <value>Enter command for the custom build.</value>
+    </data>
+    <data name="EnterDeploymentDirectoryRemoteMachine" xml:space="preserve">
+        <value>Enter the deployment directory on the remote machine.</value>
+    </data>
+    <data name="EnterEnvironmentFilePathInsideProject" xml:space="preserve">
+        <value>Enter the environment file path inside the project.</value>
+    </data>
+    <data name="EnterExecutableFileEntryPoint" xml:space="preserve">
+        <value>Enter the executable file or entry point.</value>
+    </data>
+    <data name="EnterHealthCheckCommand" xml:space="preserve">
+        <value>Enter the health-check command.</value>
+    </data>
+    <data name="EnterMachineProfileName" xml:space="preserve">
+        <value>Enter a machine profile name.</value>
+    </data>
+    <data name="EnterNameCompleteSSHConnectionBelowClick" xml:space="preserve">
+        <value>Enter a name, complete the SSH connection below, and click Verify and save profile. On the first connection, compare and confirm the server fingerprint.</value>
+    </data>
+    <data name="EnterNameEveryVariable" xml:space="preserve">
+        <value>Enter a name for every variable</value>
+    </data>
+    <data name="EnterPrivateSSHKeyPath" xml:space="preserve">
+        <value>Enter the private SSH key path.</value>
+    </data>
+    <data name="EnterProjectName" xml:space="preserve">
+        <value>Enter a project name.</value>
+    </data>
+    <data name="EnterRemoteMachineAddress" xml:space="preserve">
+        <value>Enter the remote machine address.</value>
+    </data>
+    <data name="EnterSSHPassword" xml:space="preserve">
+        <value>Enter the SSH password.</value>
+    </data>
+    <data name="EnterSSHPasswordProfile" xml:space="preserve">
+        <value>Enter the SSH password for this profile.</value>
+    </data>
+    <data name="EnterSSHUser" xml:space="preserve">
+        <value>Enter the SSH user.</value>
+    </data>
+    <data name="EnterSystemdServiceName" xml:space="preserve">
+        <value>Enter the systemd service name.</value>
+    </data>
+    <data name="EnterTagNewVersion" xml:space="preserve">
+        <value>Enter a tag for the new version.</value>
+    </data>
+    <data name="EnterToolchainFileCLinuxBuild" xml:space="preserve">
+        <value>Enter toolchainFile for the C++ Linux build.</value>
+    </data>
+    <data name="EnteredProjectDataLost" xml:space="preserve">
+        <value>The entered project data will be lost.</value>
+    </data>
+    <data name="EnvironmentFileCanGenerated" xml:space="preserve">
+        <value>The environment file can be generated.</value>
+    </data>
+    <data name="EnvironmentFileDirectoryCouldNotDetermined" xml:space="preserve">
+        <value>The environment file directory could not be determined.</value>
+    </data>
+    <data name="EnvironmentFileInvalid" xml:space="preserve">
+        <value>The environment file is invalid.</value>
+    </data>
+    <data name="EnvironmentFilePathOutsideProjectRootDirectory" xml:space="preserve">
+        <value>The environment file path is outside the project root directory.</value>
+    </data>
+    <data name="EnvironmentFormatVariablesSaved" xml:space="preserve">
+        <value>Environment format and variables saved</value>
+    </data>
+    <data name="EnvironmentVariableNameDuplicated" xml:space="preserve">
+        <value>Environment variable name "{0}" is duplicated.</value>
+    </data>
+    <data name="EnvironmentVariables" xml:space="preserve">
+        <value>Environment variables</value>
+    </data>
+    <data name="EnvironmentVariablesFile" xml:space="preserve">
+        <value>Environment variables file</value>
+    </data>
+    <data name="EnvironmentVariablesSnapshot" xml:space="preserve">
+        <value>Environment variables snapshot</value>
+    </data>
+    <data name="ExampleBillingAPI" xml:space="preserve">
+        <value>For example, Billing API</value>
+    </data>
+    <data name="ExampleRelease1" xml:space="preserve">
+        <value>For example, release-1</value>
+    </data>
+    <data name="ExecutableCsprojCouldNotSelectedUnambiguouslyAssembly" xml:space="preserve">
+        <value>The executable .csproj could not be selected unambiguously. Its assembly name must match the configured executable file.</value>
+    </data>
+    <data name="ExecutableFileEntryPoint" xml:space="preserve">
+        <value>Executable file or entry point</value>
+    </data>
+    <data name="ExecutableFileNotFoundBuild" xml:space="preserve">
+        <value>The executable file “{0}” was not found after the build.</value>
+    </data>
+    <data name="Exit" xml:space="preserve">
+        <value>Exit</value>
+    </data>
+    <data name="Export" xml:space="preserve">
+        <value>Export</value>
+    </data>
+    <data name="ExportIncludesProjectBuildProcessEnvironmentValues" xml:space="preserve">
+        <value>The export includes project and build process environment values.</value>
+    </data>
+    <data name="ExportProjectConfiguration" xml:space="preserve">
+        <value>Export project configuration</value>
+    </data>
+    <data name="ExtractingNewVersion" xml:space="preserve">
+        <value>Extracting new version</value>
+    </data>
+    <data name="Failed" xml:space="preserve">
+        <value>Failed</value>
+    </data>
+    <data name="Files" xml:space="preserve">
+        <value>Files: {0}</value>
+    </data>
+    <data name="FinalBuildSizeUnknownMinimumFreeSpace" xml:space="preserve">
+        <value>The final build size is unknown; the minimum free-space reserve was checked.</value>
+    </data>
+    <data name="FinalStatus" xml:space="preserve">
+        <value>Final status</value>
+    </data>
+    <data name="FingerprintDiffersNotConfirmedOSSSHKeys" xml:space="preserve">
+        <value>The fingerprint differs or has not been confirmed. The OS or SSH keys may have changed, or this may be a different server.</value>
+    </data>
+    <data name="FingerprintMatchesProvidingStrongEvidenceMachineIdentity" xml:space="preserve">
+        <value>The fingerprint matches, providing strong evidence of machine identity. Confirm your choice.</value>
+    </data>
+    <data name="FirstLaunch" xml:space="preserve">
+        <value>First launch</value>
+    </data>
+    <data name="GB" xml:space="preserve">
+        <value>GB</value>
+    </data>
+    <data name="GitCommitSHANotProvided" xml:space="preserve">
+        <value>Git commit SHA was not provided.</value>
+    </data>
+    <data name="GitHubArchiveContainsUnsafePath" xml:space="preserve">
+        <value>The GitHub archive contains an unsafe path.</value>
+    </data>
+    <data name="GitHubArchiveEmpty" xml:space="preserve">
+        <value>The GitHub archive is empty.</value>
+    </data>
+    <data name="GitHubArchiveSizeKnownDownload" xml:space="preserve">
+        <value>The GitHub archive size will be known after download.</value>
+    </data>
+    <data name="GitHubAuthorizationCancelledUser" xml:space="preserve">
+        <value>GitHub authorization was cancelled by the user.</value>
+    </data>
+    <data name="GitHubClientIDInvalid" xml:space="preserve">
+        <value>The GitHub Client ID is invalid.</value>
+    </data>
+    <data name="GitHubClientIDNotConfiguredAppsettingsJson" xml:space="preserve">
+        <value>GitHub Client ID is not configured in appsettings.json.</value>
+    </data>
+    <data name="GitHubCodeExpiredStartConnectionAgain" xml:space="preserve">
+        <value>The GitHub code has expired. Start the connection again.</value>
+    </data>
+    <data name="GitHubCommit" xml:space="preserve">
+        <value>GitHub commit</value>
+    </data>
+    <data name="GitHubConnectedSuccessfully" xml:space="preserve">
+        <value>GitHub connected successfully</value>
+    </data>
+    <data name="GitHubConnectionCancelled" xml:space="preserve">
+        <value>GitHub connection cancelled</value>
+    </data>
+    <data name="GitHubDefaultBranch" xml:space="preserve">
+        <value>GitHub default branch</value>
+    </data>
+    <data name="GitHubDidNotIssueAccessToken" xml:space="preserve">
+        <value>GitHub did not issue an access token.</value>
+    </data>
+    <data name="GitHubDidNotReturnGitCommitSHA" xml:space="preserve">
+        <value>GitHub did not return a Git commit SHA.</value>
+    </data>
+    <data name="GitHubDidNotReturnRepositoryTreeSHA" xml:space="preserve">
+        <value>GitHub did not return the repository tree SHA.</value>
+    </data>
+    <data name="GitHubDisconnected" xml:space="preserve">
+        <value>GitHub disconnected</value>
+    </data>
+    <data name="GitHubFolder" xml:space="preserve">
+        <value>GitHub or folder</value>
+    </data>
+    <data name="GitHubLocalVersionsLinuxMachineConnection" xml:space="preserve">
+        <value>GitHub, local versions, and Linux machine connection</value>
+    </data>
+    <data name="GitHubRepository" xml:space="preserve">
+        <value>GitHub repository</value>
+    </data>
+    <data name="GitHubRepositoryAvailable" xml:space="preserve">
+        <value>The GitHub repository is available.</value>
+    </data>
+    <data name="GitHubRepositoryIDFullNameCloneURL" xml:space="preserve">
+        <value>GitHub repository ID, full name and clone URL are required.</value>
+    </data>
+    <data name="GitHubRepositoryNoCommits" xml:space="preserve">
+        <value>The GitHub repository has no commits.</value>
+    </data>
+    <data name="GitHubRepositoryNotConfigured" xml:space="preserve">
+        <value>The GitHub repository is not configured.</value>
+    </data>
+    <data name="GitHubRepositoryUnavailable" xml:space="preserve">
+        <value>The GitHub repository is unavailable.</value>
+    </data>
+    <data name="GitHubReturnedHTTPError" xml:space="preserve">
+        <value>GitHub returned HTTP error {0}.</value>
+    </data>
+    <data name="GitHubSessionExpiredConnectGitHubAgain" xml:space="preserve">
+        <value>The GitHub session has expired. Connect GitHub again.</value>
+    </data>
+    <data name="GitHubTokenDataInvalid" xml:space="preserve">
+        <value>GitHub token data is invalid.</value>
+    </data>
+    <data name="GitSubmoduleNestingTooDeep" xml:space="preserve">
+        <value>Git submodule nesting is too deep.</value>
+    </data>
+    <data name="GitSubmodulePathOutsideRepository" xml:space="preserve">
+        <value>The Git submodule path is outside the repository.</value>
+    </data>
+    <data name="GitSubmoduleUsesUnsupportedURL" xml:space="preserve">
+        <value>The Git submodule uses an unsupported URL: {0}</value>
+    </data>
+    <data name="GoSDKNotFoundInstallGoRestart" xml:space="preserve">
+        <value>Go SDK was not found. Install Go and restart KK.Var. If you run it from Visual Studio, restart Visual Studio as well.</value>
+    </data>
+    <data name="HTTPAddress" xml:space="preserve">
+        <value>HTTP address</value>
+    </data>
+    <data name="HTTPHealthCheckFailedAttempts" xml:space="preserve">
+        <value>HTTP health-check failed after {0} attempts.</value>
+    </data>
+    <data name="HTTPRequest" xml:space="preserve">
+        <value>HTTP request</value>
+    </data>
+    <data name="HealthCheck" xml:space="preserve">
+        <value>Health check</value>
+    </data>
+    <data name="HealthCheckAttempt" xml:space="preserve">
+        <value>Health-check: attempt {0} of {1}</value>
+    </data>
+    <data name="HealthCheckAttemptExitedCode" xml:space="preserve">
+        <value>The health-check attempt exited with code {0}.</value>
+    </data>
+    <data name="HealthCheckAttemptFailed" xml:space="preserve">
+        <value>The health-check attempt failed: {0}</value>
+    </data>
+    <data name="HealthCheckFailed" xml:space="preserve">
+        <value>Health-check failed.</value>
+    </data>
+    <data name="HealthCheckFailedRestoringPreviousVersion" xml:space="preserve">
+        <value>Health-check failed, restoring previous version</value>
+    </data>
+    <data name="HealthCheckIntervalMustBetween13600" xml:space="preserve">
+        <value>The health-check interval must be between 1 and 3600 seconds.</value>
+    </data>
+    <data name="HealthCheckPassed" xml:space="preserve">
+        <value>Health-check passed</value>
+    </data>
+    <data name="HealthCheckPassed2" xml:space="preserve">
+        <value>Health-check passed.</value>
+    </data>
+    <data name="HealthCheckTimeoutMustBetween13600" xml:space="preserve">
+        <value>The health-check timeout must be between 1 and 3600 seconds.</value>
+    </data>
+    <data name="HealthCheckType" xml:space="preserve">
+        <value>Health-check type</value>
+    </data>
+    <data name="HealthCheckTypeStarted" xml:space="preserve">
+        <value>Health-check type {0} started.</value>
+    </data>
+    <data name="Help" xml:space="preserve">
+        <value>Help</value>
+    </data>
+    <data name="HistoryEmpty" xml:space="preserve">
+        <value>History is empty</value>
+    </data>
+    <data name="History_Title" xml:space="preserve">
+        <value>History</value>
+    </data>
+    <data name="HowDeployWorks" xml:space="preserve">
+        <value>How deploy works</value>
+    </data>
+    <data name="IConfirmMachineChange" xml:space="preserve">
+        <value>I confirm the machine change</value>
+    </data>
+    <data name="ImportProjectConfiguration" xml:space="preserve">
+        <value>Import project configuration</value>
+    </data>
+    <data name="InputFilesSelectedBuildProviderNotFound" xml:space="preserve">
+        <value>Input files for the selected build provider were not found.</value>
+    </data>
+    <data name="Interrupted" xml:space="preserve">
+        <value>Interrupted</value>
+    </data>
+    <data name="InterruptedDeployCompletedNewVersionRunning" xml:space="preserve">
+        <value>Interrupted Deploy completed: the new version is running.</value>
+    </data>
+    <data name="InterruptedDeployRecoveredPreviousVersionRestored" xml:space="preserve">
+        <value>Interrupted Deploy recovered: the previous version was restored.</value>
+    </data>
+    <data name="InterruptedDeployStoppedVersionSwitch" xml:space="preserve">
+        <value>Interrupted Deploy stopped before the version switch.</value>
+    </data>
+    <data name="InterruptedOperationsRecovered" xml:space="preserve">
+        <value>Interrupted operations recovered: {0}</value>
+    </data>
+    <data name="IntervalSeconds" xml:space="preserve">
+        <value>Interval, seconds</value>
+    </data>
+    <data name="InvalidArtifactSHA256Checksum" xml:space="preserve">
+        <value>Invalid artifact SHA-256 checksum.</value>
+    </data>
+    <data name="InvalidBuildArgumentsBuildProcessEnvironment" xml:space="preserve">
+        <value>Invalid build arguments or build process environment.</value>
+    </data>
+    <data name="InvalidDeploymentOperationIdentifier" xml:space="preserve">
+        <value>Invalid deployment operation identifier.</value>
+    </data>
+    <data name="InvalidEnvironmentVariableName" xml:space="preserve">
+        <value>Invalid environment variable name "{0}".</value>
+    </data>
+    <data name="InvalidGitCommitSHA" xml:space="preserve">
+        <value>Invalid Git commit SHA.</value>
+    </data>
+    <data name="InvalidGitHubBranchName" xml:space="preserve">
+        <value>Invalid GitHub branch name.</value>
+    </data>
+    <data name="InvalidGitHubRepositoryName" xml:space="preserve">
+        <value>Invalid GitHub repository name.</value>
+    </data>
+    <data name="InvalidGitHubURLSubmodule" xml:space="preserve">
+        <value>Invalid GitHub URL for submodule: {0}</value>
+    </data>
+    <data name="InvalidRemoteOperationIdentifier" xml:space="preserve">
+        <value>Invalid remote operation identifier.</value>
+    </data>
+    <data name="InvalidSourceCommitSHA" xml:space="preserve">
+        <value>Invalid source commit SHA.</value>
+    </data>
+    <data name="InvalidSystemdServiceName" xml:space="preserve">
+        <value>Invalid systemd service name.</value>
+    </data>
+    <data name="JSONObjectRequired" xml:space="preserve">
+        <value>A JSON object is required.</value>
+    </data>
+    <data name="KB" xml:space="preserve">
+        <value>KB</value>
+    </data>
+    <data name="KKVarBuildProjectSelectedSource" xml:space="preserve">
+        <value>KK.Var will build the project from the selected source</value>
+    </data>
+    <data name="KKVarBuildSourceCodeCreateLocal" xml:space="preserve">
+        <value>KK.Var will build the source code, create a local version, transfer the files to the Linux machine, and restart the systemd service.</value>
+    </data>
+    <data name="KKVarBuildsProjectsGitHubLocalFolder" xml:space="preserve">
+        <value>KK.Var builds projects from GitHub or a local folder, stores versions locally, and delivers them to a Linux machine.</value>
+    </data>
+    <data name="KKVarFirstTimeSetup" xml:space="preserve">
+        <value>KK.Var first-time setup</value>
+    </data>
+    <data name="KKVarRecovery" xml:space="preserve">
+        <value>KK.Var recovery</value>
+    </data>
+    <data name="LastDeploy" xml:space="preserve">
+        <value>Last deploy</value>
+    </data>
+    <data name="LastStage" xml:space="preserve">
+        <value>Last stage</value>
+    </data>
+    <data name="LimitsAppliedDuringAutomaticCleanupSuccessfulDeploy" xml:space="preserve">
+        <value>Limits are applied during automatic cleanup after a successful Deploy.</value>
+    </data>
+    <data name="LinuxMachineAddressSSHPort" xml:space="preserve">
+        <value>• Linux machine address and SSH port</value>
+    </data>
+    <data name="LinuxRootDirectoryCannotUsedDeploymentEnter" xml:space="preserve">
+        <value>The Linux root directory cannot be used for deployment. Enter a dedicated application directory, such as /opt/my-app.</value>
+    </data>
+    <data name="LoadingBranches" xml:space="preserve">
+        <value>Loading branches…</value>
+    </data>
+    <data name="LoadingCommit" xml:space="preserve">
+        <value>Loading commit…</value>
+    </data>
+    <data name="LoadingGitHubRepositories" xml:space="preserve">
+        <value>Loading GitHub repositories</value>
+    </data>
+    <data name="LoadingHistory" xml:space="preserve">
+        <value>Loading history</value>
+    </data>
+    <data name="LoadingProject" xml:space="preserve">
+        <value>Loading project</value>
+    </data>
+    <data name="LocalArchiveCanCreatedFreeSpaceChecked" xml:space="preserve">
+        <value>A local archive can be created; free space was checked.</value>
+    </data>
+    <data name="LocalArchiveCannotPrepared" xml:space="preserve">
+        <value>A local archive cannot be prepared.</value>
+    </data>
+    <data name="LocalArchiveSelectedVersionNotFound" xml:space="preserve">
+        <value>The local archive for the selected version was not found.</value>
+    </data>
+    <data name="LocalDirectoryPathRequired" xml:space="preserve">
+        <value>Local directory path is required.</value>
+    </data>
+    <data name="LocalFolder" xml:space="preserve">
+        <value>Local folder</value>
+    </data>
+    <data name="LocalProjectDirectory" xml:space="preserve">
+        <value>Local project directory</value>
+    </data>
+    <data name="LocalProjectFolderNotConfigured" xml:space="preserve">
+        <value>The local project folder is not configured.</value>
+    </data>
+    <data name="LocalProjectFolderNotFound" xml:space="preserve">
+        <value>The local project folder was not found: {0}</value>
+    </data>
+    <data name="LocalSourceDirectoryAvailable" xml:space="preserve">
+        <value>The local source directory is available.</value>
+    </data>
+    <data name="LocalSourceDirectoryUnavailable" xml:space="preserve">
+        <value>The local source directory is unavailable.</value>
+    </data>
+    <data name="LocalVersionArchiveNotFound" xml:space="preserve">
+        <value>The local version archive was not found.</value>
+    </data>
+    <data name="LocalVersions" xml:space="preserve">
+        <value>Local versions</value>
+    </data>
+    <data name="LocalVersionsDirectoryChanged" xml:space="preserve">
+        <value>The local versions directory has been changed</value>
+    </data>
+    <data name="MB" xml:space="preserve">
+        <value>MB</value>
+    </data>
+    <data name="MachineActiveOperationEditingArchivingUnavailable" xml:space="preserve">
+        <value>The machine has an active operation. Editing and archiving are unavailable.</value>
+    </data>
+    <data name="MachineProfileMustVerifiedNotArchived" xml:space="preserve">
+        <value>The machine profile must be verified and not archived.</value>
+    </data>
+    <data name="MachineProfileName" xml:space="preserve">
+        <value>Machine profile name</value>
+    </data>
+    <data name="MachineProfileSavedVerified" xml:space="preserve">
+        <value>Machine profile saved and verified.</value>
+    </data>
+    <data name="Machines_Title" xml:space="preserve">
+        <value>Remote machine profiles</value>
+    </data>
+    <data name="MaximizeRestore" xml:space="preserve">
+        <value>Maximize or restore</value>
+    </data>
+    <data name="MaximumVersionCount" xml:space="preserve">
+        <value>Maximum version count</value>
+    </data>
+    <data name="MaximumVersionCountMustBetween110000" xml:space="preserve">
+        <value>The maximum version count must be between 1 and 10000.</value>
+    </data>
+    <data name="MinimizeWindow" xml:space="preserve">
+        <value>Minimize window</value>
+    </data>
+    <data name="MissingArchives" xml:space="preserve">
+        <value>Missing archives: {0}</value>
+    </data>
+    <data name="Move" xml:space="preserve">
+        <value>Move</value>
+    </data>
+    <data name="MultipleBuildTypesDetectedSelectCorrectOne" xml:space="preserve">
+        <value>Multiple build types were detected. Select the correct one in project settings.</value>
+    </data>
+    <data name="MultipleExecutableCsprojFilesSameAssemblyName" xml:space="preserve">
+        <value>Multiple executable .csproj files have the same assembly name.</value>
+    </data>
+    <data name="NETSDKNotFoundInstallNETSDK" xml:space="preserve">
+        <value>.NET SDK was not found. Install the .NET SDK and restart KK.Var.</value>
+    </data>
+    <data name="Never" xml:space="preserve">
+        <value>Never</value>
+    </data>
+    <data name="NewDeployRollbackOperationsUseSelectedMachine" xml:space="preserve">
+        <value>New Deploy and rollback operations will use the selected machine. The service on the previous machine will not be stopped or removed automatically.</value>
+    </data>
+    <data name="NewDirectoryActiveButSourceFileS" xml:space="preserve">
+        <value>The new directory is active, but {0} source file(s) could not be deleted.</value>
+    </data>
+    <data name="NewProfile" xml:space="preserve">
+        <value>New profile</value>
+    </data>
+    <data name="NewProject" xml:space="preserve">
+        <value>＋  New project</value>
+    </data>
+    <data name="NewProject2" xml:space="preserve">
+        <value>New project</value>
+    </data>
+    <data name="NewProjectCreatedCheckPathsNameSystemd" xml:space="preserve">
+        <value>A new project will be created. Check the paths, name, and systemd service; change them if they conflict.</value>
+    </data>
+    <data name="NewVersionDiagnosticsAutomaticRollback" xml:space="preserve">
+        <value>New version diagnostics before automatic rollback:</value>
+    </data>
+    <data name="NewVersionTagAvailable" xml:space="preserve">
+        <value>The new version tag is available.</value>
+    </data>
+    <data name="Next" xml:space="preserve">
+        <value>Next</value>
+    </data>
+    <data name="NextVersion" xml:space="preserve">
+        <value>Next version</value>
+    </data>
+    <data name="NinjaNotFound" xml:space="preserve">
+        <value>Ninja was not found.</value>
+    </data>
+    <data name="No" xml:space="preserve">
+        <value>No</value>
+    </data>
+    <data name="NoActiveOperations" xml:space="preserve">
+        <value>No active operations</value>
+    </data>
+    <data name="NoCheck" xml:space="preserve">
+        <value>No check</value>
+    </data>
+    <data name="NoConflictingOperationProject" xml:space="preserve">
+        <value>No conflicting operation for this project.</value>
+    </data>
+    <data name="NoCreateNewMachine" xml:space="preserve">
+        <value>No, create a new machine</value>
+    </data>
+    <data name="NoDeployRollbackOperationsYet" xml:space="preserve">
+        <value>No deploy or rollback operations yet</value>
+    </data>
+    <data name="NoDescription" xml:space="preserve">
+        <value>No description</value>
+    </data>
+    <data name="NoPreviousVersionNewVersionRemoved" xml:space="preserve">
+        <value>No previous version; new version removed</value>
+    </data>
+    <data name="NoProjectsLinkedProfileYet" xml:space="preserve">
+        <value>No projects are linked to this profile yet.</value>
+    </data>
+    <data name="NoURLFoundGitmodulesGitSubmodule" xml:space="preserve">
+        <value>No URL was found in .gitmodules for Git submodule “{0}”.</value>
+    </data>
+    <data name="NoVersionCleanupNeeded" xml:space="preserve">
+        <value>No version cleanup is needed.</value>
+    </data>
+    <data name="NoVersions" xml:space="preserve">
+        <value>No versions</value>
+    </data>
+    <data name="NonInteractiveSudoChecked" xml:space="preserve">
+        <value>Non-interactive sudo was checked.</value>
+    </data>
+    <data name="NonInteractiveSudoUnavailable" xml:space="preserve">
+        <value>Non-interactive sudo is unavailable.</value>
+    </data>
+    <data name="NotConnected" xml:space="preserve">
+        <value>Not connected</value>
+    </data>
+    <data name="NotifyWhenDeployRollbackFinish" xml:space="preserve">
+        <value>Notify when Deploy and rollback finish</value>
+    </data>
+    <data name="NumberAttempts" xml:space="preserve">
+        <value>Number of attempts</value>
+    </data>
+    <data name="NumberHealthCheckAttemptsMustBetween1" xml:space="preserve">
+        <value>The number of health-check attempts must be between 1 and 100.</value>
+    </data>
+    <data name="OldAddressNewAddressOldFingerprintNew" xml:space="preserve">
+        <value>Old address: {0}
+New address: {1}
+Old fingerprint: {2}
+New fingerprint: {3}</value>
+    </data>
+    <data name="OneArgumentPerLineEnvironmentNAMEValue" xml:space="preserve">
+        <value>One argument per line. Environment: NAME=value; NAME removes a variable. Escapes: \n, \r, \\.</value>
+    </data>
+    <data name="Open" xml:space="preserve">
+        <value>Open</value>
+    </data>
+    <data name="OpenDataFolder" xml:space="preserve">
+        <value>Open data folder</value>
+    </data>
+    <data name="OpenGitHub" xml:space="preserve">
+        <value>Open GitHub</value>
+    </data>
+    <data name="OpenOperationDetails" xml:space="preserve">
+        <value>Open the operation details.</value>
+    </data>
+    <data name="OpenSettings" xml:space="preserve">
+        <value>Open settings</value>
+    </data>
+    <data name="OperationCancelled" xml:space="preserve">
+        <value>Operation cancelled.</value>
+    </data>
+    <data name="OperationCompleted" xml:space="preserve">
+        <value>Operation completed</value>
+    </data>
+    <data name="OperationDetails" xml:space="preserve">
+        <value>Operation details</value>
+    </data>
+    <data name="OperationError" xml:space="preserve">
+        <value>Operation error</value>
+    </data>
+    <data name="OperationLog" xml:space="preserve">
+        <value>Operation log</value>
+    </data>
+    <data name="OperationLogFileMissingUnavailable" xml:space="preserve">
+        <value>The operation log file is missing or unavailable.</value>
+    </data>
+    <data name="OperationNoLongerAvailable" xml:space="preserve">
+        <value>The operation is no longer available.</value>
+    </data>
+    <data name="OperationType" xml:space="preserve">
+        <value>Operation type</value>
+    </data>
+    <data name="OptionalCheckRunsSystemdServiceStarts" xml:space="preserve">
+        <value>An optional check runs after the systemd service starts.</value>
+    </data>
+    <data name="OptionalProjectNameUsedDefault" xml:space="preserve">
+        <value>Optional - the project name is used by default</value>
+    </data>
+    <data name="Overview" xml:space="preserve">
+        <value>Overview</value>
+    </data>
+    <data name="ParameterContainsInvalidCharacters" xml:space="preserve">
+        <value>A parameter contains invalid characters.</value>
+    </data>
+    <data name="Password" xml:space="preserve">
+        <value>Password</value>
+    </data>
+    <data name="PathRelativeProjectRootKKVarCreates" xml:space="preserve">
+        <value>The path is relative to the project root. KK.Var creates the file during the build.</value>
+    </data>
+    <data name="PathsRelativeWorkingDirectoryEmptyPythonDependency" xml:space="preserve">
+        <value>Paths are relative to the working directory; an empty Python dependency file enables automatic detection.</value>
+    </data>
+    <data name="Pending" xml:space="preserve">
+        <value>Pending</value>
+    </data>
+    <data name="Pin" xml:space="preserve">
+        <value>Pin</value>
+    </data>
+    <data name="Pinned" xml:space="preserve">
+        <value>Pinned</value>
+    </data>
+    <data name="PipInstallArguments" xml:space="preserve">
+        <value>pip install arguments</value>
+    </data>
+    <data name="PreflightChecksPassed" xml:space="preserve">
+        <value>Preflight: checks passed.</value>
+    </data>
+    <data name="PreflightStoppedDeploy" xml:space="preserve">
+        <value>Preflight stopped Deploy: {0}</value>
+    </data>
+    <data name="Preflight_Details" xml:space="preserve">
+        <value>Technical details</value>
+    </data>
+    <data name="Preflight_Error" xml:space="preserve">
+        <value>Preflight: error - {0}</value>
+    </data>
+    <data name="Preflight_WarningCount" xml:space="preserve">
+        <value>Preflight: {0} warning(s).</value>
+    </data>
+    <data name="Preparing" xml:space="preserve">
+        <value>Preparing</value>
+    </data>
+    <data name="PreparingMovingLocalArchives" xml:space="preserve">
+        <value>Preparing or moving local archives</value>
+    </data>
+    <data name="PreparingSourceCode" xml:space="preserve">
+        <value>Preparing source code</value>
+    </data>
+    <data name="PreviousServerSStateUnknownRecoveryStopped" xml:space="preserve">
+        <value>The previous server's state is unknown. Recovery has been stopped.</value>
+    </data>
+    <data name="PreviousVersionRestoredButSystemdUnitDid" xml:space="preserve">
+        <value>The previous version was restored, but its systemd unit did not exist.</value>
+    </data>
+    <data name="PreviousVersionRestoredStarted" xml:space="preserve">
+        <value>Previous version restored and started</value>
+    </data>
+    <data name="PreviousVersionRestoredStartedSuccessfully" xml:space="preserve">
+        <value>The previous version was restored and started successfully.</value>
+    </data>
+    <data name="PreviousVersionRestoredWithoutStartingService" xml:space="preserve">
+        <value>Previous version restored without starting the service</value>
+    </data>
+    <data name="Private" xml:space="preserve">
+        <value>Private</value>
+    </data>
+    <data name="PrivateKeyPassword" xml:space="preserve">
+        <value>• private key or password</value>
+    </data>
+    <data name="PrivateSSHKeyFileCannotAccessed" xml:space="preserve">
+        <value>The private SSH key file cannot be accessed.</value>
+    </data>
+    <data name="PrivateSSHKeyFileNotFound" xml:space="preserve">
+        <value>The private SSH key file was not found.</value>
+    </data>
+    <data name="PrivateSSHKeyPath" xml:space="preserve">
+        <value>Private SSH key path</value>
+    </data>
+    <data name="ProfileChangedOpenAgain" xml:space="preserve">
+        <value>The profile has changed. Open it again.</value>
+    </data>
+    <data name="Project" xml:space="preserve">
+        <value>Project</value>
+    </data>
+    <data name="ProjectAdded" xml:space="preserve">
+        <value>Project “{0}” added</value>
+    </data>
+    <data name="ProjectAllLocalArchivesPermanentlyDeleted" xml:space="preserve">
+        <value>Project “{0}” and all its local archives will be permanently deleted.</value>
+    </data>
+    <data name="ProjectAlreadyActiveOperation" xml:space="preserve">
+        <value>This project already has an active operation.</value>
+    </data>
+    <data name="ProjectAlreadyExistsChangeNameImporting" xml:space="preserve">
+        <value>Project "{0}" already exists. Change the name before importing.</value>
+    </data>
+    <data name="ProjectBuildTypeCouldNotDetectedAutomatically" xml:space="preserve">
+        <value>The project build type could not be detected automatically.</value>
+    </data>
+    <data name="ProjectCannotDeletedDuringVersionCleanup" xml:space="preserve">
+        <value>A project cannot be deleted during version cleanup.</value>
+    </data>
+    <data name="ProjectCannotDeployedDirectlyIntoUserS" xml:space="preserve">
+        <value>A project cannot be deployed directly into a user's home directory. Enter a dedicated subdirectory.</value>
+    </data>
+    <data name="ProjectCannotDeployedIntoProtectedLinuxSystem" xml:space="preserve">
+        <value>A project cannot be deployed into a protected Linux system directory. Choose a dedicated application directory.</value>
+    </data>
+    <data name="ProjectConfigurationExported" xml:space="preserve">
+        <value>Project configuration exported.</value>
+    </data>
+    <data name="ProjectConfigurationFileInvalid" xml:space="preserve">
+        <value>The project configuration file is invalid.</value>
+    </data>
+    <data name="ProjectDeleted" xml:space="preserve">
+        <value>Project “{0}” deleted</value>
+    </data>
+    <data name="ProjectDeploy" xml:space="preserve">
+        <value>Project Deploy</value>
+    </data>
+    <data name="ProjectFilePathContainsInvalidSegment" xml:space="preserve">
+        <value>The project file path contains an invalid segment.</value>
+    </data>
+    <data name="ProjectFolder" xml:space="preserve">
+        <value>Project folder</value>
+    </data>
+    <data name="ProjectGitHubBranch" xml:space="preserve">
+        <value>Project GitHub branch</value>
+    </data>
+    <data name="ProjectHealthCheckSettingsIncomplete" xml:space="preserve">
+        <value>The project health-check settings are incomplete.</value>
+    </data>
+    <data name="ProjectHistory" xml:space="preserve">
+        <value>Project history</value>
+    </data>
+    <data name="ProjectIdentifierRequired" xml:space="preserve">
+        <value>Project identifier is required.</value>
+    </data>
+    <data name="ProjectImported" xml:space="preserve">
+        <value>Project "{0}" imported.</value>
+    </data>
+    <data name="ProjectMachine" xml:space="preserve">
+        <value>Project machine</value>
+    </data>
+    <data name="ProjectName" xml:space="preserve">
+        <value>Project name</value>
+    </data>
+    <data name="ProjectNamedAlreadyExists" xml:space="preserve">
+        <value>A project named "{0}" already exists.</value>
+    </data>
+    <data name="ProjectNoBuiltVersionsYet" xml:space="preserve">
+        <value>This project has no built versions yet</value>
+    </data>
+    <data name="ProjectNotFound" xml:space="preserve">
+        <value>Project not found.</value>
+    </data>
+    <data name="ProjectNotFound2" xml:space="preserve">
+        <value>Project "{0}" was not found.</value>
+    </data>
+    <data name="ProjectNotFoundRefresh" xml:space="preserve">
+        <value>Project was not found after refresh.</value>
+    </data>
+    <data name="ProjectRootDirectoryRequired" xml:space="preserve">
+        <value>Project root directory is required.</value>
+    </data>
+    <data name="ProjectSVersionStoragePolicyInvalid" xml:space="preserve">
+        <value>The project's version storage policy is invalid.</value>
+    </data>
+    <data name="ProjectSolutionNET" xml:space="preserve">
+        <value>Project or solution (.NET)</value>
+    </data>
+    <data name="ProjectSourceTypeInvalid" xml:space="preserve">
+        <value>The project source type is invalid.</value>
+    </data>
+    <data name="ProjectType" xml:space="preserve">
+        <value>Project type</value>
+    </data>
+    <data name="ProjectUpdated" xml:space="preserve">
+        <value>Project “{0}” updated</value>
+    </data>
+    <data name="ProjectVersionDate" xml:space="preserve">
+        <value>Project, version, or date</value>
+    </data>
+    <data name="ProjectsUsingProfile" xml:space="preserve">
+        <value>Projects using this profile</value>
+    </data>
+    <data name="Projects_Import" xml:space="preserve">
+        <value>Import project</value>
+    </data>
+    <data name="Projects_Title" xml:space="preserve">
+        <value>Projects</value>
+    </data>
+    <data name="ProtectedDeletion" xml:space="preserve">
+        <value>Protected from deletion</value>
+    </data>
+    <data name="ProtectedGitHubTokenStorageOnlyAvailableWindows" xml:space="preserve">
+        <value>Protected GitHub token storage is only available on Windows.</value>
+    </data>
+    <data name="ProtectedSSHPasswordStorageOnlyAvailableWindows" xml:space="preserve">
+        <value>Protected SSH password storage is only available on Windows.</value>
+    </data>
+    <data name="Python3AvailableRemoteMachine" xml:space="preserve">
+        <value>Python 3 is available on the remote machine.</value>
+    </data>
+    <data name="Python3UnavailableRemoteMachine" xml:space="preserve">
+        <value>Python 3 is unavailable on the remote machine.</value>
+    </data>
+    <data name="PythonDependencyFile" xml:space="preserve">
+        <value>Python dependency file</value>
+    </data>
+    <data name="PythonEntryPoint" xml:space="preserve">
+        <value>Python entry point</value>
+    </data>
+    <data name="PythonSpecifyRelativePathWithoutPlaceholders" xml:space="preserve">
+        <value>For Python, specify a relative path without placeholders.</value>
+    </data>
+    <data name="QueuedPosition" xml:space="preserve">
+        <value>Queued · position {0}</value>
+    </data>
+    <data name="ReadySwitch" xml:space="preserve">
+        <value>Ready to switch</value>
+    </data>
+    <data name="RecoveryNotCompleted" xml:space="preserve">
+        <value>Recovery was not completed.</value>
+    </data>
+    <data name="RecoverySourceCannotReparsePoint" xml:space="preserve">
+        <value>Recovery source cannot be a reparse point: {0}</value>
+    </data>
+    <data name="Refresh" xml:space="preserve">
+        <value>Refresh</value>
+    </data>
+    <data name="RefreshCommit" xml:space="preserve">
+        <value>Refresh commit</value>
+    </data>
+    <data name="RelativePathFileInsideProjectRequired" xml:space="preserve">
+        <value>A relative path to a file inside the project is required.</value>
+    </data>
+    <data name="RemoteArchitectureChecked" xml:space="preserve">
+        <value>The remote architecture was checked.</value>
+    </data>
+    <data name="RemoteArchitectureDoesNotMatchSettings" xml:space="preserve">
+        <value>The remote architecture does not match settings.</value>
+    </data>
+    <data name="RemoteArchitectureNotCurrentlySupported" xml:space="preserve">
+        <value>Remote architecture “{0}” is not currently supported.</value>
+    </data>
+    <data name="RemoteArchitectureNotCurrentlySupportedGo" xml:space="preserve">
+        <value>Remote architecture “{0}” is not currently supported for Go.</value>
+    </data>
+    <data name="RemoteArchitectureNotCurrentlySupportedNET" xml:space="preserve">
+        <value>Remote architecture “{0}” is not currently supported for .NET.</value>
+    </data>
+    <data name="RemoteCommandExitedCode" xml:space="preserve">
+        <value>Remote command exited with code {0}.</value>
+    </data>
+    <data name="RemoteDeploymentPathSafe" xml:space="preserve">
+        <value>The remote deployment path is safe.</value>
+    </data>
+    <data name="RemoteDeploymentPathUnsafe" xml:space="preserve">
+        <value>The remote deployment path is unsafe.</value>
+    </data>
+    <data name="RemoteFreeSpaceChecked" xml:space="preserve">
+        <value>Remote free space was checked.</value>
+    </data>
+    <data name="RemoteMachineArchitecture" xml:space="preserve">
+        <value>Remote machine architecture</value>
+    </data>
+    <data name="RemoteMachineArchitectureChangedExpectedReceivedRun" xml:space="preserve">
+        <value>The remote machine architecture changed: expected {0}, received {1}. Run the connection check again.</value>
+    </data>
+    <data name="RemoteMachineCouldNotChecked" xml:space="preserve">
+        <value>The remote machine could not be checked.</value>
+    </data>
+    <data name="RemoteMachineDirectory" xml:space="preserve">
+        <value>Remote machine directory</value>
+    </data>
+    <data name="RemoteMachineDoesNotEnoughFreeSpace" xml:space="preserve">
+        <value>The remote machine does not have enough free space.</value>
+    </data>
+    <data name="RemoteMachineNotConfigured" xml:space="preserve">
+        <value>The remote machine is not configured.</value>
+    </data>
+    <data name="RemoteMachineReadyDeploy" xml:space="preserve">
+        <value>Remote machine is ready for Deploy</value>
+    </data>
+    <data name="RemoteMachineUnavailable" xml:space="preserve">
+        <value>The remote machine is unavailable: {0}</value>
+    </data>
+    <data name="RemoteOperationCancelledAutomaticRollbackResult" xml:space="preserve">
+        <value>The remote operation was cancelled: {0} Automatic rollback result: {1}</value>
+    </data>
+    <data name="RemoteOperationFailed" xml:space="preserve">
+        <value>The remote operation failed: {0}</value>
+    </data>
+    <data name="RemoteOperationFailedAutomaticRollbackFailed" xml:space="preserve">
+        <value>The remote operation failed: {0} Automatic rollback failed: {1}</value>
+    </data>
+    <data name="RemoteOperationFailedAutomaticRollbackResult" xml:space="preserve">
+        <value>The remote operation failed: {0} Automatic rollback result: {1}</value>
+    </data>
+    <data name="RepeatDeploy" xml:space="preserve">
+        <value>Repeat Deploy</value>
+    </data>
+    <data name="RequestingAuthorizationCode" xml:space="preserve">
+        <value>Requesting an authorization code...</value>
+    </data>
+    <data name="RestoreArchivedProfileFirst" xml:space="preserve">
+        <value>Restore the archived profile first.</value>
+    </data>
+    <data name="RestoreProfile" xml:space="preserve">
+        <value>Restore profile</value>
+    </data>
+    <data name="Rollback" xml:space="preserve">
+        <value>Rollback</value>
+    </data>
+    <data name="Rollback2" xml:space="preserve">
+        <value>Rollback</value>
+    </data>
+    <data name="RollbackCannotStartWhileLocalVersionsBeing" xml:space="preserve">
+        <value>Rollback cannot start while local versions are being moved.</value>
+    </data>
+    <data name="RollbackCompleted" xml:space="preserve">
+        <value>Rollback completed</value>
+    </data>
+    <data name="RollbackFailed" xml:space="preserve">
+        <value>Rollback failed</value>
+    </data>
+    <data name="RolledBackVersion" xml:space="preserve">
+        <value>Rolled back to version “{0}”</value>
+    </data>
+    <data name="Running" xml:space="preserve">
+        <value>Running</value>
+    </data>
+    <data name="RunningDeploy" xml:space="preserve">
+        <value>Running Deploy</value>
+    </data>
+    <data name="RunningHealthCheck" xml:space="preserve">
+        <value>Running health-check</value>
+    </data>
+    <data name="RunningPreflightChecks" xml:space="preserve">
+        <value>Running preflight checks…</value>
+    </data>
+    <data name="SQLiteDatabaseDamagedSchemaCannotUpdatedCan" xml:space="preserve">
+        <value>The SQLite database is damaged or its schema cannot be updated. You can back up all database files and create a new database.</value>
+    </data>
+    <data name="SSHConnectedButMachineArchitectureCouldNot" xml:space="preserve">
+        <value>SSH connected, but the machine architecture could not be detected.</value>
+    </data>
+    <data name="SSHConnectionHostFingerprintVerified" xml:space="preserve">
+        <value>SSH connection and host fingerprint are verified.</value>
+    </data>
+    <data name="SSHKey" xml:space="preserve">
+        <value>SSH key</value>
+    </data>
+    <data name="SSHKeyChangedAgainRepeatCheck" xml:space="preserve">
+        <value>The SSH key changed again. Repeat the check.</value>
+    </data>
+    <data name="SSHPort" xml:space="preserve">
+        <value>SSH port</value>
+    </data>
+    <data name="SSHPortMustBetween165535" xml:space="preserve">
+        <value>SSH port must be between 1 and 65535.</value>
+    </data>
+    <data name="SSHServerKeyDoesNotMatchTrusted" xml:space="preserve">
+        <value>The SSH server key does not match the trusted fingerprint. Check the connection in settings.</value>
+    </data>
+    <data name="SSHServerRejectedSuppliedCredentials" xml:space="preserve">
+        <value>The SSH server rejected the supplied credentials.</value>
+    </data>
+    <data name="SSHSystemd" xml:space="preserve">
+        <value>SSH and systemd</value>
+    </data>
+    <data name="SSHUser" xml:space="preserve">
+        <value>• SSH user</value>
+    </data>
+    <data name="SaveChanges" xml:space="preserve">
+        <value>Save changes</value>
+    </data>
+    <data name="SaveContinue" xml:space="preserve">
+        <value>Save and continue</value>
+    </data>
+    <data name="SaveNow" xml:space="preserve">
+        <value>Save now</value>
+    </data>
+    <data name="SaveProject" xml:space="preserve">
+        <value>Save project</value>
+    </data>
+    <data name="Saving" xml:space="preserve">
+        <value>Saving...</value>
+    </data>
+    <data name="SavingEnvironmentVariables" xml:space="preserve">
+        <value>Saving environment variables</value>
+    </data>
+    <data name="SavingProject" xml:space="preserve">
+        <value>Saving project</value>
+    </data>
+    <data name="SelectAccessibleLocalDirectoryDetectionGitHubSelect" xml:space="preserve">
+        <value>Select an accessible local directory for detection. For GitHub, select the build type manually.</value>
+    </data>
+    <data name="SelectBuildTypeDetectLocalDirectoryConfigure" xml:space="preserve">
+        <value>Select a build type or detect it from a local directory to configure its parameters.</value>
+    </data>
+    <data name="SelectCsprojSlnSlnxFile" xml:space="preserve">
+        <value>Select a .csproj, .sln, or .slnx file.</value>
+    </data>
+    <data name="SelectFolder" xml:space="preserve">
+        <value>Select folder</value>
+    </data>
+    <data name="SelectFolderComputer" xml:space="preserve">
+        <value>Select a folder on this computer</value>
+    </data>
+    <data name="SelectGitHubRepository" xml:space="preserve">
+        <value>Select a GitHub repository.</value>
+    </data>
+    <data name="SelectLocalProjectFolder" xml:space="preserve">
+        <value>Select the local project folder.</value>
+    </data>
+    <data name="SelectLocalVersionsDirectory" xml:space="preserve">
+        <value>Select the local versions directory</value>
+    </data>
+    <data name="SelectProjectFolder" xml:space="preserve">
+        <value>Select project folder</value>
+    </data>
+    <data name="SelectRemoteMachineProfile" xml:space="preserve">
+        <value>Select a remote machine profile.</value>
+    </data>
+    <data name="SelectRepository" xml:space="preserve">
+        <value>Select a repository</value>
+    </data>
+    <data name="SelectVerifiedMachineProfile" xml:space="preserve">
+        <value>Select a verified machine profile.</value>
+    </data>
+    <data name="SelectedHealthCheckTypeNotSupported" xml:space="preserve">
+        <value>The selected health-check type is not supported.</value>
+    </data>
+    <data name="SelectedPathPointsFile" xml:space="preserve">
+        <value>The selected path points to a file.</value>
+    </data>
+    <data name="SelectedProfileSettingsAddressSavedOnlyVerification" xml:space="preserve">
+        <value>Selected profile settings. The address is saved only after verification and confirmation.</value>
+    </data>
+    <data name="ServiceAssignedAnotherProjectChangeImporting" xml:space="preserve">
+        <value>Service "{0}" is assigned to another project. Change it before importing.</value>
+    </data>
+    <data name="ServiceDidNotRemainActiveSeconds" xml:space="preserve">
+        <value>The service did not remain active for {0} seconds.</value>
+    </data>
+    <data name="ServiceFile" xml:space="preserve">
+        <value>Service file</value>
+    </data>
+    <data name="ServiceStarted" xml:space="preserve">
+        <value>Service started</value>
+    </data>
+    <data name="SettingsDamagedUnavailableCanBackUpOriginal" xml:space="preserve">
+        <value>The settings are damaged or unavailable. You can back up the original file and start with clean settings.</value>
+    </data>
+    <data name="SettingsPageOpenStepGetStartedProvide" xml:space="preserve">
+        <value>The settings page will open after this step. To get started, provide:</value>
+    </data>
+    <data name="Settings_Title" xml:space="preserve">
+        <value>Settings</value>
+    </data>
+    <data name="ShowMore" xml:space="preserve">
+        <value>Show more</value>
+    </data>
+    <data name="ShowShortResultWhenWindowMinimizedAnother" xml:space="preserve">
+        <value>Show a short result when the window is minimized or another page is open. This setting is saved immediately.</value>
+    </data>
+    <data name="SimpleLocalCICD" xml:space="preserve">
+        <value>Simple local CI/CD</value>
+    </data>
+    <data name="SizeLimitMB" xml:space="preserve">
+        <value>Size limit, MB</value>
+    </data>
+    <data name="SizeLimitMustGreaterThanZero" xml:space="preserve">
+        <value>The size limit must be greater than zero.</value>
+    </data>
+    <data name="Source" xml:space="preserve">
+        <value>Source</value>
+    </data>
+    <data name="SourceBuildDeploymentSettings" xml:space="preserve">
+        <value>Source, build, and deployment settings</value>
+    </data>
+    <data name="SourceConfiguredProjectSettings" xml:space="preserve">
+        <value>The source is configured in the project settings.</value>
+    </data>
+    <data name="SourceTargetArchiveDirectoriesCannotNestedInside" xml:space="preserve">
+        <value>The source and target archive directories cannot be nested inside each other.</value>
+    </data>
+    <data name="SourceType" xml:space="preserve">
+        <value>Source type</value>
+    </data>
+    <data name="Source_Title" xml:space="preserve">
+        <value>Source code</value>
+    </data>
+    <data name="SpecifiedBuildFileNotFound" xml:space="preserve">
+        <value>The specified build file was not found.</value>
+    </data>
+    <data name="SpecifyCustomBuildCommand" xml:space="preserve">
+        <value>Specify the custom build command.</value>
+    </data>
+    <data name="SpecifyExistingCMakeToolchainFileCLinux" xml:space="preserve">
+        <value>Specify an existing CMake toolchain file for the C++ Linux build.</value>
+    </data>
+    <data name="SpecifyRequirementsTxtFilePyprojectToml" xml:space="preserve">
+        <value>Specify a requirements .txt file or pyproject.toml.</value>
+    </data>
+    <data name="SpecifyVersionSTargetArchitecture" xml:space="preserve">
+        <value>Specify the version's target architecture.</value>
+    </data>
+    <data name="StabilityDelay" xml:space="preserve">
+        <value>Stability delay</value>
+    </data>
+    <data name="StabilityDelayMustBetween13600Seconds" xml:space="preserve">
+        <value>The stability delay must be between 1 and 3600 seconds.</value>
+    </data>
+    <data name="StableOperationTimeSeconds" xml:space="preserve">
+        <value>Stable operation time, seconds</value>
+    </data>
+    <data name="Started" xml:space="preserve">
+        <value>Started</value>
+    </data>
+    <data name="StartingService" xml:space="preserve">
+        <value>Starting service</value>
+    </data>
+    <data name="StartingSystemdService" xml:space="preserve">
+        <value>Starting systemd service</value>
+    </data>
+    <data name="Status" xml:space="preserve">
+        <value>Status</value>
+    </data>
+    <data name="Stay" xml:space="preserve">
+        <value>Stay</value>
+    </data>
+    <data name="StoredValuesNotIntendedSecrets" xml:space="preserve">
+        <value>Stored values are not intended for secrets.</value>
+    </data>
+    <data name="Succeeded" xml:space="preserve">
+        <value>Succeeded</value>
+    </data>
+    <data name="SwitchEnglish" xml:space="preserve">
+        <value>Switch to English</value>
+    </data>
+    <data name="SwitchRussian" xml:space="preserve">
+        <value>Switch to Russian</value>
+    </data>
+    <data name="SwitchingVersion" xml:space="preserve">
+        <value>Switching version</value>
+    </data>
+    <data name="SystemdReloadedUpdatedUnit" xml:space="preserve">
+        <value>systemd reloaded the updated unit</value>
+    </data>
+    <data name="SystemdService" xml:space="preserve">
+        <value>Systemd service</value>
+    </data>
+    <data name="SystemdServiceAlreadyAssignedAnotherProject" xml:space="preserve">
+        <value>Systemd service "{0}" is already assigned to another project.</value>
+    </data>
+    <data name="SystemdServiceName" xml:space="preserve">
+        <value>systemd service name</value>
+    </data>
+    <data name="SystemdServiceStartedSuccessfully" xml:space="preserve">
+        <value>systemd service started successfully</value>
+    </data>
+    <data name="SystemdTarAvailable" xml:space="preserve">
+        <value>systemd and tar are available.</value>
+    </data>
+    <data name="SystemdTarUnavailable" xml:space="preserve">
+        <value>systemd or tar is unavailable.</value>
+    </data>
+    <data name="SystemdUnitCreated" xml:space="preserve">
+        <value>systemd unit will be created</value>
+    </data>
+    <data name="SystemdUnitUnchanged" xml:space="preserve">
+        <value>systemd unit is unchanged</value>
+    </data>
+    <data name="SystemdUnitUpdated" xml:space="preserve">
+        <value>systemd unit will be updated</value>
+    </data>
+    <data name="TCPHealthCheckFailedAttempts" xml:space="preserve">
+        <value>TCP health-check failed after {0} attempts.</value>
+    </data>
+    <data name="TCPPort" xml:space="preserve">
+        <value>TCP port</value>
+    </data>
+    <data name="TCPPortMustBetween165535" xml:space="preserve">
+        <value>The TCP port must be between 1 and 65535.</value>
+    </data>
+    <data name="TemporaryFilesKeptRemoteMachineRecovery" xml:space="preserve">
+        <value>Temporary files were kept on the remote machine for recovery.</value>
+    </data>
+    <data name="TerminalDeploymentStatusRequired" xml:space="preserve">
+        <value>A terminal deployment status is required.</value>
+    </data>
+    <data name="ThereNoPreviousVersionNewVersionStopped" xml:space="preserve">
+        <value>There was no previous version; the new version was stopped and removed.</value>
+    </data>
+    <data name="ThereNotEnoughFreeSpaceSelectedDirectory" xml:space="preserve">
+        <value>There is not enough free space in the selected directory.</value>
+    </data>
+    <data name="ThereNotEnoughSpaceLocalArchive" xml:space="preserve">
+        <value>There is not enough space for a local archive.</value>
+    </data>
+    <data name="ThereUnsavedChanges" xml:space="preserve">
+        <value>There are unsaved changes</value>
+    </data>
+    <data name="ThreeClearStagesWithoutRemoteReleaseStorage" xml:space="preserve">
+        <value>Three clear stages without remote release storage</value>
+    </data>
+    <data name="TimeoutSeconds" xml:space="preserve">
+        <value>Timeout, seconds</value>
+    </data>
+    <data name="ToolchainFile" xml:space="preserve">
+        <value>Toolchain file</value>
+    </data>
+    <data name="ToolchainPathCheckedBuildPlaceholdersResolved" xml:space="preserve">
+        <value>The toolchain path will be checked after build placeholders are resolved.</value>
+    </data>
+    <data name="TotalProjectSize" xml:space="preserve">
+        <value>Total project size</value>
+    </data>
+    <data name="TransferringProjectConfiguration" xml:space="preserve">
+        <value>Transferring project configuration</value>
+    </data>
+    <data name="Unchanged" xml:space="preserve">
+        <value>Unchanged</value>
+    </data>
+    <data name="UnitFileChange" xml:space="preserve">
+        <value>Unit file change</value>
+    </data>
+    <data name="UnitFileUpdated" xml:space="preserve">
+        <value>Unit file updated</value>
+    </data>
+    <data name="UnknownArchitecture" xml:space="preserve">
+        <value>Unknown architecture</value>
+    </data>
+    <data name="UnknownError" xml:space="preserve">
+        <value>unknown error</value>
+    </data>
+    <data name="Unlimited" xml:space="preserve">
+        <value>Unlimited</value>
+    </data>
+    <data name="Unpin" xml:space="preserve">
+        <value>Unpin</value>
+    </data>
+    <data name="UnsupportedEnvironmentFileFormat" xml:space="preserve">
+        <value>Unsupported environment file format.</value>
+    </data>
+    <data name="UnsupportedProjectSourceType" xml:space="preserve">
+        <value>Unsupported project source type.</value>
+    </data>
+    <data name="UpdatingUnitFile" xml:space="preserve">
+        <value>Updating unit file</value>
+    </data>
+    <data name="UploadingArchiveRemoteMachine" xml:space="preserve">
+        <value>Uploading archive to remote machine</value>
+    </data>
+    <data name="UsedArchives" xml:space="preserve">
+        <value>Used by archives</value>
+    </data>
+    <data name="User" xml:space="preserve">
+        <value>User</value>
+    </data>
+    <data name="VARIABLENAME" xml:space="preserve">
+        <value>VARIABLE_NAME</value>
+    </data>
+    <data name="Value" xml:space="preserve">
+        <value>Value</value>
+    </data>
+    <data name="ValueCannotExceedCharacters" xml:space="preserve">
+        <value>Value cannot exceed {0} characters.</value>
+    </data>
+    <data name="ValueRequired" xml:space="preserve">
+        <value>Value is required.</value>
+    </data>
+    <data name="VariableMustJSONArrayContainingOnlyStrings" xml:space="preserve">
+        <value>Variable "{0}" must be a JSON array containing only strings or only numbers.</value>
+    </data>
+    <data name="Variables" xml:space="preserve">
+        <value>Variables</value>
+    </data>
+    <data name="VariablesNotSaved" xml:space="preserve">
+        <value>Variables have not been saved</value>
+    </data>
+    <data name="VerifiedArchitectureNewAddress" xml:space="preserve">
+        <value>Verified architecture at the new address: {0}</value>
+    </data>
+    <data name="VerifySaveProfile" xml:space="preserve">
+        <value>Verify and save profile</value>
+    </data>
+    <data name="Version" xml:space="preserve">
+        <value>Version</value>
+    </data>
+    <data name="VersionAlreadyExists" xml:space="preserve">
+        <value>Version “{0}” already exists.</value>
+    </data>
+    <data name="VersionArchiveChecksumDoesNotMatch" xml:space="preserve">
+        <value>The version archive checksum does not match.</value>
+    </data>
+    <data name="VersionArchivePathContainsInvalidSegment" xml:space="preserve">
+        <value>The version archive path contains an invalid segment.</value>
+    </data>
+    <data name="VersionArchivePathInvalid" xml:space="preserve">
+        <value>The version archive path is invalid.</value>
+    </data>
+    <data name="VersionArchivePathMustRelative" xml:space="preserve">
+        <value>The version archive path must be relative.</value>
+    </data>
+    <data name="VersionArchivePathOutsideArchiveDirectory" xml:space="preserve">
+        <value>The version archive path is outside the archive directory.</value>
+    </data>
+    <data name="VersionBelongsAnotherProject" xml:space="preserve">
+        <value>The version belongs to another project.</value>
+    </data>
+    <data name="VersionCannotDeletedDuringActiveOperation" xml:space="preserve">
+        <value>A version cannot be deleted during an active operation.</value>
+    </data>
+    <data name="VersionDeleted" xml:space="preserve">
+        <value>Version "{0}" was deleted</value>
+    </data>
+    <data name="VersionDeployedPreflightWarnings" xml:space="preserve">
+        <value>Version "{0}" deployed with preflight warnings.</value>
+    </data>
+    <data name="VersionDeployedSuccessfully" xml:space="preserve">
+        <value>Version “{0}” was deployed successfully</value>
+    </data>
+    <data name="VersionDoesNotBelongSpecifiedProject" xml:space="preserve">
+        <value>The version does not belong to the specified project.</value>
+    </data>
+    <data name="VersionLocalArchiveDeletedActionCannotUndone" xml:space="preserve">
+        <value>Version "{0}" and its local archive will be deleted. This action cannot be undone.</value>
+    </data>
+    <data name="VersionNotFound" xml:space="preserve">
+        <value>Version not found.</value>
+    </data>
+    <data name="VersionNotFound2" xml:space="preserve">
+        <value>Version "{0}" was not found.</value>
+    </data>
+    <data name="VersionRequired" xml:space="preserve">
+        <value>Version is required.</value>
+    </data>
+    <data name="VersionSizeLimitMustPositiveNumberMB" xml:space="preserve">
+        <value>The version size limit must be a positive number in MB.</value>
+    </data>
+    <data name="VersionStorage" xml:space="preserve">
+        <value>Version storage</value>
+    </data>
+    <data name="VersionSwitched" xml:space="preserve">
+        <value>Version switched</value>
+    </data>
+    <data name="VersionTagMayContainOnlyLatinLetters" xml:space="preserve">
+        <value>A version tag may contain only Latin letters, digits, periods, hyphens, and underscores.</value>
+    </data>
+    <data name="VersionsCannotChangedDuringCleanup" xml:space="preserve">
+        <value>Versions cannot be changed during cleanup.</value>
+    </data>
+    <data name="VersionsCannotCleanedUpDuringActiveOperation" xml:space="preserve">
+        <value>Versions cannot be cleaned up during an active operation.</value>
+    </data>
+    <data name="VersionsDeleteBytesActionCannotUndone" xml:space="preserve">
+        <value>Versions to delete: {0}; bytes: {1}. This action cannot be undone.</value>
+    </data>
+    <data name="VersionsEnvironmentVariablesDeployHistoryLocalArchives" xml:space="preserve">
+        <value>Versions, environment variables, deploy history, and local archives will also be deleted.</value>
+    </data>
+    <data name="Versions_CreationHint" xml:space="preserve">
+        <value>A version is created automatically after a successful build. Its archive and checksum are immutable.</value>
+    </data>
+    <data name="Versions_PinningHint" xml:space="preserve">
+        <value>Pinning protects a version from automatic cleanup. Unpinning removes this protection without deleting the version. The version on the server stays unchanged.</value>
+    </data>
+    <data name="Versions_Title" xml:space="preserve">
+        <value>Versions</value>
+    </data>
+    <data name="ViewNotFound" xml:space="preserve">
+        <value>View "{0}" was not found.</value>
+    </data>
+    <data name="WaitDeployFinishClosingApplicationDuringVersion" xml:space="preserve">
+        <value>Wait for Deploy to finish. Closing the application during version switching is blocked.</value>
+    </data>
+    <data name="Warning" xml:space="preserve">
+        <value>Warning</value>
+    </data>
+    <data name="WhatChangedVersion" xml:space="preserve">
+        <value>What changed in this version</value>
+    </data>
+    <data name="WindowsNotifications" xml:space="preserve">
+        <value>Windows notifications</value>
+    </data>
+    <data name="Yes" xml:space="preserve">
+        <value>Yes</value>
+    </data>
+    <data name="YesSameMachine" xml:space="preserve">
+        <value>Yes, this is the same machine</value>
+    </data>
+</root>

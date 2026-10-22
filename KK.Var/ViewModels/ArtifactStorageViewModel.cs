@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using KK.Var.Data;
 using KK.Var.Models;
 using KK.Var.Services;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.ViewModels
 {
@@ -36,7 +37,7 @@ namespace KK.Var.ViewModels
 
         public string ArtifactStorageMigrationFileCountDisplay =>
             PendingArtifactStorageMigration is { } plan ?
-                LocalizeFormat("Файлов: {0}", plan.FileCount) :
+                LocalizeFormat(Texts.Files, plan.FileCount) :
                 string.Empty;
 
         public string ArtifactStorageMigrationSizeDisplay =>
@@ -94,7 +95,7 @@ namespace KK.Var.ViewModels
                         result.Plan.TargetRoot);
                 PendingArtifactStorageMigration = null;
                 ArtifactStorageWarning = result.Warning ?? string.Empty;
-                StatusReported?.Invoke(Localize("Каталог локальных версий изменён"));
+                StatusReported?.Invoke(Texts.LocalVersionsDirectoryChanged);
                 await RefreshArtifactStorageSummaryAsync();
             }
             catch (Exception exception)
@@ -123,7 +124,7 @@ namespace KK.Var.ViewModels
             }
             catch (Exception exception)
             {
-                ArtifactStorageEffectivePath = Localize("Каталог недоступен");
+                ArtifactStorageEffectivePath = Texts.DirectoryUnavailable;
                 ArtifactStorageUsedBytes = 0;
                 ErrorReported?.Invoke(Localize(exception.Message));
             }

@@ -3,6 +3,7 @@ using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using KK.Var.ViewModels;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Views.Pages
 {
@@ -63,7 +64,7 @@ namespace KK.Var.Views.Pages
             var folders = await storageProvider.OpenFolderPickerAsync(
                 new FolderPickerOpenOptions
                 {
-                    Title = viewModel.Localize("Выберите каталог локальных версий"),
+                    Title = viewModel.Localize(Texts.SelectLocalVersionsDirectory),
                     AllowMultiple = false,
                 });
 

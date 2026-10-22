@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using KK.Var.Constants;
 using KK.Var.Enums;
 using KK.Var.Models;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
@@ -31,7 +32,7 @@ namespace KK.Var.Services.Implementations
                     configuration.BuildArguments.Any(argument => argument is null) ||
                     configuration.ConfigureArguments.Any(argument => argument is null))
                 {
-                    throw new InvalidDataException(localizationService.Get("Аргументы сборки или переменные окружения недопустимы."));
+                    throw new InvalidDataException(Texts.BuildArgumentsEnvironmentVariablesInvalid);
                 }
 
                 var provider = project.BuildProvider;
@@ -54,7 +55,7 @@ namespace KK.Var.Services.Implementations
                 {
                     checks.Add(checkFactory.Warning(
                         PreflightCheckKeys.Build,
-                        "Способ сборки будет определён после загрузки исходников."));
+                        Texts.BuildProviderDetectedSourceDownload));
                     return;
                 }
 
@@ -62,7 +63,7 @@ namespace KK.Var.Services.Implementations
                 {
                     checks.Add(checkFactory.Warning(
                         PreflightCheckKeys.BuildSource,
-                        "Входные файлы сборки будут проверены после загрузки GitHub-архива."));
+                        Texts.BuildInputFilesCheckedGitHubArchiveDownloaded));
                 }
 
                 if (sourceRoot is not null && !Directory.Exists(sourceRoot))
@@ -96,23 +97,20 @@ namespace KK.Var.Services.Implementations
                     };
                     if (!hasInputs)
                     {
-                        throw new FileNotFoundException(localizationService.Get(
-                            "Не найдены входные файлы выбранного способа сборки."));
+                        throw new FileNotFoundException(Texts.InputFilesSelectedBuildProviderNotFound);
                     }
                 }
 
                 if (provider == ProjectBuildProvider.Custom &&
                     string.IsNullOrWhiteSpace(configuration.Command))
                 {
-                    throw new InvalidDataException(localizationService.Get(
-                        "Укажите команду пользовательской сборки."));
+                    throw new InvalidDataException(Texts.SpecifyCustomBuildCommand);
                 }
 
                 if (provider == ProjectBuildProvider.Cpp &&
                     string.IsNullOrWhiteSpace(configuration.ToolchainFile))
                 {
-                    throw new InvalidDataException(localizationService.Get(
-                        "Укажите существующий CMake toolchain-файл для сборки C++ под Linux."));
+                    throw new InvalidDataException(Texts.SpecifyExistingCMakeToolchainFileCLinux);
                 }
 
                 if (provider == ProjectBuildProvider.Cpp &&
@@ -127,7 +125,7 @@ namespace KK.Var.Services.Implementations
                     {
                         checks.Add(checkFactory.Warning(
                             PreflightCheckKeys.Toolchain,
-                            "Путь к toolchain будет проверен после подстановки параметров сборки."));
+                            Texts.ToolchainPathCheckedBuildPlaceholdersResolved));
                     }
 
                     if (!toolchain.Contains('{') &&
@@ -152,7 +150,7 @@ namespace KK.Var.Services.Implementations
                 {
                     checks.Add(checkFactory.Warning(
                         PreflightCheckKeys.BuildTool,
-                        "Команда сборки будет проверена после подстановки параметров."));
+                        Texts.BuildCommandCheckedPlaceholdersResolved));
                 }
 
                 if (tool is not null &&
@@ -160,15 +158,14 @@ namespace KK.Var.Services.Implementations
                     !ToolExists(tool, sourceRoot))
                 {
                     throw new FileNotFoundException(localizationService.Format(
-                        "Инструмент сборки «{0}» не найден.",
+                        Texts.BuildToolNotFound,
                         tool));
                 }
 
                 if (provider == ProjectBuildProvider.DotNet &&
                     !await HasDotNetSdkAsync(cancellationToken))
                 {
-                    throw new InvalidOperationException(localizationService.Get(
-                        ".NET SDK не найден. Установите .NET SDK и перезапустите KK.Var."));
+                    throw new InvalidOperationException(Texts.NETSDKNotFoundInstallNETSDK);
                 }
 
                 if (provider == ProjectBuildProvider.Cpp &&
@@ -176,17 +173,16 @@ namespace KK.Var.Services.Implementations
                      configuration.CmakeGenerator.Equals(BuildConstants.NinjaGenerator, StringComparison.OrdinalIgnoreCase)) &&
                     !ToolExists(BuildConstants.NinjaExecutable))
                 {
-                    throw new FileNotFoundException(localizationService.Get(
-                        "Ninja не найден."));
+                    throw new FileNotFoundException(Texts.NinjaNotFound);
                 }
 
-                checks.Add(checkFactory.Success(PreflightCheckKeys.Build, "Build-конфигурация и локальный инструмент проверены."));
+                checks.Add(checkFactory.Success(PreflightCheckKeys.Build, Texts.BuildConfigurationLocalToolAvailable));
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
                 checks.Add(checkFactory.Error(
                     PreflightCheckKeys.Build,
-                    "Build-конфигурация или инструмент недоступны.",
+                    Texts.BuildConfigurationToolUnavailable,
                     exception.Message));
             }
         }
@@ -239,7 +235,7 @@ namespace KK.Var.Services.Implementations
             startInfo.ArgumentList.Add(BuildConstants.DotNetListSdksOption);
 
             using var process = Process.Start(startInfo) ??
-                throw new InvalidOperationException(localizationService.Get("Не удалось запустить процесс dotnet."));
+                throw new InvalidOperationException(Texts.DotnetProcessCouldNotStarted);
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             timeout.CancelAfter(TimeSpan.FromSeconds(10));
 

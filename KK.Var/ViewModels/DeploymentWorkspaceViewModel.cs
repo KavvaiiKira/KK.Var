@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using KK.Var.Enums;
 using KK.Var.Models;
 using KK.Var.Services;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.ViewModels
 {
@@ -54,9 +55,9 @@ namespace KK.Var.ViewModels
                     result.Checks.Select(check =>
                                     $"{Localize(check.Status switch
                                     {
-                                        PreflightStatus.Success => "Успешно",
-                                        PreflightStatus.Warning => "Предупреждение",
-                                        _ => "Ошибка",
+                                        PreflightStatus.Success => Texts.Succeeded,
+                                        PreflightStatus.Warning => Texts.Warning,
+                                        _ => Texts.Failed,
                                     })}: {check.Message}" +
                                     (string.IsNullOrWhiteSpace(check.Detail) ?
                                         string.Empty :
@@ -73,14 +74,14 @@ namespace KK.Var.ViewModels
                 if (state?.QueueStatus == DeploymentQueueStatus.Waiting)
                 {
                     return LocalizeFormat(
-                        "В очереди · позиция {0}",
+                        Texts.QueuedPosition,
                         GetWaitingPosition(state));
                 }
 
                 if (state?.QueueStatus == DeploymentQueueStatus.Running)
                 {
                     return string.IsNullOrWhiteSpace(state.ProgressMessage) ?
-                        Localize("Выполняется") :
+                        Texts.Running :
                         state.ProgressMessage;
                 }
 
@@ -174,13 +175,13 @@ namespace KK.Var.ViewModels
         {
             if (result.FirstError is { } error)
             {
-                return LocalizeFormat("Preflight: ошибка - {0}", error.Message);
+                return LocalizeFormat(Texts.Preflight_Error, error.Message);
             }
 
             var warnings = result.Checks.Count(check => check.Status == PreflightStatus.Warning);
             return warnings == 0 ?
-                Localize("Preflight: проверка пройдена.") :
-                LocalizeFormat("Preflight: предупреждений - {0}.", warnings);
+                Texts.PreflightChecksPassed :
+                LocalizeFormat(Texts.Preflight_WarningCount, warnings);
         }
 
         private void DeploymentOperationQueue_OnQueueChanged(object? sender, EventArgs e)

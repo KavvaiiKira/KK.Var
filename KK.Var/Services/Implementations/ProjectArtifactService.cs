@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using KK.Var.Constants;
 using KK.Var.Enums;
 using KK.Var.Models;
+using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
@@ -52,8 +53,7 @@ namespace KK.Var.Services.Implementations
             var tag = versionTag.Trim();
             if (!TagPattern.IsMatch(tag))
             {
-                throw new VersionTagException(VersionTagError.InvalidFormat, localizationService.Get(
-                    "Тег версии может содержать только латинские буквы, цифры, точку, дефис и подчёркивание."));
+                throw new VersionTagException(VersionTagError.InvalidFormat, Texts.VersionTagMayContainOnlyLatinLetters);
             }
 
             var operationDirectory = Path.Combine(
@@ -74,7 +74,7 @@ namespace KK.Var.Services.Implementations
             {
                 progress?.Report(new DeploymentProgress(
                     5,
-                    localizationService.Get("Подготовка исходного кода")));
+                    Texts.PreparingSourceCode));
                 sourceCommitSha = await sourceService.AcquireSourceAsync(
                     project,
                     sourceDirectory,
@@ -93,7 +93,7 @@ namespace KK.Var.Services.Implementations
                 progress?.Report(new DeploymentProgress(
                     15,
                     localizationService.Format(
-                        "Сборка: {0}",
+                        Texts.Build2,
                         FormatProvider(provider))));
 
                 await buildService.BuildAsync(
@@ -118,13 +118,13 @@ namespace KK.Var.Services.Implementations
                 if (!File.Exists(executablePath))
                 {
                     throw new InvalidOperationException(localizationService.Format(
-                        "После сборки не найден исполняемый файл «{0}».",
+                        Texts.ExecutableFileNotFoundBuild,
                         project.RemoteExecutableFileName));
                 }
 
                 progress?.Report(new DeploymentProgress(
                     45,
-                    localizationService.Get("Создание локального архива")));
+                    Texts.CreatingLocalArchive));
 
                 var artifactRoot = await artifactStorageService.GetEffectiveRootAsync(
                     cancellationToken);
@@ -145,7 +145,7 @@ namespace KK.Var.Services.Implementations
                 if (File.Exists(artifactPath))
                 {
                     throw new VersionTagException(VersionTagError.AlreadyExists, localizationService.Format(
-                        "Артефакт версии «{0}» уже существует.",
+                        Texts.ArtifactVersionAlreadyExists,
                         tag));
                 }
 
@@ -177,7 +177,7 @@ namespace KK.Var.Services.Implementations
                 {
                     throw new VersionTagException(
                         VersionTagError.AlreadyExists,
-                        localizationService.Format("Артефакт версии «{0}» уже существует.", tag),
+                        localizationService.Format(Texts.ArtifactVersionAlreadyExists, tag),
                         exception);
                 }
 
@@ -224,7 +224,7 @@ namespace KK.Var.Services.Implementations
                 string.IsNullOrWhiteSpace(configuredDirectory) ? "." : configuredDirectory);
             if (!Directory.Exists(path))
             {
-                throw new DirectoryNotFoundException(localizationService.Get("Рабочий каталог сборки не найден."));
+                throw new DirectoryNotFoundException(Texts.BuildWorkingDirectoryNotFound);
             }
             return path;
         }
@@ -243,7 +243,7 @@ namespace KK.Var.Services.Implementations
             ProjectBuildProvider.Python => PythonProviderName,
             ProjectBuildProvider.Go => GoProviderName,
             ProjectBuildProvider.Cpp => CppProviderName,
-            ProjectBuildProvider.Custom => localizationService.Get("Свой сценарий"),
+            ProjectBuildProvider.Custom => Texts.CustomScript,
             _ => provider.ToString(),
         };
     }

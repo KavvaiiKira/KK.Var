@@ -73,7 +73,7 @@
                         VerticalContentAlignment="Center"
                         Classes="project-secondary"
                         Click="BackButton_OnClick"
-                        ToolTip.Tip="{DynamicResource 'Назад к проектам'}">
+                        ToolTip.Tip="{DynamicResource BackProjects}">
                     <PathIcon Width="19"
                               Height="19"
                               Data="M20,11H7.8L13.4,5.4L12,4L4,12L12,20L13.4,18.6L7.8,13H20V11Z" />
@@ -83,7 +83,7 @@
                     <TextBlock Text="{Binding EditorTitle}"
                                FontSize="30"
                                FontWeight="Bold" />
-                    <TextBlock Text="{DynamicResource 'Источник, сборка и параметры развёртывания'}"
+                    <TextBlock Text="{DynamicResource SourceBuildDeploymentSettings}"
                                FontSize="13"
                                Foreground="{DynamicResource AppTextMutedBrush}" />
                 </StackPanel>
@@ -109,7 +109,7 @@
                             Spacing="18">
                     <Border Padding="24" Background="{DynamicResource AppSurfaceBrush}" CornerRadius="14">
                         <StackPanel Spacing="10">
-                            <TextBlock Text="{DynamicResource 'Машина проекта'}" FontSize="19" FontWeight="Bold" />
+                            <TextBlock Text="{DynamicResource ProjectMachine}" FontSize="19" FontWeight="Bold" />
                             <ComboBox ItemsSource="{Binding ProjectMachines}" SelectedItem="{Binding SelectedProjectMachine}"
                                       HorizontalAlignment="Stretch" Classes="project-field">
                                 <ComboBox.ItemTemplate>
@@ -119,9 +119,9 @@
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
                             <StackPanel IsVisible="{Binding IsProjectMachineChanged}" Spacing="8">
-                                <TextBlock Text="{DynamicResource 'Новые Deploy и rollback будут выполняться на выбранной машине. Сервис на прежней машине не будет остановлен или удалён автоматически.'}"
+                                <TextBlock Text="{DynamicResource NewDeployRollbackOperationsUseSelectedMachine}"
                                            TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}" />
-                                <CheckBox IsChecked="{Binding MachineSwitchConfirmed}" Content="{DynamicResource 'Подтверждаю смену машины'}" />
+                                <CheckBox IsChecked="{Binding MachineSwitchConfirmed}" Content="{DynamicResource IConfirmMachineChange}" />
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -132,17 +132,17 @@
                             CornerRadius="14">
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="18">
                             <StackPanel Spacing="7">
-                                <TextBlock Classes="field-label" Text="{DynamicResource 'Название проекта'}" />
+                                <TextBlock Classes="field-label" Text="{DynamicResource ProjectName}" />
                                 <TextBox Classes="project-field"
                                          Text="{Binding Name, Mode=TwoWay}"
-                                         PlaceholderText="{DynamicResource 'Например, Billing API'}" />
+                                         PlaceholderText="{DynamicResource ExampleBillingAPI}" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="1" Spacing="7">
-                                <TextBlock Classes="field-label" Text="{DynamicResource 'Описание'}" />
+                                <TextBlock Classes="field-label" Text="{DynamicResource Common_Description}" />
                                 <TextBox Classes="project-field"
                                          Text="{Binding Description, Mode=TwoWay}"
-                                         PlaceholderText="{DynamicResource 'Необязательно - иначе используется название'}" />
+                                         PlaceholderText="{DynamicResource OptionalProjectNameUsedDefault}" />
                             </StackPanel>
 
                         </Grid>
@@ -155,10 +155,10 @@
                             CornerRadius="14">
                         <StackPanel Spacing="14">
                             <StackPanel Spacing="5">
-                                <TextBlock Text="{DynamicResource 'Хранение версий'}"
+                                <TextBlock Text="{DynamicResource VersionStorage}"
                                            FontSize="19"
                                            FontWeight="Bold" />
-                                <TextBlock Text="{DynamicResource 'Ограничения применяются при автоматической очистке после успешного Deploy.'}"
+                                <TextBlock Text="{DynamicResource LimitsAppliedDuringAutomaticCleanupSuccessfulDeploy}"
                                            FontSize="12"
                                            TextWrapping="Wrap"
                                            Foreground="{DynamicResource AppTextMutedBrush}" />
@@ -167,7 +167,7 @@
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="18">
                                 <StackPanel Spacing="7">
                                     <TextBlock Classes="field-label"
-                                               Text="{DynamicResource 'Максимальное количество версий'}" />
+                                               Text="{DynamicResource MaximumVersionCount}" />
                                     <NumericUpDown Classes="project-field"
                                                    Minimum="1"
                                                    Maximum="10000"
@@ -177,10 +177,10 @@
 
                                 <StackPanel Grid.Column="1" Spacing="7">
                                     <TextBlock Classes="field-label"
-                                               Text="{DynamicResource 'Лимит размера, МБ'}" />
+                                               Text="{DynamicResource SizeLimitMB}" />
                                     <TextBox Classes="project-field"
                                              Text="{Binding MaxStoredVersionSizeMb, Mode=TwoWay}"
-                                             PlaceholderText="{DynamicResource 'Без ограничения'}" />
+                                             PlaceholderText="{DynamicResource Unlimited}" />
                                 </StackPanel>
                             </Grid>
                         </StackPanel>
@@ -193,16 +193,16 @@
                             CornerRadius="14">
                         <StackPanel Spacing="14">
                             <StackPanel Spacing="5">
-                                <TextBlock Text="{DynamicResource 'Исходный код'}"
+                                <TextBlock Text="{DynamicResource Source_Title}"
                                            FontSize="19"
                                            FontWeight="Bold" />
-                                <TextBlock Text="{DynamicResource 'KK.Var будет собирать проект из выбранного источника'}"
+                                <TextBlock Text="{DynamicResource KKVarBuildProjectSelectedSource}"
                                            FontSize="12"
                                            Foreground="{DynamicResource AppTextMutedBrush}" />
                             </StackPanel>
 
                             <StackPanel Spacing="7">
-                                <TextBlock Classes="field-label" Text="{DynamicResource 'Способ получения исходников'}" />
+                                <TextBlock Classes="field-label" Text="{DynamicResource SourceType}" />
                                 <ComboBox Classes="project-field"
                                           HorizontalAlignment="Stretch"
                                           ItemsSource="{Binding SourceTypes}"
@@ -220,15 +220,15 @@
                                   ColumnDefinitions="*,Auto"
                                   ColumnSpacing="10">
                                 <StackPanel Spacing="7">
-                                    <TextBlock Classes="field-label" Text="{DynamicResource 'Папка проекта'}" />
+                                    <TextBlock Classes="field-label" Text="{DynamicResource ProjectFolder}" />
                                     <TextBox Classes="project-field"
                                              Text="{Binding LocalDirectoryPath, Mode=TwoWay}"
-                                             PlaceholderText="{DynamicResource 'Выберите папку на этом компьютере'}" />
+                                             PlaceholderText="{DynamicResource SelectFolderComputer}" />
                                 </StackPanel>
                                 <Button Grid.Column="1"
                                         Margin="0,23,0,0"
                                         Classes="project-secondary"
-                                        Content="{DynamicResource 'Обзор...'}"
+                                        Content="{DynamicResource Browse}"
                                         Click="BrowseFolderButton_OnClick" />
                             </Grid>
 
@@ -236,18 +236,18 @@
                                   ColumnDefinitions="*,Auto"
                                   ColumnSpacing="10">
                                 <StackPanel Spacing="7">
-                                    <TextBlock Classes="field-label" Text="{DynamicResource 'Репозиторий GitHub'}" />
+                                    <TextBlock Classes="field-label" Text="{DynamicResource GitHubRepository}" />
                                     <ComboBox Classes="project-field"
                                               ItemsSource="{Binding GitHubRepositories}"
                                               SelectedItem="{Binding SelectedGitHubRepository, Mode=TwoWay}"
-                                              PlaceholderText="{DynamicResource 'Выберите репозиторий'}">
+                                              PlaceholderText="{DynamicResource SelectRepository}">
                                         <ComboBox.ItemTemplate>
                                             <DataTemplate x:DataType="models:GitHubRepository">
                                                 <Grid ColumnDefinitions="*,Auto">
                                                     <TextBlock Text="{Binding FullName}" />
                                                     <TextBlock Grid.Column="1"
                                                                Margin="16,0,0,0"
-                                                               Text="{DynamicResource 'Приватный'}"
+                                                               Text="{DynamicResource Private}"
                                                                IsVisible="{Binding IsPrivate}"
                                                                FontSize="11"
                                                                Foreground="{DynamicResource AppTextMutedBrush}" />
@@ -260,11 +260,11 @@
                                         Margin="0,23,0,0"
                                         Classes="project-secondary"
                                         IsEnabled="{Binding !IsLoadingRepositories}"
-                                        Content="{DynamicResource 'Обновить'}"
+                                        Content="{DynamicResource Refresh}"
                                         Command="{Binding RefreshGitHubRepositoriesCommand}" />
                             </Grid>
                                 <StackPanel IsVisible="{Binding IsGitHubSource}" Spacing="8">
-                                    <TextBlock Text="{DynamicResource 'Ветка проекта GitHub'}" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                    <TextBlock Text="{DynamicResource ProjectGitHubBranch}" Foreground="{DynamicResource AppTextMutedBrush}" />
                                     <ComboBox
                                               HorizontalAlignment="Stretch"
                                               ItemsSource="{Binding GitHubBranchSelection.Branches}"
@@ -278,9 +278,9 @@
                                     </ComboBox>
                                     <Button
                                             Classes="project-secondary" HorizontalAlignment="Left"
-                                            Content="{DynamicResource 'Обновить коммит'}" Click="ProjectCommit_OnClick" />
-                                    <TextBlock IsVisible="{Binding GitHubBranchSelection.IsLoadingBranches}" Text="{DynamicResource 'Загрузка веток…'}" />
-                                    <TextBlock IsVisible="{Binding GitHubBranchSelection.IsResolving}" Text="{DynamicResource 'Загрузка коммита…'}" />
+                                            Content="{DynamicResource RefreshCommit}" Click="ProjectCommit_OnClick" />
+                                    <TextBlock IsVisible="{Binding GitHubBranchSelection.IsLoadingBranches}" Text="{DynamicResource LoadingBranches}" />
+                                    <TextBlock IsVisible="{Binding GitHubBranchSelection.IsResolving}" Text="{DynamicResource LoadingCommit}" />
                                     <TextBlock IsVisible="{Binding GitHubBranchSelection.HasError}" Text="{Binding GitHubBranchSelection.ErrorMessage}"
                                                TextWrapping="Wrap" Foreground="{DynamicResource AppDangerBrush}" />
                                     <controls:GitHubCommitCard DataContext="{Binding GitHubBranchSelection}" />
@@ -295,16 +295,16 @@
                             CornerRadius="14">
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="18" RowDefinitions="Auto,Auto,Auto,Auto">
                             <StackPanel Grid.ColumnSpan="2" Margin="0,0,0,16" Spacing="5">
-                                <TextBlock Text="{DynamicResource 'Сборка и запуск'}"
+                                <TextBlock Text="{DynamicResource BuildRun}"
                                            FontSize="19"
                                            FontWeight="Bold" />
-                                <TextBlock Text="{DynamicResource 'Автоопределение можно уточнить вручную'}"
+                                <TextBlock Text="{DynamicResource AutomaticDetectionCanOverriddenManually}"
                                            FontSize="12"
                                            Foreground="{DynamicResource AppTextMutedBrush}" />
                             </StackPanel>
 
                             <StackPanel Grid.Row="1" Spacing="7">
-                                <TextBlock Classes="field-label" Text="{DynamicResource 'Тип проекта'}" />
+                                <TextBlock Classes="field-label" Text="{DynamicResource ProjectType}" />
                                 <ComboBox Classes="project-field"
                                           ItemsSource="{Binding BuildProviders}"
                                           SelectedValue="{Binding SelectedBuildProvider, Mode=TwoWay}"
@@ -318,21 +318,21 @@
                             </StackPanel>
 
                             <StackPanel Grid.Row="1" Grid.Column="1" Spacing="7" IsVisible="{Binding !IsPythonBuild}">
-                                <TextBlock Classes="field-label" Text="{DynamicResource 'Исполняемый файл или точка входа'}" />
+                                <TextBlock Classes="field-label" Text="{DynamicResource ExecutableFileEntryPoint}" />
                                 <TextBox Classes="project-field"
                                          Text="{Binding RemoteExecutableFileName, Mode=TwoWay}"
                                          PlaceholderText="app.dll, main.py, server" />
                             </StackPanel>
 
                             <StackPanel Grid.Row="2" Margin="0,18,0,0" Spacing="7">
-                                <TextBlock Classes="field-label" Text="{DynamicResource 'Название systemd-сервиса'}" />
+                                <TextBlock Classes="field-label" Text="{DynamicResource SystemdServiceName}" />
                                 <TextBox Classes="project-field"
                                          Text="{Binding RemoteServiceName, Mode=TwoWay}"
                                          PlaceholderText="billing-api.service" />
                             </StackPanel>
 
                             <StackPanel Grid.Row="2" Grid.Column="1" Margin="0,18,0,0" Spacing="7">
-                                <TextBlock Classes="field-label" Text="{DynamicResource 'Директория на удалённой машине'}" />
+                                <TextBlock Classes="field-label" Text="{DynamicResource RemoteMachineDirectory}" />
                                 <TextBox Classes="project-field"
                                          Text="{Binding RemoteDeploymentDirectory, Mode=TwoWay}"
                                          PlaceholderText="/opt/kk-var/billing-api" />
@@ -340,84 +340,84 @@
 
                             <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Margin="0,18,0,0" Spacing="12">
                                 <Button Classes="project-secondary" HorizontalAlignment="Left"
-                                        Content="{DynamicResource 'Определить параметры сборки'}"
+                                        Content="{DynamicResource DetectBuildSettings}"
                                         Command="{Binding DetectBuildSettingsCommand}" />
-                                <TextBlock Text="{DynamicResource 'Пути задаются относительно рабочего каталога; пустой файл зависимостей Python означает автоопределение.'}"
+                                <TextBlock Text="{DynamicResource PathsRelativeWorkingDirectoryEmptyPythonDependency}"
                                            TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
                                 <TextBlock IsVisible="{Binding IsAutomaticBuild}"
-                                           Text="{DynamicResource 'Для настройки параметров выберите тип сборки или определите его по локальной папке.'}"
+                                           Text="{DynamicResource SelectBuildTypeDetectLocalDirectoryConfigure}"
                                            TextWrapping="Wrap" Foreground="{DynamicResource AppTextMutedBrush}" />
                                 <StackPanel Spacing="7">
-                                    <TextBlock Classes="field-label" Text="{DynamicResource 'Рабочий каталог сборки'}" />
+                                    <TextBlock Classes="field-label" Text="{DynamicResource Build_WorkingDirectory}" />
                                     <TextBox Classes="project-field" Text="{Binding BuildWorkingDirectory, Mode=TwoWay}" PlaceholderText="." />
                                 </StackPanel>
                                 <StackPanel IsVisible="{Binding IsDotNetBuild}" Spacing="12">
                                     <StackPanel Spacing="7">
-                                        <TextBlock Classes="field-label" Text="{DynamicResource 'Проект или решение (.NET)'}" />
-                                        <TextBox Classes="project-field" Text="{Binding DotNetProjectPath, Mode=TwoWay}" PlaceholderText="{DynamicResource 'Автоматический выбор .csproj'}" />
+                                        <TextBlock Classes="field-label" Text="{DynamicResource ProjectSolutionNET}" />
+                                        <TextBox Classes="project-field" Text="{Binding DotNetProjectPath, Mode=TwoWay}" PlaceholderText="{DynamicResource AutomaticCsprojSelection}" />
                                     </StackPanel>
                                 </StackPanel>
                                 <StackPanel IsVisible="{Binding HasBuildConfiguration}" Spacing="12">
                                     <StackPanel Spacing="7">
-                                        <TextBlock Classes="field-label" Text="{DynamicResource 'Конфигурация сборки'}" />
+                                        <TextBlock Classes="field-label" Text="{DynamicResource BuildConfiguration}" />
                                         <TextBox Classes="project-field" Text="{Binding BuildConfiguration, Mode=TwoWay}" PlaceholderText="Release" />
                                     </StackPanel>
                                 </StackPanel>
                                 <StackPanel IsVisible="{Binding IsGoBuild}" Spacing="12">
-                                    <CheckBox IsChecked="{Binding CgoEnabled, Mode=TwoWay}" Content="{DynamicResource 'Включить CGO'}" />
-                                    <TextBlock Text="{DynamicResource 'Для CGO нужен C-компилятор под целевую Linux-архитектуру.'}" TextWrapping="Wrap" Foreground="{DynamicResource AppTextMutedBrush}" />
+                                    <CheckBox IsChecked="{Binding CgoEnabled, Mode=TwoWay}" Content="{DynamicResource EnableCGO}" />
+                                    <TextBlock Text="{DynamicResource CGORequiresCCompilerTargetingLinuxArchitecture}" TextWrapping="Wrap" Foreground="{DynamicResource AppTextMutedBrush}" />
                                 </StackPanel>
                                 <StackPanel IsVisible="{Binding IsPythonBuild}" Spacing="12">
                                     <StackPanel Spacing="7">
-                                        <TextBlock Classes="field-label" Text="{DynamicResource 'Точка входа Python'}" />
+                                        <TextBlock Classes="field-label" Text="{DynamicResource PythonEntryPoint}" />
                                         <TextBox Classes="project-field" Text="{Binding RemoteExecutableFileName, Mode=TwoWay}" PlaceholderText="main.py" />
                                     </StackPanel>
                                     <StackPanel Spacing="7">
-                                        <TextBlock Classes="field-label" Text="{DynamicResource 'Файл зависимостей Python'}" />
+                                        <TextBlock Classes="field-label" Text="{DynamicResource PythonDependencyFile}" />
                                         <TextBox Classes="project-field" Text="{Binding PythonDependencyFilePath, Mode=TwoWay}" PlaceholderText="requirements.txt / pyproject.toml" />
                                     </StackPanel>
                                 </StackPanel>
                                 <StackPanel IsVisible="{Binding IsCppBuild}" Spacing="12">
                                     <StackPanel Spacing="7">
-                                        <TextBlock Classes="field-label" Text="{DynamicResource 'Генератор CMake'}" />
+                                        <TextBlock Classes="field-label" Text="{DynamicResource CMakeGenerator}" />
                                         <TextBox Classes="project-field" Text="{Binding CmakeGenerator, Mode=TwoWay}" PlaceholderText="Ninja" />
                                     </StackPanel>
                                     <StackPanel Spacing="7">
-                                        <TextBlock Classes="field-label" Text="{DynamicResource 'Toolchain-файл'}" />
+                                        <TextBlock Classes="field-label" Text="{DynamicResource ToolchainFile}" />
                                         <TextBox Classes="project-field" Text="{Binding ToolchainFile, Mode=TwoWay}" PlaceholderText="toolchains/linux-{architecture}.cmake" />
                                     </StackPanel>
                                 </StackPanel>
                                 <StackPanel IsVisible="{Binding IsCustomBuild}" Spacing="12">
                                     <StackPanel Spacing="7">
-                                        <TextBlock Classes="field-label" Text="{DynamicResource 'Команда сборки'}" />
+                                        <TextBlock Classes="field-label" Text="{DynamicResource BuildCommand}" />
                                         <TextBox Classes="project-field" Text="{Binding CustomBuildCommand, Mode=TwoWay}" PlaceholderText="dotnet / cmd.exe / build.cmd" />
                                     </StackPanel>
                                 </StackPanel>
                                 <StackPanel IsVisible="{Binding IsCppBuild}" Spacing="7">
-                                    <TextBlock Classes="field-label" Text="{DynamicResource 'Аргументы конфигурации CMake'}" />
+                                    <TextBlock Classes="field-label" Text="{DynamicResource CMakeConfigureArguments}" />
                                     <TextBox Classes="project-field" MinHeight="80" Padding="12,10"
                                              AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top"
                                              Text="{Binding ConfigureArgumentsText, Mode=TwoWay}" />
                                 </StackPanel>
                                 <StackPanel IsVisible="{Binding !IsPythonBuild}" Spacing="7">
-                                    <TextBlock Classes="field-label" Text="{DynamicResource 'Дополнительные аргументы сборки'}" />
+                                    <TextBlock Classes="field-label" Text="{DynamicResource AdditionalBuildArguments}" />
                                     <TextBox Classes="project-field" MinHeight="80" Padding="12,10"
                                              AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top"
                                              Text="{Binding BuildArgumentsText, Mode=TwoWay}" />
                                 </StackPanel>
                                 <StackPanel IsVisible="{Binding IsPythonBuild}" Spacing="7">
-                                    <TextBlock Classes="field-label" Text="{DynamicResource 'Параметры установки pip'}" />
+                                    <TextBlock Classes="field-label" Text="{DynamicResource PipInstallArguments}" />
                                     <TextBox Classes="project-field" MinHeight="80" Padding="12,10"
                                              AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top"
                                              Text="{Binding BuildArgumentsText, Mode=TwoWay}" />
                                 </StackPanel>
                                 <StackPanel IsVisible="{Binding !IsPythonBuild}" Spacing="7">
-                                    <TextBlock Classes="field-label" Text="{DynamicResource 'Переменные процесса сборки'}" />
+                                    <TextBlock Classes="field-label" Text="{DynamicResource BuildProcessEnvironment}" />
                                     <TextBox Classes="project-field" MinHeight="80" Padding="12,10"
                                              AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top"
                                              Text="{Binding BuildEnvironmentText, Mode=TwoWay}" />
                                 </StackPanel>
-                                <TextBlock Text="{DynamicResource 'Один аргумент на строку. Переменные: NAME=value; NAME удаляет переменную. Экранирование: \n, \r, \\.'}"
+                                <TextBlock Text="{DynamicResource OneArgumentPerLineEnvironmentNAMEValue}"
                                            TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource AppTextMutedBrush}" />
                             </StackPanel>
                         </Grid>
@@ -429,10 +429,10 @@
                             BorderThickness="1"
                             CornerRadius="14">
                         <StackPanel Spacing="7">
-                            <TextBlock Text="{DynamicResource 'Переменные окружения'}"
+                            <TextBlock Text="{DynamicResource EnvironmentVariables}"
                                        FontSize="19"
                                        FontWeight="Bold" />
-                            <TextBlock Text="{DynamicResource 'Путь задаётся относительно корня проекта. Сам файл KK.Var сформирует при сборке.'}"
+                            <TextBlock Text="{DynamicResource PathRelativeProjectRootKKVarCreates}"
                                        FontSize="12"
                                        Foreground="{DynamicResource AppTextMutedBrush}" />
                             <TextBox Margin="0,8,0,0"
@@ -449,10 +449,10 @@
                             CornerRadius="14">
                         <StackPanel Spacing="14">
                             <StackPanel Spacing="5">
-                                <TextBlock Text="{DynamicResource 'Проверка работоспособности'}"
+                                <TextBlock Text="{DynamicResource HealthCheck}"
                                            FontSize="19"
                                            FontWeight="Bold" />
-                                <TextBlock Text="{DynamicResource 'Необязательная проверка выполняется после запуска systemd-сервиса.'}"
+                                <TextBlock Text="{DynamicResource OptionalCheckRunsSystemdServiceStarts}"
                                            FontSize="12"
                                            TextWrapping="Wrap"
                                            Foreground="{DynamicResource AppTextMutedBrush}" />
@@ -460,7 +460,7 @@
 
                             <StackPanel Spacing="7">
                                 <TextBlock Classes="field-label"
-                                           Text="{DynamicResource 'Тип health-check'}" />
+                                           Text="{DynamicResource HealthCheckType}" />
                                 <ComboBox Classes="project-field"
                                           ItemsSource="{Binding HealthCheckTypes}"
                                           SelectedValue="{Binding SelectedHealthCheckType, Mode=TwoWay}"
@@ -476,7 +476,7 @@
                             <StackPanel IsVisible="{Binding IsStabilityDelayHealthCheck}"
                                         Spacing="7">
                                 <TextBlock Classes="field-label"
-                                           Text="{DynamicResource 'Время стабильной работы, секунд'}" />
+                                           Text="{DynamicResource StableOperationTimeSeconds}" />
                                 <NumericUpDown Classes="project-field"
                                                Minimum="1"
                                                Maximum="3600"
@@ -489,7 +489,7 @@
                                   ColumnSpacing="18">
                                 <StackPanel Spacing="7">
                                     <TextBlock Classes="field-label"
-                                               Text="{DynamicResource 'Timeout, секунд'}" />
+                                               Text="{DynamicResource TimeoutSeconds}" />
                                     <NumericUpDown Classes="project-field"
                                                    Minimum="1"
                                                    Maximum="3600"
@@ -499,7 +499,7 @@
 
                                 <StackPanel Grid.Column="1" Spacing="7">
                                     <TextBlock Classes="field-label"
-                                               Text="{DynamicResource 'Интервал, секунд'}" />
+                                               Text="{DynamicResource IntervalSeconds}" />
                                     <NumericUpDown Classes="project-field"
                                                    Minimum="1"
                                                    Maximum="3600"
@@ -509,7 +509,7 @@
 
                                 <StackPanel Grid.Column="2" Spacing="7">
                                     <TextBlock Classes="field-label"
-                                               Text="{DynamicResource 'Количество попыток'}" />
+                                               Text="{DynamicResource NumberAttempts}" />
                                     <NumericUpDown Classes="project-field"
                                                    Minimum="1"
                                                    Maximum="100"
@@ -521,7 +521,7 @@
                             <StackPanel IsVisible="{Binding IsHttpHealthCheck}"
                                         Spacing="7">
                                 <TextBlock Classes="field-label"
-                                           Text="{DynamicResource 'HTTP-адрес'}" />
+                                           Text="{DynamicResource HTTPAddress}" />
                                 <TextBox Classes="project-field"
                                          Text="{Binding HealthCheckHttpUrl, Mode=TwoWay}"
                                          PlaceholderText="http://127.0.0.1:8080/health" />
@@ -530,7 +530,7 @@
                             <StackPanel IsVisible="{Binding IsTcpHealthCheck}"
                                         Spacing="7">
                                 <TextBlock Classes="field-label"
-                                           Text="{DynamicResource 'TCP-порт'}" />
+                                           Text="{DynamicResource TCPPort}" />
                                 <NumericUpDown Classes="project-field"
                                                Minimum="1"
                                                Maximum="65535"
@@ -541,7 +541,7 @@
                             <StackPanel IsVisible="{Binding IsCommandHealthCheck}"
                                         Spacing="7">
                                 <TextBlock Classes="field-label"
-                                           Text="{DynamicResource 'Команда на удалённой машине'}" />
+                                           Text="{DynamicResource CommandRemoteMachine}" />
                                 <TextBox Classes="project-field"
                                          Text="{Binding HealthCheckCommand, Mode=TwoWay}"
                                          PlaceholderText="curl --fail http://127.0.0.1:8080/health" />
@@ -564,10 +564,10 @@
                     BorderThickness="1"
                     CornerRadius="14">
                 <StackPanel Spacing="12">
-                    <TextBlock Text="{DynamicResource 'Не сохранять изменения?'}"
+                    <TextBlock Text="{DynamicResource DiscardChanges}"
                                FontSize="20"
                                FontWeight="Bold" />
-                    <TextBlock Text="{DynamicResource 'Введённые данные проекта будут потеряны.'}"
+                    <TextBlock Text="{DynamicResource EnteredProjectDataLost}"
                                FontSize="13"
                                Foreground="{DynamicResource AppTextMutedBrush}" />
                     <StackPanel Margin="0,10,0,0"
@@ -575,10 +575,10 @@
                                 Orientation="Horizontal"
                                 Spacing="10">
                         <Button Classes="project-secondary"
-                                Content="{DynamicResource 'Продолжить редактирование'}"
+                                Content="{DynamicResource ContinueEditing}"
                                 Click="ContinueEditingButton_OnClick" />
                         <Button Classes="project-primary"
-                                Content="{DynamicResource 'Не сохранять'}"
+                                Content="{DynamicResource Discard}"
                                 Click="DiscardButton_OnClick" />
                     </StackPanel>
                 </StackPanel>
