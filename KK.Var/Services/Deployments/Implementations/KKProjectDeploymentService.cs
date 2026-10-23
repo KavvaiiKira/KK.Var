@@ -43,6 +43,9 @@ namespace KK.Var.Services.Implementations
             var queuedProject = await projectRepository.GetByIdAsync(request.ProjectId, cancellationToken) ??
                 throw new KeyNotFoundException(Texts.ProjectNotFound);
             request = request with { RemoteMachineId = queuedProject.RemoteMachineId };
+            await using var storageReservation = storageActivity.AcquireOperationLease(
+                Texts.DeployCannotStartWhileLocalVersionsBeing,
+                cancellationToken);
             await using var machineReservation = await machineService.ReserveAsync(
                 queuedProject.RemoteMachineId,
                 cancellationToken);
@@ -54,7 +57,7 @@ namespace KK.Var.Services.Implementations
                     request.ProjectId,
                     request.VersionTag,
                     DeploymentOperationType.Deploy,
-                    () => DeployCoreAsync(request, progress, preflightProgress, token, queuedProject)),
+                    () => DeployCoreAsync(request, progress, preflightProgress, token, queuedProject, storageReservation)),
                 cancellationToken,
                 remoteMachineId: queuedProject.RemoteMachineId);
         }
@@ -64,7 +67,8 @@ namespace KK.Var.Services.Implementations
             IProgress<DeploymentProgress>? progress,
             IProgress<DeploymentPreflightResult>? preflightProgress,
             CancellationToken cancellationToken,
-            KKProject operationProject)
+            KKProject operationProject,
+            IArtifactStorageOperationLease storageReservation)
         {
             progress?.Report(new DeploymentProgress(
                 1,
@@ -145,7 +149,8 @@ namespace KK.Var.Services.Implementations
                 await versionCleanupService.ExecuteAsync(
                     project.Id,
                     afterSuccessfulDeploy: true,
-                    cancellationToken: CancellationToken.None);
+                    cancellationToken: CancellationToken.None,
+                    operationReservation: storageReservation);
             }
             catch (Exception exception)
             {
@@ -179,6 +184,9 @@ namespace KK.Var.Services.Implementations
 
             var queuedProject = await projectRepository.GetByIdAsync(projectId, cancellationToken) ??
                 throw new KeyNotFoundException(Texts.ProjectNotFound);
+            await using var storageReservation = storageActivity.AcquireOperationLease(
+                Texts.RollbackCannotStartWhileLocalVersionsBeing,
+                cancellationToken);
             await using var machineReservation = await machineService.ReserveAsync(
                 queuedProject.RemoteMachineId,
                 cancellationToken);

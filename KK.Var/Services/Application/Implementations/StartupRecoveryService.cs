@@ -16,8 +16,13 @@ namespace KK.Var.Services.Implementations
     public sealed class StartupRecoveryService(
         DatabaseOptions databaseOptions,
         IDbContextFactory<AppDbContext> contextFactory,
-        ILocalizationService localizationService) : IStartupRecoveryService
+        ILocalizationService localizationService,
+        string? userDataDirectory = null) : IStartupRecoveryService
     {
+        private string UserDataDirectory => userDataDirectory ?? DatabasePaths.UserDataDirectory;
+
+        private string UserSettingsFilePath => Path.Combine(UserDataDirectory, ApplicationConstants.SettingsFileName);
+
         private const string BackupTimestampFormat = "yyyyMMdd-HHmmss-fff";
 
         private const string WalFileSuffix = "-wal";
@@ -30,18 +35,18 @@ namespace KK.Var.Services.Implementations
         {
             cancellationToken.ThrowIfCancellationRequested();
             var recoveryDirectory = Path.Combine(
-                DatabasePaths.RecoveryDirectory,
+                Path.Combine(UserDataDirectory, ApplicationConstants.RecoveryDirectoryName),
                 DateTime.UtcNow.ToString(BackupTimestampFormat));
             Directory.CreateDirectory(recoveryDirectory);
 
             switch (kind)
             {
                 case StartupRecoveryKind.UserSettings:
-                    MoveIfExists(DatabasePaths.UserSettingsFilePath, recoveryDirectory);
-                    MoveIfExists(DatabasePaths.UserSettingsFilePath + ApplicationConstants.TemporaryFileExtension, recoveryDirectory);
+                    MoveIfExists(UserSettingsFilePath, recoveryDirectory);
+                    MoveIfExists(UserSettingsFilePath + ApplicationConstants.TemporaryFileExtension, recoveryDirectory);
                     break;
                 case StartupRecoveryKind.Database:
-                    var databasePath = DatabasePaths.GetDatabaseFilePath(databaseOptions.FileName);
+                    var databasePath = Path.Combine(UserDataDirectory, Path.GetFileName(DatabasePaths.GetDatabaseFilePath(databaseOptions.FileName)));
                     SqliteConnection.ClearAllPools();
                     MoveIfExists(databasePath, recoveryDirectory);
                     MoveIfExists(databasePath + WalFileSuffix, recoveryDirectory);
@@ -60,10 +65,10 @@ namespace KK.Var.Services.Implementations
 
         public void OpenUserDataDirectory()
         {
-            DatabasePaths.EnsureUserDataDirectory();
+            Directory.CreateDirectory(UserDataDirectory);
             Process.Start(new ProcessStartInfo
             {
-                FileName = DatabasePaths.UserDataDirectory,
+                FileName = UserDataDirectory,
                 UseShellExecute = true,
             });
         }

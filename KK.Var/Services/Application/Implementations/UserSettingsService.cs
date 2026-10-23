@@ -10,8 +10,10 @@ using KK.Var.Data;
 
 namespace KK.Var.Services.Implementations
 {
-    public sealed class UserSettingsService : IUserSettingsService
+    public sealed class UserSettingsService(string? settingsFilePath = null) : IUserSettingsService
     {
+        private string SettingsFilePath => settingsFilePath ?? DatabasePaths.UserSettingsFilePath;
+
         private static readonly JsonSerializerOptions SerializerOptions = new JsonSerializerOptions()
         {
             PropertyNameCaseInsensitive = true,
@@ -118,15 +120,15 @@ namespace KK.Var.Services.Implementations
             }
         }
 
-        private static async Task<UserSettings> LoadCoreAsync(
+        private async Task<UserSettings> LoadCoreAsync(
             CancellationToken cancellationToken)
         {
-            if (!File.Exists(DatabasePaths.UserSettingsFilePath))
+            if (!File.Exists(SettingsFilePath))
             {
                 return new UserSettings();
             }
 
-            await using var stream = File.OpenRead(DatabasePaths.UserSettingsFilePath);
+            await using var stream = File.OpenRead(SettingsFilePath);
 
             return await JsonSerializer.DeserializeAsync<UserSettings>(
                 stream,
@@ -135,13 +137,13 @@ namespace KK.Var.Services.Implementations
                        new UserSettings();
         }
 
-        private static async Task SaveCoreAsync(
+        private async Task SaveCoreAsync(
             UserSettings settings,
             CancellationToken cancellationToken)
         {
-            DatabasePaths.EnsureUserDataDirectory();
+            Directory.CreateDirectory(Path.GetDirectoryName(SettingsFilePath)!);
 
-            var temporaryPath = DatabasePaths.UserSettingsFilePath + ApplicationConstants.TemporaryFileExtension;
+            var temporaryPath = SettingsFilePath + ApplicationConstants.TemporaryFileExtension;
 
             await using (var stream = File.Create(temporaryPath))
             {
@@ -154,7 +156,7 @@ namespace KK.Var.Services.Implementations
 
             File.Move(
                 temporaryPath,
-                DatabasePaths.UserSettingsFilePath,
+                SettingsFilePath,
                 overwrite: true);
         }
     }

@@ -45,15 +45,17 @@ namespace KK.Var.Services.Implementations
             Guid projectId,
             VersionCleanupPlan? expectedPlan = null,
             bool afterSuccessfulDeploy = false,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            IArtifactStorageOperationLease? operationReservation = null)
         {
             if (!afterSuccessfulDeploy)
             {
                 EnsureManualCleanupAvailable();
             }
 
-            await using var lease = await storageActivity.AcquireCleanupLeaseAsync(
-                cancellationToken);
+            await using var lease = afterSuccessfulDeploy && operationReservation is not null ?
+                await operationReservation.AcquireCleanupLeaseAsync(cancellationToken) :
+                await storageActivity.AcquireCleanupLeaseAsync(cancellationToken);
 
             if (!afterSuccessfulDeploy && operationQueue.HasActiveOperations())
             {

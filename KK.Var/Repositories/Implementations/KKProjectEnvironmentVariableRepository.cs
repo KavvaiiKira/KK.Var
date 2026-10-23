@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -37,6 +38,9 @@ namespace KK.Var.Repositories.Implementations
             CancellationToken cancellationToken = default)
         {
             await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
+            await using var transaction = await db.Database.BeginTransactionAsync(
+                IsolationLevel.Serializable,
+                cancellationToken);
 
             var project = await db.Projects.SingleOrDefaultAsync(
                 candidate => candidate.Id == projectId,
@@ -52,6 +56,7 @@ namespace KK.Var.Repositories.Implementations
             project.EnvironmentFileFormat = format;
             project.UpdatedAtUtc = DateTime.UtcNow;
             await db.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
         }
     }
 }

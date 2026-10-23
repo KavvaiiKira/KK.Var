@@ -18,7 +18,9 @@ namespace KK.Var.Services.Implementations
         IDeploymentJournal journal,
         IRemoteDeploymentService remoteDeploymentService,
         IDeploymentOperationQueue operationQueue,
-        IRemoteMachineService machineService) : IDeploymentRecoveryService
+        IRemoteMachineService machineService,
+        IArtifactStorageActivity storageActivity,
+        string? logsDirectory = null) : IDeploymentRecoveryService
     {
         public async Task<int> RecoverInterruptedAsync(
             CancellationToken cancellationToken = default)
@@ -33,6 +35,9 @@ namespace KK.Var.Services.Implementations
 
             foreach (var deployment in runningDeployments)
             {
+                await using var storageReservation = storageActivity.AcquireOperationLease(
+                    Texts.RollbackCannotStartWhileLocalVersionsBeing,
+                    cancellationToken);
                 await using var machineReservation = await machineService.ReserveAsync(
                     deployment.RemoteMachineId,
                     cancellationToken);
@@ -68,13 +73,14 @@ namespace KK.Var.Services.Implementations
             RemoteMachineSettings connection,
             CancellationToken cancellationToken)
         {
+            var effectiveLogsDirectory = logsDirectory ?? DatabasePaths.LogsDirectory;
             var logPath = string.IsNullOrWhiteSpace(deployment.LogPath) ?
                 Path.Combine(
-                    DatabasePaths.LogsDirectory,
+                    effectiveLogsDirectory,
                     $"{DateTime.UtcNow:yyyyMMdd-HHmmss}-{deployment.Id:N}.log") :
                     deployment.LogPath;
 
-            Directory.CreateDirectory(DatabasePaths.LogsDirectory);
+            Directory.CreateDirectory(effectiveLogsDirectory);
 
             await using var log = new StreamWriter(
                 logPath,

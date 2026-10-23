@@ -18,7 +18,8 @@ namespace KK.Var.Services.Implementations
         IDeploymentJournal journal,
         IKKProjectEnvironmentService environmentService,
         IRemoteDeploymentService remoteDeploymentService,
-        IRemoteMachineService machineService) : IDeploymentExecutor
+        IRemoteMachineService machineService,
+        string? logsDirectory = null) : IDeploymentExecutor
     {
         public async Task<KKProjectDeployment> ExecuteAsync(
             KKProject project,
@@ -38,10 +39,11 @@ namespace KK.Var.Services.Implementations
                 !(await deploymentRepository.GetByProjectIdAsync(project.Id, cancellationToken)).Any(item =>
                     item.RemoteMachineId == machine.Id && item.RemoteServerGeneration == machine.ServerGeneration &&
                     item.Status == DeploymentStatus.Succeeded);
-            Directory.CreateDirectory(DatabasePaths.LogsDirectory);
+            var effectiveLogsDirectory = logsDirectory ?? DatabasePaths.LogsDirectory;
+            Directory.CreateDirectory(effectiveLogsDirectory);
 
             var logPath = Path.Combine(
-                DatabasePaths.LogsDirectory,
+                effectiveLogsDirectory,
                 $"{DateTime.UtcNow:yyyyMMdd-HHmmss}-{Guid.NewGuid():N}.log");
 
             var variables = await environmentService.GetAsync(project.Id, cancellationToken);

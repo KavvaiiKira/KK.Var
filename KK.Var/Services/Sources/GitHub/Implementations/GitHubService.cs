@@ -41,16 +41,15 @@ namespace KK.Var.Services.Implementations
         public GitHubService(
             GitHubOptions options,
             ILocalizationService localizationService,
-            ILogger<GitHubService> logger)
+            ILogger<GitHubService> logger,
+            HttpMessageHandler? handler = null)
         {
             _options = options;
             _logger = logger;
             _localizationService = localizationService;
 
-            _httpClient = new HttpClient
-            {
-                Timeout = TimeSpan.FromSeconds(30),
-            };
+            _httpClient = handler is null ? new HttpClient() : new HttpClient(handler);
+            _httpClient.Timeout = TimeSpan.FromSeconds(30);
 
             _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(GitHubProtocol.UserAgent);
             _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(GitHubProtocol.ApiMediaType));

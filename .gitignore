@@ -15,6 +15,7 @@
 *.db-wal
 settings.json
 settings.json.tmp
+KK.Var.Tests/Deployment/appsettings.json
 
 # OS files
 .DS_Store

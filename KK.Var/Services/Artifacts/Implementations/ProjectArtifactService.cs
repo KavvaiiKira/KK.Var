@@ -17,7 +17,8 @@ namespace KK.Var.Services.Implementations
         IProjectBuildService buildService,
         IArtifactPackagingService packagingService,
         IArtifactStorageService artifactStorageService,
-        ILocalizationService localizationService) : IProjectArtifactService
+        ILocalizationService localizationService,
+        Func<Guid>? temporaryArchiveIdFactory = null) : IProjectArtifactService
     {
         private const string DotNetProviderName = ".NET";
 
@@ -151,7 +152,7 @@ namespace KK.Var.Services.Implementations
 
                 temporaryArchivePath = Path.Combine(
                     Path.GetDirectoryName(artifactPath)!,
-                    $".{Guid.NewGuid():N}{ArtifactConstants.ArchiveExtension}");
+                    $".{(temporaryArchiveIdFactory?.Invoke() ?? Guid.NewGuid()):N}{ArtifactConstants.ArchiveExtension}");
 
                 await using (var file = new FileStream(
                     temporaryArchivePath,

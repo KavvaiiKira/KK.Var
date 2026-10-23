@@ -12,8 +12,10 @@ using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
-    public sealed class GitHubTokenStore : IGitHubTokenStore
+    public sealed class GitHubTokenStore(string? tokenFilePath = null) : IGitHubTokenStore
     {
+        private string TokenFilePath => tokenFilePath ?? DatabasePaths.GitHubTokenFilePath;
+
         private const string TokenEntropyPurpose = "KK.Var.GitHub.Token.v1";
 
         private static readonly byte[] AdditionalEntropy =
@@ -32,14 +34,14 @@ namespace KK.Var.Services.Implementations
                     Texts.ProtectedGitHubTokenStorageOnlyAvailableWindows);
             }
 
-            DatabasePaths.EnsureUserDataDirectory();
+            Directory.CreateDirectory(Path.GetDirectoryName(TokenFilePath)!);
 
             var encryptedToken = ProtectedData.Protect(
                 JsonSerializer.SerializeToUtf8Bytes(token),
                 AdditionalEntropy,
                 DataProtectionScope.CurrentUser);
 
-            var temporaryPath = DatabasePaths.GitHubTokenFilePath + ApplicationConstants.TemporaryFileExtension;
+            var temporaryPath = TokenFilePath + ApplicationConstants.TemporaryFileExtension;
 
             await File.WriteAllBytesAsync(
                 temporaryPath,
@@ -48,7 +50,7 @@ namespace KK.Var.Services.Implementations
 
             File.Move(
                 temporaryPath,
-                DatabasePaths.GitHubTokenFilePath,
+                TokenFilePath,
                 overwrite: true);
         }
 
@@ -61,13 +63,13 @@ namespace KK.Var.Services.Implementations
                     Texts.ProtectedGitHubTokenStorageOnlyAvailableWindows);
             }
 
-            if (!File.Exists(DatabasePaths.GitHubTokenFilePath))
+            if (!File.Exists(TokenFilePath))
             {
                 return null;
             }
 
             var encryptedToken = await File.ReadAllBytesAsync(
-                DatabasePaths.GitHubTokenFilePath,
+                TokenFilePath,
                 cancellationToken);
 
             var token = ProtectedData.Unprotect(
@@ -83,9 +85,9 @@ namespace KK.Var.Services.Implementations
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (File.Exists(DatabasePaths.GitHubTokenFilePath))
+            if (File.Exists(TokenFilePath))
             {
-                File.Delete(DatabasePaths.GitHubTokenFilePath);
+                File.Delete(TokenFilePath);
             }
 
             return Task.CompletedTask;

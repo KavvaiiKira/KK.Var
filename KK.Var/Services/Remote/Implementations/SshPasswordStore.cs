@@ -10,8 +10,10 @@ using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.Services.Implementations
 {
-    public sealed class SshPasswordStore : ISshPasswordStore
+    public sealed class SshPasswordStore(string? userDataDirectory = null) : ISshPasswordStore
     {
+        private string UserDataDirectory => userDataDirectory ?? DatabasePaths.UserDataDirectory;
+
         private const string PasswordEntropyPrefix = "KK.Var.SSH.Password.v2:";
 
         private const string PasswordFilePrefix = "ssh-";
@@ -21,8 +23,8 @@ namespace KK.Var.Services.Implementations
         private static byte[] PasswordEntropy(Guid id) =>
             Encoding.UTF8.GetBytes($"{PasswordEntropyPrefix}{id:N}");
 
-        private static string PasswordPath(Guid id) =>
-            Path.Combine(DatabasePaths.UserDataDirectory, $"{PasswordFilePrefix}{id:N}{PasswordFileExtension}");
+        private string PasswordPath(Guid id) =>
+            Path.Combine(UserDataDirectory, $"{PasswordFilePrefix}{id:N}{PasswordFileExtension}");
 
         public async Task SaveAsync(
             Guid machineId,
@@ -37,7 +39,7 @@ namespace KK.Var.Services.Implementations
                     Texts.ProtectedSSHPasswordStorageOnlyAvailableWindows);
             }
 
-            DatabasePaths.EnsureUserDataDirectory();
+            Directory.CreateDirectory(UserDataDirectory);
 
             var encryptedPassword = ProtectedData.Protect(
                 Encoding.UTF8.GetBytes(password),

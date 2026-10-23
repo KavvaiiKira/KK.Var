@@ -15,6 +15,7 @@ namespace KK.Var.Services
             Guid projectId,
             VersionCleanupPlan? expectedPlan = null,
             bool afterSuccessfulDeploy = false,
-            CancellationToken cancellationToken = default);
+            CancellationToken cancellationToken = default,
+            IArtifactStorageOperationLease? operationReservation = null);
     }
 }

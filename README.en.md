@@ -205,19 +205,19 @@ After the wizard, the same options remain available on the Settings page, where 
 
 Application data is stored in `%LOCALAPPDATA%\KK.Var`:
 
-- `settings.json` - application and connection settings without the SSH password;
-- `kk-var.db` - projects, versions, variables, and operation history;
+- `settings.json` - application settings without SSH passwords;
+- `kk-var.db` - machine profiles, projects, versions, variables, and operation history;
 - `artifacts` - local version archives;
 - `logs` - diagnostic logs;
 - `github-token.dat` - GitHub token protected by Windows DPAPI;
-- `ssh-password.dat` - SSH password protected by Windows DPAPI;
+- `ssh-<profileId>.dat` - a separate SSH password for each machine profile, protected by Windows DPAPI; `profileId` is the profile identifier as 32 hexadecimal characters without hyphens;
 - `recovery` - backups of damaged settings or SQLite files created through the recovery screen.
 
 If `settings.json` is damaged or SQLite cannot be opened, the application shows a recovery screen instead of terminating. Reset happens only after confirmation, and the original files are preserved under `recovery`.
 
 Deleting a project also deletes its local version archives.
 
-Review diagnostic logs before publishing them. Do not commit or share `github-token.dat` or `ssh-password.dat`.
+Review diagnostic logs before publishing them. Do not commit or share `github-token.dat` or any `ssh-<profileId>.dat` password files.
 
 ## Current limitations
 
