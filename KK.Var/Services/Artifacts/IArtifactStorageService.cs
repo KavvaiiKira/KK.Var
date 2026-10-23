@@ -23,7 +23,8 @@ namespace KK.Var.Services
 
         Task DeleteProjectArtifactsAsync(
             Guid projectId,
-            CancellationToken cancellationToken = default);
+            CancellationToken cancellationToken = default,
+            IArtifactStorageDestructiveLease? reservation = null);
 
         Task DeleteArtifactAsync(
             string relativePath,

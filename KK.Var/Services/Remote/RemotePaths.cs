@@ -14,7 +14,16 @@ namespace KK.Var.Services
             "/usr/lib64/", "/usr/sbin/", "/usr/share/",
         ];
 
-        public static bool IsProtectedDirectory(string path) => ProtectedPrefixes.Any(prefix =>
-            (path.TrimEnd('/') + "/").StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+        public static string NormalizeDirectoryForComparison(string path) =>
+            (path.StartsWith('/') ?
+                "/" :
+                string.Empty) +
+            string.Join('/', path.Split('/', StringSplitOptions.RemoveEmptyEntries));
+
+        public static bool IsProtectedDirectory(string path)
+        {
+            var directory = NormalizeDirectoryForComparison(path).TrimEnd('/') + "/";
+            return ProtectedPrefixes.Any(prefix => directory.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+        }
     }
 }

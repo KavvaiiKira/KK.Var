@@ -1777,10 +1777,10 @@
         <value>Systemd-сервис успешно запущен</value>
     </data>
     <data name="SystemdTarAvailable" xml:space="preserve">
-        <value>systemd и tar доступны.</value>
+        <value>systemd, tar и flock доступны.</value>
     </data>
     <data name="SystemdTarUnavailable" xml:space="preserve">
-        <value>systemd или tar недоступны.</value>
+        <value>systemd, tar или flock недоступны.</value>
     </data>
     <data name="SystemdUnitCreated" xml:space="preserve">
         <value>Systemd unit будет создан</value>
@@ -2010,4 +2010,70 @@
     <data name="StartingApplication" xml:space="preserve">
         <value>Подготовка приложения…</value>
     </data>
+  <data name="RecoveryNotRequired" xml:space="preserve">
+    <value>Эта операция не требует явного восстановления.</value>
+  </data>
+  <data name="RecoverySuperseded" xml:space="preserve">
+    <value>Восстановление недоступно: после этой операции уже начата другая операция проекта или той же удаленной цели.</value>
+  </data>
+  <data name="RecoveryTargetChanged" xml:space="preserve">
+    <value>Сохраненная цель восстановления больше не соответствует профилю машины или содержит недопустимый путь.</value>
+  </data>
+  <data name="RecoveryOutcomeUnknown" xml:space="preserve">
+    <value>Результат восстановления не подтвержден. Проверьте журнал попытки; повтор разрешен только при подтвержденном владении удаленными файлами.</value>
+  </data>
+  <data name="RecoveryOwnershipUnknown" xml:space="preserve">
+    <value>Владение удаленными файлами не подтверждено. Восстановление остановлено.</value>
+  </data>
+  <data name="RecoveryRequiredNotice" xml:space="preserve">
+    <value>Результат удаленной операции неизвестен. Восстановление использует сохраненную цель и checkpoint исходной операции без новой сборки или Deploy. Исходная ошибка останется в истории.</value>
+  </data>
+  <data name="RecoveryResolvedNotice" xml:space="preserve">
+    <value>Результат восстановления сохранен отдельно. Исходная ошибка операции остается в истории.</value>
+  </data>
+  <data name="RecoveryTitle" xml:space="preserve">
+    <value>Восстановление сохраненной операции</value>
+  </data>
+  <data name="RecoverSavedOperation" xml:space="preserve">
+    <value>Восстановить операцию</value>
+  </data>
+  <data name="CancelRecovery" xml:space="preserve">
+    <value>Отменить ожидание восстановления</value>
+  </data>
+  <data name="RecoveryInProgress" xml:space="preserve">
+    <value>Ожидание или выполнение восстановления. Начатое удаленное действие может завершиться до обработки отмены.</value>
+  </data>
+  <data name="RecoveryCancelledNotice" xml:space="preserve">
+    <value>Восстановление отменено. Удаленный результат может оставаться неизвестным; состояние и журнал попытки сохранены.</value>
+  </data>
+  <data name="RecoveryAttemptSucceeded" xml:space="preserve">
+    <value>Результат подтвержден</value>
+  </data>
+  <data name="RecoveryAttemptFailed" xml:space="preserve">
+    <value>Попытка завершилась ошибкой</value>
+  </data>
+  <data name="RecoveryAttemptCancelled" xml:space="preserve">
+    <value>Попытка отменена</value>
+  </data>
+  <data name="RecoveryAttemptUnknown" xml:space="preserve">
+    <value>Попытка начата; завершение не подтверждено</value>
+  </data>
+  <data name="RecoveryNewVersionRemoved" xml:space="preserve">
+    <value>Новая версия удалена. Предыдущей версии нет; сервис не запущен.</value>
+  </data>
+  <data name="RecoveryPreviousFilesRestored" xml:space="preserve">
+    <value>Предыдущие файлы восстановлены. Сервис не запущен: прежний systemd unit отсутствовал.</value>
+  </data>
+  <data name="RecoveryRefresh" xml:space="preserve">
+    <value>Обновить состояние</value>
+  </data>
+  <data name="RecoveryToolMissing" xml:space="preserve">
+    <value>Для безопасного восстановления требуется flock на удаленной машине.</value>
+  </data>
+  <data name="RecoveryLogUnavailable" xml:space="preserve">
+    <value>Журнал восстановления недоступен: {0}</value>
+  </data>
+  <data name="StorageMutationUnavailable" xml:space="preserve">
+    <value>Хранилище занято другой операцией. Повторите изменение после ее завершения.</value>
+  </data>
 </root>

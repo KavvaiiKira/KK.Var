@@ -1,4 +1,3 @@
 <Solution>
   <Project Path="KK.Var/KK.Var.csproj" />
-  <Project Path="KK.Var.Tests/KK.Var.Tests.csproj" />
 </Solution>

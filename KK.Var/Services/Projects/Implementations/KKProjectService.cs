@@ -18,13 +18,12 @@ namespace KK.Var.Services.Implementations
         IKKProjectRepository repository,
         IProjectArtifactService artifactService,
         IRemoteMachineService machineService,
-        ILocalizationService localizationService)
+        ILocalizationService localizationService,
+        IArtifactStorageActivity storageActivity)
         : IKKProjectService
     {
-        private const string ServiceNameValidationPattern = "^[A-Za-z0-9_.@-]+\\.service$";
-
         private static readonly Regex ServiceNamePattern = new Regex(
-            ServiceNameValidationPattern,
+            DeploymentConstants.ServiceNameValidationPattern,
             RegexOptions.CultureInvariant);
 
         public Task<IReadOnlyList<KKProject>> GetAllAsync(
@@ -118,7 +117,8 @@ namespace KK.Var.Services.Implementations
             Guid id,
             CancellationToken cancellationToken = default)
         {
-            await artifactService.DeleteAllAsync(id, cancellationToken);
+            await using var lease = storageActivity.AcquireDestructiveLease(cancellationToken);
+            await artifactService.DeleteAllAsync(id, cancellationToken, lease);
             await repository.DeleteAsync(id, cancellationToken);
         }
 

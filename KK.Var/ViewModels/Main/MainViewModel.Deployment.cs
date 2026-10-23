@@ -32,15 +32,15 @@ namespace KK.Var.ViewModels
         public async Task LoadDeploymentDetailsAsync(DeploymentHistoryItemViewModel item)
         {
             var revision = ++_deploymentDetailsRevision;
-            var logText = await ReadDeploymentLogAsync(item.Deployment.LogPath);
+            var deployment = await _deploymentHistory.GetByIdAsync(item.Deployment.Id) ?? item.Deployment;
+            var logText = await ReadDeploymentLogAsync(deployment.LogPath);
+            var details = new DeploymentDetailsViewModel(deployment, logText, _localizationService, _deploymentRecovery);
+            await details.RefreshRecoveryAsync();
             if (revision != _deploymentDetailsRevision)
             {
                 return;
             }
-            SelectedDeploymentDetails = new DeploymentDetailsViewModel(
-                item.Deployment,
-                logText,
-                _localizationService);
+            SelectedDeploymentDetails = details;
         }
 
         public void ClearDeploymentDetails()

@@ -10,8 +10,10 @@ namespace KK.Var.Constants
 
         public const string ReloadSystemd = "sudo systemctl daemon-reload";
 
-        public const string CheckDeploymentTools = "command -v systemctl >/dev/null && command -v tar >/dev/null";
+        public const string CheckRecoveryTools = "sudo -n sh -c 'command -v flock >/dev/null'";
 
-        public const string CheckRunningSystemd = "command -v systemctl >/dev/null && test -d /run/systemd/system && command -v tar >/dev/null";
+        public const string CheckDeploymentTools = "command -v systemctl >/dev/null && command -v tar >/dev/null && " + CheckRecoveryTools;
+
+        public const string CheckRunningSystemd = "command -v systemctl >/dev/null && test -d /run/systemd/system && command -v tar >/dev/null && " + CheckRecoveryTools;
     }
 }

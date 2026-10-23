@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace KK.Var.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20261019204329_InitialCreate")]
+    [Migration("20261023162427_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -173,7 +173,17 @@ namespace KK.Var.Data.Migrations
                         .HasMaxLength(1024)
                         .HasColumnType("TEXT");
 
+                    b.Property<long>("OperationSequence")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("OperationType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("RecoveryAttemptsJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("RecoveryRequired")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("RemoteArchitecture")
@@ -250,6 +260,9 @@ namespace KK.Var.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("KKProjectVersionId");
+
+                    b.HasIndex("OperationSequence")
+                        .IsUnique();
 
                     b.HasIndex("RemoteMachineId");
 

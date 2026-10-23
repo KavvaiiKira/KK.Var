@@ -10,6 +10,10 @@ namespace KK.Var.Services
 
         bool IsCleanupRunning { get; }
 
+        IArtifactStorageDestructiveLease AcquireDestructiveLease(CancellationToken cancellationToken = default);
+
+        void ValidateDestructiveLease(IArtifactStorageDestructiveLease lease);
+
         IArtifactStorageOperationLease AcquireOperationLease(string unavailableMessage, CancellationToken cancellationToken = default);
 
         Task<IAsyncDisposable> AcquireCleanupLeaseAsync(CancellationToken cancellationToken = default);

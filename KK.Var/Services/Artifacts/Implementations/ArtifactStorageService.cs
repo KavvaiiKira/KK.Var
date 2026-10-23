@@ -63,7 +63,8 @@ namespace KK.Var.Services.Implementations
 
         public async Task DeleteProjectArtifactsAsync(
             Guid projectId,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            IArtifactStorageDestructiveLease? reservation = null)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -72,9 +73,10 @@ namespace KK.Var.Services.Implementations
                 throw new ArgumentException(Texts.ProjectIdentifierRequired, nameof(projectId));
             }
 
-            if (storageActivity.IsCleanupRunning)
+            await using var ownLease = reservation is null ? storageActivity.AcquireDestructiveLease(cancellationToken) : null;
+            if (reservation is not null)
             {
-                throw new InvalidOperationException(Texts.ProjectCannotDeletedDuringVersionCleanup);
+                storageActivity.ValidateDestructiveLease(reservation);
             }
 
             var root = await GetEffectiveRootAsync(cancellationToken);

@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/Windows-supported-6F5AE8?style=flat-square" alt="Windows">
   <img src="https://img.shields.io/badge/.NET-10.0-8C52FF?style=flat-square" alt=".NET 10">
   <img src="https://img.shields.io/badge/Avalonia_UI-12.1-9B6DFF?style=flat-square" alt="Avalonia UI 12.1">
-  <img src="https://img.shields.io/badge/license-MIT-3AADC9?style=flat-square" alt="MIT License">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-3AADC9?style=flat-square" alt="GNU AGPL v3"></a>
 </p>
 
 > [!IMPORTANT]
@@ -62,7 +62,19 @@ flowchart LR
 
 During delivery, KK.Var checks SSH access, architecture, and available disk space, uploads the release into a staging directory, and only then switches the working directory. If an operation fails after the switch, the application attempts to restore the previous release and unit file.
 
-Version archives remain on the local computer. The remote machine keeps only the current working release, making KK.Var suitable for servers with limited disk space.
+Version archives remain on the local computer. The remote machine has no separate archive store: it holds the working release, temporary operation files, and recovery metadata. Files needed for recovery are preserved when the operation's remote outcome is unknown.
+
+### Recovering a Failed operation
+
+If a lost SSH connection or an automatic rollback error leaves the server state unknown:
+
+1. Open the operation in history and check the saved machine in its details.
+2. In the recovery panel, click `Recover operation` when the action is available.
+3. Check the outcome and the attempt log. The original `Failed` status, error, and log remain in history; the recovery outcome is stored separately.
+
+Recovery uses the saved target and checkpoint of the original operation without a new build, version, or Deploy. `Repeat Deploy` opens a new operation's form and does not replace recovery. `Failed` records are not recovered automatically at application startup.
+
+Recovery is rejected if a later operation has started for the project or the same target, the machine profile no longer matches the saved target, or ownership of the remote files cannot be confirmed. Keep the retained recovery files until the outcome is established. When no previous version exists, recovery may remove the failed new version without starting the service.
 
 ## Supported platforms
 
@@ -149,7 +161,7 @@ The global history combines Deploy and Rollback operations for every project. It
 
 - Linux with systemd;
 - SSH and SFTP;
-- `systemctl` and `tar`;
+- `systemctl`, `tar`, and `flock`;
 - a user allowed to run the required commands through `sudo` without an interactive password prompt;
 - `python3`, the `venv` module, and `pip` for Python projects.
 
@@ -229,10 +241,9 @@ Review diagnostic logs before publishing them. Do not commit or share `github-to
 
 ## License
 
-The source code is distributed under the [MIT License](LICENSE).
+The KK.Var source code is distributed under the [GNU Affero General Public License v3.0](LICENSE) (`AGPL-3.0-only`, version 3 only).
 
 ### Third-party licenses
 
 - the [Exo 2](https://github.com/googlefonts/Exo-2.0) font is distributed under the SIL Open Font License 1.1; the full text is available in [`KK.Var/Assets/Fonts/Exo2-OFL.txt`](KK.Var/Assets/Fonts/Exo2-OFL.txt);
 - the [Inter](https://github.com/rsms/inter) font is distributed under the [SIL Open Font License 1.1](https://github.com/rsms/inter/blob/master/LICENSE.txt) and is provided through the `Avalonia.Fonts.Inter` package.
-

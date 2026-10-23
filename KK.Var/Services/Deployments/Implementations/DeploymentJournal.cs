@@ -119,6 +119,10 @@ namespace KK.Var.Services.Implementations
                 string.IsNullOrWhiteSpace(errorMessage) ?
                     null :
                     errorMessage.Trim();
+            deployment.RecoveryRequired = status == DeploymentStatus.Failed &&
+                deployment.Stage >= DeploymentStage.SwitchingVersion &&
+                deployment.Stage != DeploymentStage.Committed &&
+                !automaticRollbackCompleted;
 
             await deploymentRepository.UpdateAsync(deployment, cancellationToken);
             if (status is DeploymentStatus.Succeeded or DeploymentStatus.Failed || automaticRollbackCompleted)

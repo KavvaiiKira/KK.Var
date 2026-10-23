@@ -25,7 +25,7 @@ namespace KK.Var.Services.Implementations
             {
                 Run(
                     ssh,
-                    $"sudo systemctl status --no-pager --full {Q(project.RemoteServiceName)}",
+                    $"sudo systemctl status --no-pager --full -- {Q(project.RemoteServiceName)}",
                     log);
                 Run(
                     ssh,

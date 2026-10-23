@@ -58,7 +58,7 @@ namespace KK.Var.Services.Implementations
                 throw new InvalidOperationException(Texts.ProjectHealthCheckSettingsIncomplete);
             var initialRestartCount = commandRunner.RunCheckedWithOutput(
                 ssh,
-                $"sudo systemctl show --property=NRestarts --value {Q(project.RemoteServiceName)}",
+                $"sudo systemctl show --property=NRestarts --value -- {Q(project.RemoteServiceName)}",
                 log);
             var deadline = DateTime.UtcNow.AddSeconds(delaySeconds);
 
@@ -75,7 +75,7 @@ namespace KK.Var.Services.Implementations
 
                 var activeResult = commandRunner.Run(
                     ssh,
-                    $"sudo systemctl is-active --quiet {Q(project.RemoteServiceName)}",
+                    $"sudo systemctl is-active --quiet -- {Q(project.RemoteServiceName)}",
                     log);
 
                 if (activeResult.ExitStatus != 0)
@@ -88,7 +88,7 @@ namespace KK.Var.Services.Implementations
 
             var finalRestartCount = commandRunner.RunCheckedWithOutput(
                 ssh,
-                $"sudo systemctl show --property=NRestarts --value {Q(project.RemoteServiceName)}",
+                $"sudo systemctl show --property=NRestarts --value -- {Q(project.RemoteServiceName)}",
                 log);
 
             if (!string.Equals(

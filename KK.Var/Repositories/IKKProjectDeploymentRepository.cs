@@ -42,5 +42,11 @@ namespace KK.Var.Repositories
         Task UpdateAsync(
             KKProjectDeployment deployment,
             CancellationToken cancellationToken = default);
+
+        Task BeginRecoveryAsync(Guid deploymentId, DeploymentRecoveryAttempt attempt, CancellationToken cancellationToken = default);
+
+        Task<bool> IsRecoveryCurrentAsync(Guid deploymentId, CancellationToken cancellationToken = default);
+
+        Task CompleteRecoveryAsync(Guid deploymentId, DeploymentRecoveryAttempt attempt, CancellationToken cancellationToken = default);
     }
 }

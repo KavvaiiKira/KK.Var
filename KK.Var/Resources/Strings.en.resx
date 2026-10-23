@@ -1777,10 +1777,10 @@ New fingerprint: {3}</value>
         <value>systemd service started successfully</value>
     </data>
     <data name="SystemdTarAvailable" xml:space="preserve">
-        <value>systemd and tar are available.</value>
+        <value>systemd, tar and flock are available.</value>
     </data>
     <data name="SystemdTarUnavailable" xml:space="preserve">
-        <value>systemd or tar is unavailable.</value>
+        <value>systemd, tar or flock is unavailable.</value>
     </data>
     <data name="SystemdUnitCreated" xml:space="preserve">
         <value>systemd unit will be created</value>
@@ -2010,4 +2010,70 @@ New fingerprint: {3}</value>
     <data name="StartingApplication" xml:space="preserve">
         <value>Preparing the application…</value>
     </data>
+  <data name="RecoveryNotRequired" xml:space="preserve">
+    <value>This operation does not require explicit recovery.</value>
+  </data>
+  <data name="RecoverySuperseded" xml:space="preserve">
+    <value>Recovery is unavailable: a newer operation has started for this project or remote target.</value>
+  </data>
+  <data name="RecoveryTargetChanged" xml:space="preserve">
+    <value>The saved recovery target no longer matches the machine profile or contains an invalid path.</value>
+  </data>
+  <data name="RecoveryOutcomeUnknown" xml:space="preserve">
+    <value>The recovery outcome is unconfirmed. Check the attempt log; retry requires confirmed ownership of the remote files.</value>
+  </data>
+  <data name="RecoveryOwnershipUnknown" xml:space="preserve">
+    <value>Remote file ownership could not be confirmed. Recovery stopped.</value>
+  </data>
+  <data name="RecoveryRequiredNotice" xml:space="preserve">
+    <value>The remote outcome is unknown. Recovery uses the original saved target and checkpoint without a new build or Deploy. The original failure remains in history.</value>
+  </data>
+  <data name="RecoveryResolvedNotice" xml:space="preserve">
+    <value>The recovery outcome is saved separately. The original operation failure remains in history.</value>
+  </data>
+  <data name="RecoveryTitle" xml:space="preserve">
+    <value>Saved operation recovery</value>
+  </data>
+  <data name="RecoverSavedOperation" xml:space="preserve">
+    <value>Recover operation</value>
+  </data>
+  <data name="CancelRecovery" xml:space="preserve">
+    <value>Cancel recovery wait</value>
+  </data>
+  <data name="RecoveryInProgress" xml:space="preserve">
+    <value>Recovery is waiting or running. A remote action already in progress may finish before cancellation is handled.</value>
+  </data>
+  <data name="RecoveryCancelledNotice" xml:space="preserve">
+    <value>Recovery was cancelled. The remote outcome may remain unknown; the attempt state and log are saved.</value>
+  </data>
+  <data name="RecoveryAttemptSucceeded" xml:space="preserve">
+    <value>Outcome confirmed</value>
+  </data>
+  <data name="RecoveryAttemptFailed" xml:space="preserve">
+    <value>Attempt failed</value>
+  </data>
+  <data name="RecoveryAttemptCancelled" xml:space="preserve">
+    <value>Attempt cancelled</value>
+  </data>
+  <data name="RecoveryAttemptUnknown" xml:space="preserve">
+    <value>Attempt started; completion is unconfirmed</value>
+  </data>
+  <data name="RecoveryNewVersionRemoved" xml:space="preserve">
+    <value>The new version was removed. No previous version exists; the service is not running.</value>
+  </data>
+  <data name="RecoveryPreviousFilesRestored" xml:space="preserve">
+    <value>Previous files were restored. The service is not running because no previous systemd unit existed.</value>
+  </data>
+  <data name="RecoveryRefresh" xml:space="preserve">
+    <value>Refresh state</value>
+  </data>
+  <data name="RecoveryToolMissing" xml:space="preserve">
+    <value>Safe recovery requires flock on the remote machine.</value>
+  </data>
+  <data name="RecoveryLogUnavailable" xml:space="preserve">
+    <value>Recovery log unavailable: {0}</value>
+  </data>
+  <data name="StorageMutationUnavailable" xml:space="preserve">
+    <value>Storage is busy with another operation. Retry the change after it finishes.</value>
+  </data>
 </root>

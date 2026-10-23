@@ -24,6 +24,11 @@ namespace KK.Var.Services.Implementations
         IRemoteRecoveryService recoveryService,
         ILocalizationService localizationService) : IRemoteDeploymentService
     {
+        public Task<DeploymentRecoveryResult> RecoverFailedAsync(
+            KKProject project, RemoteMachineSettings settings, string operationId, DeploymentStage stage,
+            DeploymentUnitChange unitChange, TextWriter log, CancellationToken cancellationToken = default) =>
+            recoveryService.RecoverFailedAsync(project, settings, operationId, stage, unitChange, log, cancellationToken);
+
         private const string FreeSpaceProbeScript = "while ! sudo test -d \"$check_path\"; do parent=$(dirname -- \"$check_path\"); if test \"$parent\" = \"$check_path\"; then break; fi; check_path=\"$parent\"; done; available=$(df -Pk -- \"$check_path\" | awk 'NR==2 {print $4}'); ";
 
         public Task DeployAsync(
@@ -86,6 +91,7 @@ namespace KK.Var.Services.Implementations
             var unitContent = unitBuilder.CreateUnit(project, settings.UserName!);
             var unitState = DeploymentUnitChange.Unchanged;
             var targetMoved = false;
+            var switchAttempted = false;
             var healthCheckInProgress = false;
 
             using var ssh = clientFactory.CreateSshClient(settings);
@@ -121,6 +127,10 @@ namespace KK.Var.Services.Implementations
                     Texts.CheckingRemoteMachine));
 
                 commandRunner.RunChecked(ssh, RemoteCommands.CheckSudo, log);
+                if (commandRunner.Run(ssh, RemoteCommands.CheckRecoveryTools, log).ExitStatus != 0)
+                {
+                    throw new InvalidOperationException(Texts.RecoveryToolMissing);
+                }
                 commandRunner.RunChecked(ssh, RemoteCommands.CheckDeploymentTools, log);
 
                 var actualArchitecture = commandRunner.RunCheckedWithOutput(ssh, RemoteCommands.Architecture, log);
@@ -145,6 +155,7 @@ namespace KK.Var.Services.Implementations
                                     $"test -n \"$available\" && test \"$available\" -ge {requiredKilobytes}",
                     log);
 
+                commandRunner.RunChecked(ssh, RemoteRecoveryProtocol.PrepareOperation(target, operationId), log);
                 progress?.Report(new DeploymentProgress(
                     58,
                     Texts.RemoteMachineReadyDeploy));
@@ -250,7 +261,9 @@ namespace KK.Var.Services.Implementations
 
                 SaveCheckpoint(checkpoint, DeploymentStage.SwitchingVersion, unitState);
 
-                commandRunner.Run(ssh, $"sudo systemctl stop {Q(project.RemoteServiceName)}", log);
+                switchAttempted = true;
+                commandRunner.RunChecked(ssh, RemoteRecoveryProtocol.PrepareSwitch(target, operationId, settings.CleanDeployment), log);
+                commandRunner.Run(ssh, $"sudo systemctl stop -- {Q(project.RemoteServiceName)}", log);
                 commandRunner.RunChecked(
                     ssh,
                     (settings.CleanDeployment ?
@@ -278,19 +291,19 @@ namespace KK.Var.Services.Implementations
 
                 SaveCheckpoint(checkpoint, DeploymentStage.UnitUpdated, unitState);
 
-                if (commandRunner.Run(ssh, $"sudo systemctl is-enabled {Q(project.RemoteServiceName)}", log).ExitStatus != 0)
+                if (commandRunner.Run(ssh, $"sudo systemctl is-enabled -- {Q(project.RemoteServiceName)}", log).ExitStatus != 0)
                 {
-                    commandRunner.RunChecked(ssh, $"sudo systemctl enable {Q(project.RemoteServiceName)}", log);
+                    commandRunner.RunChecked(ssh, $"sudo systemctl enable -- {Q(project.RemoteServiceName)}", log);
                 }
 
                 progress?.Report(new DeploymentProgress(88, Texts.StartingSystemdService));
 
                 SaveCheckpoint(checkpoint, DeploymentStage.StartingService, unitState);
 
-                commandRunner.RunChecked(ssh, $"sudo systemctl restart {Q(project.RemoteServiceName)}", log);
+                commandRunner.RunChecked(ssh, $"sudo systemctl restart -- {Q(project.RemoteServiceName)}", log);
                 commandRunner.RunChecked(
                     ssh,
-                    $"sudo systemctl is-active --quiet {Q(project.RemoteServiceName)}",
+                    $"sudo systemctl is-active --quiet -- {Q(project.RemoteServiceName)}",
                     log);
 
                 SaveCheckpoint(checkpoint, DeploymentStage.ServiceStarted, unitState);
@@ -334,7 +347,8 @@ namespace KK.Var.Services.Implementations
                     remoteUnit,
                     unitBackup,
                     target + DeploymentConstants.MarkerRelativePath,
-                    log);
+                    log,
+                    operationId);
 
                 progress?.Report(new DeploymentProgress(
                     100,
@@ -360,6 +374,7 @@ namespace KK.Var.Services.Implementations
                     if (targetMoved)
                     {
                         commandRunner.CaptureFailureDiagnostics(ssh, project, log);
+                        commandRunner.RunChecked(ssh, RemoteRecoveryProtocol.PrepareRollback(target, operationId), log);
 
                         rollbackResult = recoveryService.RestorePreviousVersion(
                             ssh,
@@ -381,7 +396,7 @@ namespace KK.Var.Services.Implementations
                         caughtRollbackException));
                 }
 
-                if (!targetMoved || rollbackException is null)
+                if (!switchAttempted || (targetMoved && rollbackException is null))
                 {
                     recoveryService.CleanupRemoteOperationFiles(
                         ssh,
@@ -389,7 +404,8 @@ namespace KK.Var.Services.Implementations
                         remoteArchive,
                         remoteUnit,
                         unitBackup,
-                        log);
+                        log,
+                        operationId);
                 }
                 else
                 {

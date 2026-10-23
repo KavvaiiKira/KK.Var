@@ -9,6 +9,8 @@ namespace KK.Var.ViewModels
     {
         private readonly IDeploymentHistoryService _deploymentHistory;
 
+        private readonly IDeploymentRecoveryService _deploymentRecovery;
+
         private readonly IKKProjectDeploymentService _projectDeploymentService;
 
         private readonly IDeploymentPreflightService _deploymentPreflightService;
@@ -35,8 +37,10 @@ namespace KK.Var.ViewModels
             DeploymentWorkspaceViewModel deploymentWorkspace,
             ILocalizationService localizationService,
             CreateProjectViewModel projectEditor,
-            ProjectDetailsViewModel projectDetails)
+            ProjectDetailsViewModel projectDetails,
+            IDeploymentRecoveryService deploymentRecovery)
         {
+            _deploymentRecovery = deploymentRecovery;
             AppSettings = appSettings;
             AppSettings.NotificationRequested += PublishNotification;
             ProjectList = projectList;

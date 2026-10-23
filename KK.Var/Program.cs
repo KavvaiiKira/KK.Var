@@ -91,87 +91,92 @@ namespace KK.Var
                 options.UseSqlite(
                     $"Data Source={DatabasePaths.GetDatabaseFilePath(databaseOptions.FileName)}"));
 
-            builder.Services.AddSingleton<IBuildConfigurationService, BuildConfigurationService>();
-            builder.Services.AddSingleton<IProjectSourceService, ProjectSourceService>();
-            builder.Services.AddSingleton<IBuildProcessRunner, BuildProcessRunner>();
-            builder.Services.AddSingleton<IProjectBuildService, ProjectBuildService>();
-            builder.Services.AddSingleton<IArtifactPackagingService, ArtifactPackagingService>();
-            builder.Services.AddSingleton<IRemoteCommandRunner, RemoteCommandRunner>();
-            builder.Services.AddSingleton<IRemoteDeploymentValidator, RemoteDeploymentValidator>();
-            builder.Services.AddSingleton<ISystemdUnitBuilder, SystemdUnitBuilder>();
-            builder.Services.AddSingleton<IRemoteHealthCheckService, RemoteHealthCheckService>();
-            builder.Services.AddSingleton<IRemoteRecoveryService, RemoteRecoveryService>();
-            builder.Services.AddSingleton<IRemoteClientFactory, RemoteClientFactory>();
-            builder.Services.AddSingleton<IDeploymentNotificationService, DeploymentNotificationService>();
-            builder.Services.AddSingleton<IDeploymentJournal, DeploymentJournal>();
-            builder.Services.AddSingleton<IDeploymentExecutor, DeploymentExecutor>();
-            builder.Services.AddSingleton<IDeploymentRecoveryService, DeploymentRecoveryService>();
-            builder.Services.AddSingleton<IDeploymentHistoryService, DeploymentHistoryService>();
-            builder.Services.AddSingleton<IArtifactPathPolicy, ArtifactPathPolicy>();
-            builder.Services.AddSingleton<IArtifactStorageRelocationService, ArtifactStorageRelocationService>();
-            builder.Services.AddSingleton<IArtifactStorageActivity, ArtifactStorageActivity>();
-            builder.Services.AddSingleton<ISourcePreflightService, SourcePreflightService>();
-            builder.Services.AddSingleton<IBuildPreflightService, BuildPreflightService>();
-            builder.Services.AddSingleton<IStoragePreflightService, StoragePreflightService>();
-            builder.Services.AddSingleton<DeploymentHistoryViewModel, DeploymentHistoryViewModel>();
-            builder.Services.AddSingleton<GitHubAccountViewModel, GitHubAccountViewModel>();
-            builder.Services.AddSingleton<ArtifactStorageViewModel, ArtifactStorageViewModel>();
-            builder.Services.AddSingleton<IPreflightCheckFactory, PreflightCheckFactory>();
-            builder.Services.AddSingleton<ProjectEnvironmentEditorViewModel, ProjectEnvironmentEditorViewModel>();
-            builder.Services.AddSingleton<DeploymentWorkspaceViewModel, DeploymentWorkspaceViewModel>();
-            builder.Services.AddSingleton<RemoteMachineEditorViewModel, RemoteMachineEditorViewModel>();
-            builder.Services.AddSingleton<IApplicationStartupService, ApplicationStartupService>();
-            builder.Services.AddSingleton<IUserSettingsService, UserSettingsService>();
-            builder.Services.AddSingleton<IRemoteMachineService, RemoteMachineService>();
-            builder.Services.AddSingleton<IStartupRecoveryService, StartupRecoveryService>();
-            builder.Services.AddSingleton<ISshPasswordStore, SshPasswordStore>();
-            builder.Services.AddSingleton<ILocalizationService, LocalizationService>();
-            builder.Services.AddSingleton<IRemoteConnectionService, RemoteConnectionService>();
-            builder.Services.AddSingleton<IDeploymentPreflightService, DeploymentPreflightService>();
-            builder.Services.AddSingleton<IGitHubTokenStore, GitHubTokenStore>();
-            builder.Services.AddSingleton<IGitHubService, GitHubService>();
-            builder.Services.AddSingleton<
+            RegisterApplicationServices(builder.Services);
+
+            return builder.Build();
+        }
+
+        internal static void RegisterApplicationServices(IServiceCollection services)
+        {
+            services.AddSingleton<IBuildConfigurationService, BuildConfigurationService>();
+            services.AddSingleton<IProjectSourceService, ProjectSourceService>();
+            services.AddSingleton<IBuildProcessRunner, BuildProcessRunner>();
+            services.AddSingleton<IProjectBuildService, ProjectBuildService>();
+            services.AddSingleton<IArtifactPackagingService, ArtifactPackagingService>();
+            services.AddSingleton<IRemoteCommandRunner, RemoteCommandRunner>();
+            services.AddSingleton<IRemoteDeploymentValidator, RemoteDeploymentValidator>();
+            services.AddSingleton<ISystemdUnitBuilder, SystemdUnitBuilder>();
+            services.AddSingleton<IRemoteHealthCheckService, RemoteHealthCheckService>();
+            services.AddSingleton<IRemoteRecoveryService, RemoteRecoveryService>();
+            services.AddSingleton<IRemoteClientFactory, RemoteClientFactory>();
+            services.AddSingleton<IDeploymentNotificationService, DeploymentNotificationService>();
+            services.AddSingleton<IDeploymentJournal, DeploymentJournal>();
+            services.AddSingleton<IDeploymentExecutor, DeploymentExecutor>();
+            services.AddSingleton<IDeploymentRecoveryService, DeploymentRecoveryService>();
+            services.AddSingleton<IDeploymentHistoryService, DeploymentHistoryService>();
+            services.AddSingleton<IArtifactPathPolicy, ArtifactPathPolicy>();
+            services.AddSingleton<IArtifactStorageRelocationService, ArtifactStorageRelocationService>();
+            services.AddSingleton<IArtifactStorageActivity, ArtifactStorageActivity>();
+            services.AddSingleton<ISourcePreflightService, SourcePreflightService>();
+            services.AddSingleton<IBuildPreflightService, BuildPreflightService>();
+            services.AddSingleton<IStoragePreflightService, StoragePreflightService>();
+            services.AddSingleton<DeploymentHistoryViewModel, DeploymentHistoryViewModel>();
+            services.AddSingleton<GitHubAccountViewModel, GitHubAccountViewModel>();
+            services.AddSingleton<ArtifactStorageViewModel, ArtifactStorageViewModel>();
+            services.AddSingleton<IPreflightCheckFactory, PreflightCheckFactory>();
+            services.AddSingleton<ProjectEnvironmentEditorViewModel, ProjectEnvironmentEditorViewModel>();
+            services.AddSingleton<DeploymentWorkspaceViewModel, DeploymentWorkspaceViewModel>();
+            services.AddSingleton<RemoteMachineEditorViewModel, RemoteMachineEditorViewModel>();
+            services.AddSingleton<IApplicationStartupService, ApplicationStartupService>();
+            services.AddSingleton<IUserSettingsService, UserSettingsService>();
+            services.AddSingleton<IRemoteMachineService, RemoteMachineService>();
+            services.AddSingleton<IStartupRecoveryService, StartupRecoveryService>();
+            services.AddSingleton<ISshPasswordStore, SshPasswordStore>();
+            services.AddSingleton<ILocalizationService, LocalizationService>();
+            services.AddSingleton<IRemoteConnectionService, RemoteConnectionService>();
+            services.AddSingleton<IDeploymentPreflightService, DeploymentPreflightService>();
+            services.AddSingleton<IGitHubTokenStore, GitHubTokenStore>();
+            services.AddSingleton<IGitHubService, GitHubService>();
+            services.AddSingleton<
                 IGitHubAuthenticationService,
                 GitHubAuthenticationService>();
-            builder.Services.AddSingleton<IKKProjectRepository, KKProjectRepository>();
-            builder.Services.AddSingleton<
+            services.AddSingleton<IKKProjectRepository, KKProjectRepository>();
+            services.AddSingleton<
                 IKKProjectEnvironmentVariableRepository,
                 KKProjectEnvironmentVariableRepository>();
-            builder.Services.AddSingleton<IKKProjectVersionRepository, KKProjectVersionRepository>();
-            builder.Services.AddSingleton<
+            services.AddSingleton<IKKProjectVersionRepository, KKProjectVersionRepository>();
+            services.AddSingleton<
                 IKKProjectDeploymentRepository,
                 KKProjectDeploymentRepository>();
 
-            builder.Services.AddSingleton<IKKProjectService, KKProjectService>();
-            builder.Services.AddSingleton<IProjectConfigurationTransferService, ProjectConfigurationTransferService>();
-            builder.Services.AddSingleton<
+            services.AddSingleton<IKKProjectService, KKProjectService>();
+            services.AddSingleton<IProjectConfigurationTransferService, ProjectConfigurationTransferService>();
+            services.AddSingleton<
                 IKKProjectEnvironmentService,
                 KKProjectEnvironmentService>();
-            builder.Services.AddSingleton<IKKProjectVersionService, KKProjectVersionService>();
-            builder.Services.AddSingleton<IArtifactStorageService, ArtifactStorageService>();
-            builder.Services.AddSingleton<IVersionCleanupService, VersionCleanupService>();
-            builder.Services.AddSingleton<IProjectArtifactService, ProjectArtifactService>();
-            builder.Services.AddSingleton<IRemoteDeploymentService, RemoteDeploymentService>();
-            builder.Services.AddSingleton<
+            services.AddSingleton<IKKProjectVersionService, KKProjectVersionService>();
+            services.AddSingleton<IArtifactStorageService, ArtifactStorageService>();
+            services.AddSingleton<IVersionCleanupService, VersionCleanupService>();
+            services.AddSingleton<IProjectArtifactService, ProjectArtifactService>();
+            services.AddSingleton<IRemoteDeploymentService, RemoteDeploymentService>();
+            services.AddSingleton<
                 IDeploymentOperationQueue,
                 DeploymentOperationQueue>();
-            builder.Services.AddSingleton<
+            services.AddSingleton<
                 IKKProjectDeploymentService,
                 KKProjectDeploymentService>();
-            builder.Services.AddTransient<GitHubSourceSelectionViewModel>();
-            builder.Services.AddSingleton<CreateProjectViewModel>();
-            builder.Services.AddSingleton<ProjectDetailsViewModel>();
-            builder.Services.AddSingleton<ApplicationSettingsViewModel>();
-            builder.Services.AddSingleton<ProjectListViewModel>();
-            builder.Services.AddSingleton<MainViewModel>();
-            builder.Services.AddSingleton<MainWindow>(services => new MainWindow(
+            services.AddTransient<GitHubSourceSelectionViewModel>();
+            services.AddSingleton<CreateProjectViewModel>();
+            services.AddSingleton<ProjectDetailsViewModel>();
+            services.AddSingleton<ApplicationSettingsViewModel>();
+            services.AddSingleton<ProjectListViewModel>();
+            services.AddSingleton<MainViewModel>();
+            services.AddSingleton<MainWindow>(services => new MainWindow(
                 services.GetRequiredService<ILocalizationService>(),
                 services.GetRequiredService<Microsoft.Extensions.Logging.ILogger<WindowsDeploymentNotifications>>())
             {
                 DataContext = services.GetRequiredService<MainViewModel>(),
             });
-
-            return builder.Build();
         }
 
         private static void ApplyDatabaseMigrations()

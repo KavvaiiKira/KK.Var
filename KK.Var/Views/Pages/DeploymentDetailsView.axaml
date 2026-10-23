@@ -60,6 +60,26 @@
 
             <TextBlock Text="{Binding MachineDisplay}" TextWrapping="Wrap" FontSize="13"
                        Foreground="{DynamicResource AppTextMutedBrush}" />
+            <Border IsVisible="{Binding HasRecovery}" Padding="22,17"
+                    Background="{DynamicResource AppSurfaceBrush}" BorderBrush="{DynamicResource AppBorderBrush}"
+                    BorderThickness="1" CornerRadius="12">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="{DynamicResource RecoveryTitle}" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding RecoveryNotice}" TextWrapping="Wrap" />
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Button x:Name="RecoverOperationButton" Classes="primary" Content="{DynamicResource RecoverSavedOperation}"
+                                Command="{Binding RecoverCommand}" />
+                        <Button Content="{DynamicResource CancelRecovery}" Command="{Binding RecoverCancelCommand}"
+                                IsVisible="{Binding IsRecoveryRunning}" />
+                        <Button Content="{DynamicResource RecoveryRefresh}" Command="{Binding RefreshRecoveryCommand}" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding RecoveryMessage}" TextWrapping="Wrap" />
+                    <TextBlock IsVisible="{Binding HasRecoveryHistory}" Text="{Binding RecoveryHistoryDisplay}" TextWrapping="Wrap" />
+                    <TextBox IsVisible="{Binding HasRecoveryLog}" Classes="operation-code" Height="200" IsReadOnly="True" AcceptsReturn="True"
+                             Text="{Binding RecoveryLogDisplay}" FontFamily="Cascadia Mono, Consolas"
+                             ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" />
+                </StackPanel>
+            </Border>
             <Border Padding="22"
                     Background="{DynamicResource AppSurfaceBrush}"
                     BorderBrush="{DynamicResource AppBorderBrush}"

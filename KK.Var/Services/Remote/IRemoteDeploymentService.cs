@@ -10,6 +10,10 @@ namespace KK.Var.Services
 {
     public interface IRemoteDeploymentService
     {
+        Task<DeploymentRecoveryResult> RecoverFailedAsync(
+            KKProject project, RemoteMachineSettings settings, string operationId, DeploymentStage stage,
+            DeploymentUnitChange unitChange, TextWriter log, CancellationToken cancellationToken = default);
+
         Task DeployAsync(
             KKProject project,
             string artifactPath,

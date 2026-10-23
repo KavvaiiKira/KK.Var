@@ -38,8 +38,9 @@ namespace KK.Var.Services.Implementations
 
         public Task DeleteAllAsync(
             Guid projectId,
-            CancellationToken cancellationToken = default) =>
-            artifactStorageService.DeleteProjectArtifactsAsync(projectId, cancellationToken);
+            CancellationToken cancellationToken = default,
+            IArtifactStorageDestructiveLease? reservation = null) =>
+            artifactStorageService.DeleteProjectArtifactsAsync(projectId, cancellationToken, reservation);
 
         public async Task<ProjectArtifact> CreateAsync(
             KKProject project,

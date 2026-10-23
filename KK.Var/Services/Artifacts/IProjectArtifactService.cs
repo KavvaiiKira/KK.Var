@@ -17,6 +17,7 @@ namespace KK.Var.Services
 
         Task DeleteAllAsync(
             Guid projectId,
-            CancellationToken cancellationToken = default);
+            CancellationToken cancellationToken = default,
+            IArtifactStorageDestructiveLease? reservation = null);
     }
 }

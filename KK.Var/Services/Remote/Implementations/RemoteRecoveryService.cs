@@ -18,6 +18,11 @@ namespace KK.Var.Services.Implementations
         IRemoteDeploymentValidator validator,
         ILocalizationService localizationService) : IRemoteRecoveryService
     {
+        public Task<DeploymentRecoveryResult> RecoverFailedAsync(
+            KKProject project, RemoteMachineSettings settings, string operationId, DeploymentStage stage,
+            DeploymentUnitChange unitChange, TextWriter log, CancellationToken cancellationToken = default) =>
+            Task.Run(() => Recover(project, settings, operationId, stage, unitChange, log, cancellationToken, explicitRecovery: true), cancellationToken);
+
         public Task<DeploymentRecoveryResult> RecoverAsync(
             KKProject project,
             RemoteMachineSettings settings,
@@ -42,14 +47,13 @@ namespace KK.Var.Services.Implementations
             string remoteArchive,
             string remoteUnit,
             string unitBackup,
-            TextWriter log)
+            TextWriter log,
+            string operationId)
         {
             try
             {
-                commandRunner.Run(
-                    ssh,
-                    $"sudo rm -rf -- {Q(staging)} {Q(remoteArchive)} {Q(remoteUnit)} {Q(unitBackup)}",
-                    log);
+                var target = staging[..^(".staging-".Length + operationId.Length)];
+                commandRunner.RunChecked(ssh, RemoteRecoveryProtocol.CleanupOwned(target, operationId), log);
             }
             catch (Exception exception)
             {
@@ -66,15 +70,13 @@ namespace KK.Var.Services.Implementations
             string remoteUnit,
             string unitBackup,
             string marker,
-            TextWriter log)
+            TextWriter log,
+            string operationId)
         {
             try
             {
-                commandRunner.Run(
-                    ssh,
-                    $"sudo rm -rf -- {Q(backup)} {Q(remoteArchive)} {Q(remoteUnit)} " +
-                                    $"{Q(unitBackup)} {Q(marker)}",
-                    log);
+                var target = marker[..^DeploymentConstants.MarkerRelativePath.Length];
+                commandRunner.RunChecked(ssh, RemoteRecoveryProtocol.CommitOwned(target, operationId), log);
             }
             catch (Exception exception)
             {
@@ -100,7 +102,7 @@ namespace KK.Var.Services.Implementations
                 $"sudo test -e {Q(backup)}",
                 log).ExitStatus == 0;
 
-            commandRunner.Run(ssh, $"sudo systemctl stop {Q(project.RemoteServiceName)}", log);
+            commandRunner.Run(ssh, $"sudo systemctl stop -- {Q(project.RemoteServiceName)}", log);
             commandRunner.RunChecked(ssh, $"sudo rm -rf -- {Q(target)}", log);
 
             if (previousVersionExists)
@@ -129,11 +131,11 @@ namespace KK.Var.Services.Implementations
             {
                 commandRunner.RunChecked(
                     ssh,
-                    $"sudo systemctl restart {Q(project.RemoteServiceName)}",
+                    $"sudo systemctl restart -- {Q(project.RemoteServiceName)}",
                     log);
                 commandRunner.RunChecked(
                     ssh,
-                    $"sudo systemctl is-active --quiet {Q(project.RemoteServiceName)}",
+                    $"sudo systemctl is-active --quiet -- {Q(project.RemoteServiceName)}",
                     log);
 
                 progress?.Report(new DeploymentProgress(
@@ -166,20 +168,17 @@ namespace KK.Var.Services.Implementations
             DeploymentStage stage,
             DeploymentUnitChange unitChange,
             TextWriter log,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            bool explicitRecovery = false)
         {
             validator.ValidateConnection(settings, project);
             validator.ValidateOperationId(operationId);
+            if (!Enum.IsDefined(stage) || !Enum.IsDefined(unitChange) ||
+                (explicitRecovery && (stage < DeploymentStage.SwitchingVersion || stage == DeploymentStage.Committed)))
+            {
+                throw new InvalidOperationException(Texts.RecoveryNotRequired);
+            }
             cancellationToken.ThrowIfCancellationRequested();
-
-            var target = project.RemoteDeploymentDirectory.TrimEnd('/');
-            var staging = $"{target}.staging-{operationId}";
-            var backup = $"{target}.previous-{operationId}";
-            var remoteArchive = $"{DeploymentConstants.RemoteTemporaryPrefix}{operationId}{ArtifactConstants.ArchiveExtension}";
-            var remoteUnit = $"{DeploymentConstants.RemoteTemporaryPrefix}{operationId}{DeploymentConstants.ServiceExtension}";
-            var unitPath = $"{DeploymentConstants.SystemdDirectory}{project.RemoteServiceName}";
-            var unitBackup = $"{DeploymentConstants.RemoteTemporaryPrefix}{operationId}{DeploymentConstants.ServiceBackupExtension}";
-            var marker = target + DeploymentConstants.MarkerRelativePath;
 
             using var ssh = clientFactory.CreateSshClient(settings);
 
@@ -202,101 +201,20 @@ namespace KK.Var.Services.Implementations
             {
                 commandRunner.RunChecked(ssh, RemoteCommands.CheckSudo, log);
 
-                var markerMatches = commandRunner.Run(
-                    ssh,
-                    $"sudo test -f {Q(marker)} && test \"$(sudo cat {Q(marker)})\" = {Q(operationId)}",
-                    log).ExitStatus == 0;
-
-                var serviceIsActive = commandRunner.Run(
-                    ssh,
-                    $"sudo systemctl is-active --quiet {Q(project.RemoteServiceName)}",
-                    log).ExitStatus == 0;
-
-                if (stage == DeploymentStage.Committed && serviceIsActive)
+                if (commandRunner.Run(ssh, RemoteCommands.CheckRecoveryTools, log).ExitStatus != 0)
                 {
-                    commandRunner.RunChecked(
-                        ssh,
-                        $"sudo rm -rf -- {Q(backup)} {Q(staging)} {Q(remoteArchive)} {Q(remoteUnit)} " +
-                                            $"{Q(unitBackup)} {Q(marker)}",
-                        log);
-                    return new DeploymentRecoveryResult(
-                        DeploymentRecoveryOutcome.NewVersionActive);
+                    throw new InvalidOperationException(Texts.RecoveryToolMissing);
                 }
-
-                if (stage is DeploymentStage.StartingService or
-                    DeploymentStage.ServiceStarted or
-                    DeploymentStage.HealthChecking)
+                cancellationToken.ThrowIfCancellationRequested();
+                var result = commandRunner.Run(ssh, RemoteRecoveryProtocol.RecoverAtCheckpoint(project, operationId, stage, unitChange), log,
+                    TimeSpan.FromMinutes(2));
+                var lastLine = result.Result.Trim().Split('\n')[^1].Trim();
+                if (result.ExitStatus != 0 || !int.TryParse(lastLine, out var code) || code is < 1 or > 5 ||
+                    (explicitRecovery && code == 1))
                 {
-                    commandRunner.CaptureFailureDiagnostics(ssh, project, log);
+                    throw new InvalidOperationException(Texts.RecoveryOutcomeUnknown);
                 }
-
-                if (stage < DeploymentStage.SwitchingVersion)
-                {
-                    commandRunner.RunChecked(
-                        ssh,
-                        $"sudo rm -rf -- {Q(staging)} {Q(remoteArchive)} {Q(remoteUnit)} {Q(unitBackup)}",
-                        log);
-                    return new DeploymentRecoveryResult(
-                        DeploymentRecoveryOutcome.StagingCleaned);
-                }
-
-                var backupExists = commandRunner.Run(
-                    ssh,
-                    $"sudo test -e {Q(backup)}",
-                    log).ExitStatus == 0;
-
-                var targetExists = commandRunner.Run(
-                    ssh,
-                    $"sudo test -e {Q(target)}",
-                    log).ExitStatus == 0;
-
-                var hasPreviousVersion = backupExists || (targetExists && !markerMatches);
-
-                commandRunner.Run(
-                    ssh,
-                    $"sudo systemctl stop {Q(project.RemoteServiceName)}; " +
-                                    $"if sudo test -f {Q(marker)}; then sudo rm -rf -- {Q(target)}; fi; " +
-                                    $"if sudo test -e {Q(backup)}; then sudo mv -- {Q(backup)} {Q(target)}; fi",
-                    log);
-
-                if (unitChange == DeploymentUnitChange.Created)
-                {
-                    commandRunner.RunChecked(
-                        ssh,
-                        $"sudo rm -f -- {Q(unitPath)} && sudo systemctl daemon-reload",
-                        log);
-                }
-                else if (unitChange == DeploymentUnitChange.Changed)
-                {
-                    commandRunner.RunChecked(
-                        ssh,
-                        $"if sudo test -f {Q(unitBackup)}; then " +
-                                            $"sudo install -o root -g root -m 0644 {Q(unitBackup)} {Q(unitPath)} && " +
-                                            RemoteCommands.ReloadSystemd + "; fi",
-                        log);
-                }
-
-                if (hasPreviousVersion && unitChange != DeploymentUnitChange.Created)
-                {
-                    commandRunner.RunChecked(
-                        ssh,
-                        $"sudo systemctl restart {Q(project.RemoteServiceName)}",
-                        log);
-                    commandRunner.RunChecked(
-                        ssh,
-                        $"sudo systemctl is-active --quiet {Q(project.RemoteServiceName)}",
-                        log);
-                }
-
-                commandRunner.RunChecked(
-                    ssh,
-                    $"sudo rm -rf -- {Q(staging)} {Q(remoteArchive)} {Q(remoteUnit)} {Q(unitBackup)}",
-                    log);
-
-                return new DeploymentRecoveryResult(
-                    hasPreviousVersion && unitChange != DeploymentUnitChange.Created ?
-                        DeploymentRecoveryOutcome.PreviousVersionRestored :
-                        DeploymentRecoveryOutcome.StagingCleaned);
+                return new DeploymentRecoveryResult((DeploymentRecoveryOutcome)code);
             }
             finally
             {

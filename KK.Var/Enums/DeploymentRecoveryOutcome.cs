@@ -5,5 +5,7 @@ namespace KK.Var.Enums
         NewVersionActive = 1,
         PreviousVersionRestored = 2,
         StagingCleaned = 3,
+        NewVersionRemoved = 4,
+        PreviousFilesRestored = 5,
     }
 }

@@ -14,6 +14,8 @@ namespace KK.Var.Data.Configurations
 
             builder.HasKey(deployment => deployment.Id);
 
+            builder.HasIndex(deployment => deployment.OperationSequence).IsUnique();
+
             builder.Property(deployment => deployment.OperationType)
                 .HasConversion<int>();
 
@@ -48,6 +50,9 @@ namespace KK.Var.Data.Configurations
 
             builder.Property(deployment => deployment.ErrorMessage)
                 .HasMaxLength(4000);
+
+            builder.Property(deployment => deployment.RecoveryAttemptsJson)
+                .IsRequired();
 
             builder.HasIndex(deployment => new
             {

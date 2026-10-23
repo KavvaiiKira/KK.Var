@@ -1,5 +1,11 @@
+using System;
 using System.Globalization;
+using System.Linq;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using KK.Var.Enums;
 using KK.Var.Models;
 using KK.Var.Services;
@@ -7,14 +13,115 @@ using Texts = KK.Var.Resources.Strings;
 
 namespace KK.Var.ViewModels
 {
-    public sealed class DeploymentDetailsViewModel(
+    public sealed partial class DeploymentDetailsViewModel(
         KKProjectDeployment deployment,
         string? logText,
-        ILocalizationService localizationService) : ViewModelBase
+        ILocalizationService localizationService,
+        IDeploymentRecoveryService? recoveryService = null) : ViewModelBase
     {
         private const string DurationTimeFormat = "hh\\:mm\\:ss";
 
-        public KKProjectDeployment Deployment { get; } = deployment;
+        public KKProjectDeployment Deployment { get; private set; } = deployment;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(CanRecover))]
+        [NotifyPropertyChangedFor(nameof(RecoveryNotice))]
+        [NotifyCanExecuteChangedFor(nameof(RecoverCommand))]
+        public partial bool IsRecoveryRunning { get; set; }
+
+        [ObservableProperty]
+        public partial string RecoveryMessage { get; set; } = string.Empty;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(HasRecoveryLog))]
+        public partial string RecoveryLogDisplay { get; set; } = string.Empty;
+
+        public bool HasRecoveryLog => !string.IsNullOrWhiteSpace(RecoveryLogDisplay);
+
+        public bool HasRecoveryHistory => DeploymentRecoveryAttempt.Read(Deployment.RecoveryAttemptsJson).Count > 0;
+
+        public bool CanRecover => recoveryService is not null && Deployment.Status == DeploymentStatus.Failed &&
+            Deployment.RecoveryRequired && !Deployment.RecoverySuperseded && !Deployment.RecoveryInProgress && !IsRecoveryRunning;
+
+        public bool HasRecovery => Deployment.RecoveryRequired || DeploymentRecoveryAttempt.Read(Deployment.RecoveryAttemptsJson).Count > 0;
+
+        public string RecoveryNotice => IsRecoveryRunning || Deployment.RecoveryInProgress ?
+            Texts.RecoveryInProgress : Deployment.RecoverySuperseded ?
+            Texts.RecoverySuperseded :
+            Deployment.RecoveryRequired ? Texts.RecoveryRequiredNotice : Texts.RecoveryResolvedNotice;
+
+        public string RecoveryHistoryDisplay => string.Join(Environment.NewLine + Environment.NewLine,
+            DeploymentRecoveryAttempt.Read(Deployment.RecoveryAttemptsJson).Select(attempt =>
+                $"{attempt.StartedAtUtc.ToLocalTime():G} - {AttemptStatus(attempt.Status)}" +
+                (attempt.Outcome is { } outcome ? Environment.NewLine + OutcomeText(outcome) : string.Empty) +
+                (attempt.ErrorMessage is { } error ? Environment.NewLine + Localize(error) : string.Empty) +
+                Environment.NewLine + attempt.LogPath));
+
+        [RelayCommand]
+        public async Task RefreshRecoveryAsync()
+        {
+            if (recoveryService is null)
+            {
+                return;
+            }
+            Deployment = await recoveryService.GetAsync(Deployment.Id);
+            RecoveryLogDisplay = await recoveryService.ReadLogAsync(Deployment.Id) ?? string.Empty;
+            OnPropertyChanged(string.Empty);
+            RecoverCommand.NotifyCanExecuteChanged();
+        }
+
+        [RelayCommand(CanExecute = nameof(CanRecover), IncludeCancelCommand = true)]
+        private async Task RecoverAsync(CancellationToken cancellationToken)
+        {
+            if (!CanRecover)
+            {
+                return;
+            }
+            IsRecoveryRunning = true;
+            RecoveryMessage = string.Empty;
+            try
+            {
+                Deployment = await recoveryService!.RecoverFailedAsync(Deployment.Id, cancellationToken);
+                RecoveryMessage = OutcomeText(DeploymentRecoveryAttempt.Read(Deployment.RecoveryAttemptsJson).Last().Outcome!.Value);
+            }
+            catch (OperationCanceledException)
+            {
+                RecoveryMessage = Texts.RecoveryCancelledNotice;
+            }
+            catch (Exception exception)
+            {
+                RecoveryMessage = Localize(exception.Message);
+            }
+            finally
+            {
+                try
+                {
+                    await RefreshRecoveryAsync();
+                }
+                catch (Exception exception)
+                {
+                    RecoveryMessage = Localize(exception.Message);
+                }
+                IsRecoveryRunning = false;
+            }
+        }
+
+        private static string AttemptStatus(DeploymentRecoveryAttemptStatus status) => status switch
+        {
+            DeploymentRecoveryAttemptStatus.Succeeded => Texts.RecoveryAttemptSucceeded,
+            DeploymentRecoveryAttemptStatus.Failed => Texts.RecoveryAttemptFailed,
+            DeploymentRecoveryAttemptStatus.Cancelled => Texts.RecoveryAttemptCancelled,
+            _ => Texts.RecoveryAttemptUnknown,
+        };
+
+        private static string OutcomeText(DeploymentRecoveryOutcome outcome) => outcome switch
+        {
+            DeploymentRecoveryOutcome.PreviousVersionRestored => Texts.InterruptedDeployRecoveredPreviousVersionRestored,
+            DeploymentRecoveryOutcome.NewVersionRemoved => Texts.RecoveryNewVersionRemoved,
+            DeploymentRecoveryOutcome.PreviousFilesRestored => Texts.RecoveryPreviousFilesRestored,
+            DeploymentRecoveryOutcome.StagingCleaned => Texts.InterruptedDeployStoppedVersionSwitch,
+            _ => Texts.RecoveryOutcomeUnknown,
+        };
 
         public string ProjectName => Deployment.Project?.Name ?? string.Empty;
 
@@ -109,6 +216,8 @@ namespace KK.Var.ViewModels
 
         public void RefreshLocalization()
         {
+            OnPropertyChanged(nameof(RecoveryNotice));
+            OnPropertyChanged(nameof(RecoveryHistoryDisplay));
             OnPropertyChanged(nameof(OperationDisplay));
             OnPropertyChanged(nameof(ErrorMessage));
             OnPropertyChanged(nameof(StatusDisplay));

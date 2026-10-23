@@ -11,6 +11,10 @@ namespace KK.Var.Services
 {
     public interface IRemoteRecoveryService
     {
+        Task<DeploymentRecoveryResult> RecoverFailedAsync(
+            KKProject project, RemoteMachineSettings settings, string operationId, DeploymentStage stage,
+            DeploymentUnitChange unitChange, TextWriter log, CancellationToken cancellationToken = default);
+
         Task<DeploymentRecoveryResult> RecoverAsync(
             KKProject project,
             RemoteMachineSettings settings,
@@ -37,7 +41,8 @@ namespace KK.Var.Services
             string remoteArchive,
             string remoteUnit,
             string unitBackup,
-            TextWriter log);
+            TextWriter log,
+            string operationId);
 
         void CleanupCommittedDeploymentFiles(
             SshClient ssh,
@@ -46,6 +51,7 @@ namespace KK.Var.Services
             string remoteUnit,
             string unitBackup,
             string marker,
-            TextWriter log);
+            TextWriter log,
+            string operationId);
     }
 }

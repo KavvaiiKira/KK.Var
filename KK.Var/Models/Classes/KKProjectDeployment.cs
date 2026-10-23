@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 using KK.Var.Enums;
 
 namespace KK.Var.Models
@@ -6,6 +7,8 @@ namespace KK.Var.Models
     public sealed class KKProjectDeployment
     {
         public Guid Id { get; set; } = Guid.NewGuid();
+
+        public long OperationSequence { get; set; }
 
         public Guid KKProjectId { get; set; }
 
@@ -58,6 +61,16 @@ namespace KK.Var.Models
         public string? LogPath { get; set; }
 
         public string? ErrorMessage { get; set; }
+
+        public bool RecoveryRequired { get; set; }
+
+        [NotMapped]
+        public bool RecoverySuperseded { get; set; }
+
+        [NotMapped]
+        public bool RecoveryInProgress { get; set; }
+
+        public string RecoveryAttemptsJson { get; set; } = "[]";
 
         public KKProject Project { get; set; } = null!;
 

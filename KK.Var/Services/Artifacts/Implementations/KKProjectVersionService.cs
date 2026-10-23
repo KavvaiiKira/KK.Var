@@ -131,6 +131,7 @@ namespace KK.Var.Services.Implementations
             bool isPinned,
             CancellationToken cancellationToken = default)
         {
+            await using var lease = storageActivity.AcquireDestructiveLease(cancellationToken);
             if (storageActivity.IsCleanupRunning)
             {
                 throw new InvalidOperationException(Texts.VersionsCannotChangedDuringCleanup);
@@ -147,6 +148,7 @@ namespace KK.Var.Services.Implementations
             Guid versionId,
             CancellationToken cancellationToken = default)
         {
+            await using var lease = storageActivity.AcquireDestructiveLease(cancellationToken);
             var version = await versionRepository.GetByIdAsync(versionId, cancellationToken) ??
                 throw new KeyNotFoundException(Texts.VersionNotFound);
 

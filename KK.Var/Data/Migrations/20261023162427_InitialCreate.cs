@@ -138,6 +138,7 @@ namespace KK.Var.Data.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    OperationSequence = table.Column<long>(type: "INTEGER", nullable: false),
                     KKProjectId = table.Column<Guid>(type: "TEXT", nullable: false),
                     RemoteMachineId = table.Column<Guid>(type: "TEXT", nullable: false),
                     RemoteMachineName = table.Column<string>(type: "TEXT", nullable: false),
@@ -162,7 +163,9 @@ namespace KK.Var.Data.Migrations
                     StartedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: false),
                     CompletedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: true),
                     LogPath = table.Column<string>(type: "TEXT", maxLength: 1024, nullable: true),
-                    ErrorMessage = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: true)
+                    ErrorMessage = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: true),
+                    RecoveryRequired = table.Column<bool>(type: "INTEGER", nullable: false),
+                    RecoveryAttemptsJson = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -196,6 +199,12 @@ namespace KK.Var.Data.Migrations
                 name: "IX_KKProjectDeployments_KKProjectVersionId",
                 table: "KKProjectDeployments",
                 column: "KKProjectVersionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_KKProjectDeployments_OperationSequence",
+                table: "KKProjectDeployments",
+                column: "OperationSequence",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_KKProjectDeployments_RemoteMachineId",

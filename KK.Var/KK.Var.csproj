@@ -13,7 +13,7 @@
     <FileVersion>0.1.0.0</FileVersion>
     <Product>KK.Var</Product>
     <Authors>KavvaiiKira</Authors>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageLicenseExpression>AGPL-3.0-only</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/KavvaiiKira/KK.Var</RepositoryUrl>
   </PropertyGroup>
 

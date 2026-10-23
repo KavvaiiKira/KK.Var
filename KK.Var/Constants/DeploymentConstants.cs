@@ -8,6 +8,8 @@ namespace KK.Var.Constants
 
         public const string ServiceExtension = ".service";
 
+        public const string ServiceNameValidationPattern = "^[A-Za-z0-9_.@-]+\\.service$";
+
         public const string ServiceBackupExtension = ".service.backup";
 
         public const string SystemdDirectory = "/etc/systemd/system/";

@@ -13,6 +13,8 @@ namespace KK.Var.Services.Implementations
 
         private int _operations;
 
+        private bool _destructiveRunning;
+
         private int _migrationRunning;
 
         private int _cleanupRunning;
@@ -32,13 +34,58 @@ namespace KK.Var.Services.Implementations
             lock (_syncRoot)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                if (IsMigrationRunning || IsCleanupRunning)
+                if (IsMigrationRunning || IsCleanupRunning || _destructiveRunning)
                 {
                     throw new InvalidOperationException(unavailableMessage);
                 }
 
                 _operations++;
                 return new OperationLease(this);
+            }
+        }
+
+        public IArtifactStorageDestructiveLease AcquireDestructiveLease(CancellationToken cancellationToken = default)
+        {
+            lock (_syncRoot)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (_operations != 0 || IsMigrationRunning || IsCleanupRunning || _destructiveRunning)
+                {
+                    throw new InvalidOperationException(Texts.StorageMutationUnavailable);
+                }
+                _destructiveRunning = true;
+                return new DestructiveLease(this);
+            }
+        }
+
+        public void ValidateDestructiveLease(IArtifactStorageDestructiveLease lease)
+        {
+            lock (_syncRoot)
+            {
+                if (lease is not DestructiveLease owned || !ReferenceEquals(owned.Owner, this) || owned.IsDisposed)
+                {
+                    throw new InvalidOperationException(Texts.StorageMutationUnavailable);
+                }
+            }
+        }
+
+        private sealed class DestructiveLease(ArtifactStorageActivity owner) : IArtifactStorageDestructiveLease
+        {
+            public ArtifactStorageActivity Owner => owner;
+
+            public bool IsDisposed { get; private set; }
+
+            public ValueTask DisposeAsync()
+            {
+                lock (owner._syncRoot)
+                {
+                    if (!IsDisposed)
+                    {
+                        IsDisposed = true;
+                        owner._destructiveRunning = false;
+                    }
+                }
+                return ValueTask.CompletedTask;
             }
         }
 
@@ -53,6 +100,10 @@ namespace KK.Var.Services.Implementations
                 lock (_syncRoot)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
+                    if (_destructiveRunning)
+                    {
+                        throw new InvalidOperationException(Texts.StorageMutationUnavailable);
+                    }
                     if (operation is not null)
                     {
                         ObjectDisposedException.ThrowIf(operation.IsDisposed, operation);
